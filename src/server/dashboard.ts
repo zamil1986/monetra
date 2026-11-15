@@ -6,7 +6,7 @@ import { ServiceError } from "./errors";
 import { listTransactions, type TransactionView } from "./transactions";
 import { listWallets } from "./wallets";
 
-export const RECENT_COUNT = 5;
+const RECENT_COUNT = 5;
 
 export type Dashboard = {
   period: Period;

@@ -1,8 +1,9 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button, Field, cx, inputClass, segButtonClass, segClass } from "@/components/ui";
 import type { PeriodKind } from "@/domain/period";
+import { useOnline } from "@/lib/use-online";
 
 const OPTIONS: { kind: PeriodKind; short: string; long?: string }[] = [
   { kind: "today", short: "Today" },
@@ -18,10 +19,13 @@ export function PeriodFilter({ kind, from, to }: { kind: PeriodKind; from: strin
   const path = usePathname();
   const [showCustom, setShowCustom] = useState(kind === "custom");
   const [range, setRange] = useState({ from, to });
+  const [pending, startTransition] = useTransition();
+  // Each Periode is computed by the server, so switching needs a connection (PRD 4.4).
+  const online = useOnline();
 
   const go = (params: Record<string, string>) => {
     const query = new URLSearchParams(params);
-    router.replace(query.size ? `${path}?${query}` : path);
+    startTransition(() => router.replace(query.size ? `${path}?${query}` : path));
   };
   const pick = (next: PeriodKind) => {
     if (next === "custom") return setShowCustom(true);
@@ -31,15 +35,17 @@ export function PeriodFilter({ kind, from, to }: { kind: PeriodKind; from: strin
   const pressed = (k: PeriodKind) => (showCustom ? k === "custom" : k === kind);
 
   return (
-    <div className="flex flex-col gap-3 max-md:w-full">
-      <div className={cx(segClass, "max-md:w-full")} role="group" aria-label="Period">
+    <div className="flex flex-col gap-3 max-md:w-full" aria-busy={pending}>
+      <div className={cx(segClass, "max-md:w-full", pending && "opacity-60")} role="group" aria-label="Period">
         {OPTIONS.map((o) => (
-          <button key={o.kind} type="button" className={cx(segButtonClass, "min-h-10 px-3 text-sm")} aria-pressed={pressed(o.kind)} onClick={() => pick(o.kind)}>
+          <button key={o.kind} type="button" className={cx(segButtonClass, "min-h-10 px-3 text-sm")} aria-pressed={pressed(o.kind)} disabled={!online || pending} onClick={() => pick(o.kind)}>
             {o.long && <span className="max-md:hidden">{o.long}</span>}
             <span className={o.long ? "md:lowercase max-md:capitalize" : undefined}>{o.short}</span>
           </button>
         ))}
       </div>
+      {pending && <span className="text-meta text-ink-2" role="status">Updating figures…</span>}
+      {!online && <span className="text-meta text-ink-2" role="status">Changing the period needs a connection.</span>}
       {showCustom && (
         <form
           className="flex flex-wrap items-end gap-2.5"
@@ -57,7 +63,7 @@ export function PeriodFilter({ kind, from, to }: { kind: PeriodKind; from: strin
             <input id="p-to" type="date" required className={inputClass()} value={range.to} min={range.from || undefined}
               onChange={(e) => setRange({ ...range, to: e.target.value })} />
           </Field>
-          <Button type="submit" variant="secondary">Show</Button>
+          <Button type="submit" variant="secondary" disabled={!online || pending}>Show</Button>
         </form>
       )}
     </div>

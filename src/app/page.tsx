@@ -37,16 +37,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const asked = parsed.success ? { kind: parsed.data.period, from: parsed.data.from, to: parsed.data.to } : null;
 
   // A Periode that can't be read still shows the balances, which never depend on it.
-  let data: Dashboard;
-  let periodError: string | null = null;
-  try {
-    if (!asked) throw new ServiceError(422, "INVALID_PERIOD", "That period isn't one of the choices.");
-    data = await getDashboard(user.id, asked);
-  } catch (e) {
-    if (!(e instanceof ServiceError) || e.code !== "INVALID_PERIOD") throw e;
-    periodError = e.message;
-    data = await getDashboard(user.id, { kind: "month" });
+  let data: Dashboard | null = null;
+  let periodError: string | null = asked ? null : "That period isn't one of the choices.";
+  if (asked) {
+    try {
+      data = await getDashboard(user.id, asked);
+    } catch (e) {
+      if (!(e instanceof ServiceError) || e.code !== "INVALID_PERIOD") throw e;
+      periodError = e.message;
+    }
   }
+  data ??= await getDashboard(user.id, { kind: "month" });
 
   const today = instantToLocal(new Date(), user.timezone).date;
   const filterValues = periodError && asked
