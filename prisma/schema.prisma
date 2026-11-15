@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  email         String    @unique
+  timezone      String    @default("Asia/Jakarta")
+  isDemo        Boolean   @default(false) @map("is_demo")
+  demoExpiresAt DateTime? @map("demo_expires_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  wallets      Wallet[]
+  categories   Category[]
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  name           String
+  // Whole rupiah (ADR 0002). BigInt so large balances never overflow.
+  openingBalance BigInt    @default(0) @map("opening_balance")
+  icon           String
+  color          String
+  archivedAt     DateTime? @map("archived_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions     Transaction[] @relation("TransactionWallet")
+  transfersInbound Transaction[] @relation("TransactionToWallet")
+
+  @@index([userId])
+  @@map("wallets")
+}
+
+model Category {
+  id         String       @id @default(uuid()) @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  name       String
+  type       CategoryType
+  icon       String
+  color      String
+  archivedAt DateTime?    @map("archived_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@map("categories")
+}
+
+model Transaction {
+  // Generated on the device before the request is sent (ADR 0003).
+  id          String          @id @db.Uuid
+  userId      String          @map("user_id") @db.Uuid
+  type        TransactionType
+  amount      BigInt
+  walletId    String          @map("wallet_id") @db.Uuid
+  toWalletId  String?         @map("to_wallet_id") @db.Uuid
+  categoryId  String?         @map("category_id") @db.Uuid
+  description String?
+  occurredAt  DateTime        @map("occurred_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  deletedAt   DateTime?       @map("deleted_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet   Wallet    @relation("TransactionWallet", fields: [walletId], references: [id], onDelete: Restrict)
+  toWallet Wallet?   @relation("TransactionToWallet", fields: [toWalletId], references: [id], onDelete: Restrict)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([userId, occurredAt])
+  @@index([walletId])
+  @@index([toWalletId])
+  @@map("transactions")
+}

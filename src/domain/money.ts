@@ -1,0 +1,21 @@
+import { err, ok, type Result } from "./result";
+
+const PLAIN_DIGITS = /^\d+$/;
+const GROUPED = /^\d{1,3}(\.\d{3})+$/;
+
+/** Reads what a person typed into an amount field as whole rupiah (ADR 0002). */
+export function parseRupiah(input: string): Result<number> {
+  const text = input.trim().replace(/^rp\s*/i, "");
+  if (!PLAIN_DIGITS.test(text) && !GROUPED.test(text)) {
+    return err("Enter a whole rupiah amount, for example 18.000.");
+  }
+  const value = Number(text.replaceAll(".", ""));
+  if (!Number.isSafeInteger(value)) return err("That amount is too large.");
+  return ok(value);
+}
+
+/** "Rp 6.240.000", "−Rp 15.000" */
+export function formatRupiah(value: number): string {
+  const digits = Math.abs(value).toLocaleString("id-ID");
+  return value < 0 ? `−Rp ${digits}` : `Rp ${digits}`;
+}
