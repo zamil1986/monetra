@@ -59,6 +59,17 @@ describe("wallets", () => {
     expect((await listWallets(user.id)).wallets.find((w) => w.id === gopay.id)?.archived).toBe(false);
   });
 
+  it("can't be edited while archived, so an archived wallet never holds money", async () => {
+    const user = await newUser();
+    const old = await createWallet(user.id, { name: "Mandiri", openingBalance: 0, color: "slate", icon: "bank" });
+    await archiveWallet(user.id, old.id);
+    await expect(updateWallet(user.id, old.id, { openingBalance: 500_000 })).rejects.toMatchObject({ status: 422, code: "WALLET_ARCHIVED" });
+
+    await unarchiveWallet(user.id, old.id);
+    await updateWallet(user.id, old.id, { name: "Mandiri Payroll" });
+    expect((await listWallets(user.id)).wallets.find((w) => w.id === old.id)?.name).toBe("Mandiri Payroll");
+  });
+
   it("deletes a wallet never used, but not one with a transaction", async () => {
     const user = await newUser();
     const unused = await createWallet(user.id, { name: "Spare", openingBalance: 0, color: "slate", icon: "cash" });

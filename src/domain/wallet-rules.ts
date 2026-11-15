@@ -17,8 +17,9 @@ export function validateWalletInput(input: WalletInput): Result<ValidWalletInput
   const name = input.name.trim();
   if (!name) return invalid("name", "Give the wallet a name.");
   if (name.length > 40) return invalid("name", "Keep the name to 40 characters or fewer.");
-  if (!Number.isSafeInteger(input.openingBalance) || input.openingBalance < 0) {
-    return invalid("openingBalance", "The opening balance is a whole rupiah amount of 0 or more.");
+  // May be negative: a Saldo is allowed below zero (PRD 3.3 rule 3).
+  if (!Number.isSafeInteger(input.openingBalance)) {
+    return invalid("openingBalance", "The opening balance is a whole rupiah amount.");
   }
   if (!(WALLET_COLORS as readonly string[]).includes(input.color)) return invalid("color", "Pick one of the colors.");
   if (!(WALLET_ICONS as readonly string[]).includes(input.icon)) return invalid("icon", "Pick one of the icons.");
@@ -42,4 +43,10 @@ export function checkDelete(wallet: { transactionCount: number }): Result<void, 
     code: "WALLET_IN_USE",
     message: "This wallet has transactions, so it can't be deleted. Archive it instead.",
   });
+}
+
+/** An archived Dompet sits at Rp 0 and stays there: it is unarchived before any edit (PRD 3.3 rule 4). */
+export function checkEdit(wallet: { name: string; archived: boolean }): Result<void, DomainError> {
+  if (!wallet.archived) return ok(undefined);
+  return err({ code: "WALLET_ARCHIVED", message: `${wallet.name} is archived. Unarchive it to make changes.` });
 }

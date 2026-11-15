@@ -41,11 +41,15 @@ describe("wallet details", () => {
     });
   });
 
+  it("accept a negative opening balance, since a Saldo may be below zero (PRD 3.3 rule 3)", () => {
+    const result = validateWalletInput({ name: "Kartu Kredit", openingBalance: -250_000, color: "slate", icon: "bank" });
+    expect(result.ok && result.value.openingBalance).toBe(-250_000);
+  });
+
   it.each([
     ["an empty name", { name: "  ", openingBalance: 0, color: "blue", icon: "bank" }, "name"],
     ["a name over 40 characters", { name: "x".repeat(41), openingBalance: 0, color: "blue", icon: "bank" }, "name"],
     ["a fractional opening balance", { name: "BCA", openingBalance: 10.5, color: "blue", icon: "bank" }, "openingBalance"],
-    ["a negative opening balance", { name: "BCA", openingBalance: -1, color: "blue", icon: "bank" }, "openingBalance"],
     ["an unknown color", { name: "BCA", openingBalance: 0, color: "pink", icon: "bank" }, "color"],
     ["an unknown icon", { name: "BCA", openingBalance: 0, color: "blue", icon: "rocket" }, "icon"],
   ])("are refused with %s", (_label, input, field) => {

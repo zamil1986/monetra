@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { NotSignedIn } from "@/components/not-signed-in";
 import { signedAmount } from "@/components/transaction-type";
+import { Page, PageHead, h1, spacer } from "@/components/ui";
 import { instantToLocal } from "@/domain/local-time";
 import { dayMonth, weekday } from "@/lib/dates";
 import { ServiceError } from "@/server/errors";
@@ -32,10 +33,10 @@ export default async function EditTransactionPage({ params }: { params: Promise<
 
   return (
     <>
-      <div className="page-head">
-        <Link className="back" href="/transactions"><ChevronLeft />Transactions</Link>
-        <h1>Edit transaction</h1>
-        <span className="spacer" />
+      <PageHead>
+        <Link className="inline-flex items-center gap-1 text-sm font-semibold no-underline" href="/transactions"><ChevronLeft />Transactions</Link>
+        <h1 className={h1}>Edit transaction</h1>
+        <span className={spacer} />
         <DeleteTransactionButton
           variant="button"
           after="/transactions"
@@ -44,8 +45,8 @@ export default async function EditTransactionPage({ params }: { params: Promise<
           meta={`${transaction.categoryName ?? "Transfer"} · ${walletLabel} · ${weekday(local.date)} ${dayMonth(local.date)} ${local.time}`}
           amount={signedAmount(transaction.type, transaction.amount)}
         />
-      </div>
-      <main className="page">
+      </PageHead>
+      <Page>
         <TransactionForm
           mode="edit"
           {...data}
@@ -60,11 +61,11 @@ export default async function EditTransactionPage({ params }: { params: Promise<
             ...local,
           }}
         />
-        <p className="meta-line">
+        <p className="mt-5 max-w-[560px] border-t border-line pt-3.5 text-meta text-ink-2">
           Recorded {weekday(recorded.date)} {dayMonth(recorded.date)} {recorded.date.slice(0, 4)}, {recorded.time}.{" "}
           {edited ? `Last edited ${dayMonth(instantToLocal(transaction.updatedAt, user.timezone).date)}.` : "Not edited since."}
         </p>
-      </main>
+      </Page>
     </>
   );
 }

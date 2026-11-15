@@ -15,10 +15,9 @@ export default async function WalletsPage() {
   return (
     <WalletsManager
       totalBalance={totalBalance}
-      wallets={wallets.map((w) => ({
+      wallets={wallets.map(({ archivedAt, ...w }) => ({
         ...w,
-        archivedOn: w.archivedAt ? instantToLocal(w.archivedAt, user.timezone).date : null,
-        archivedAt: undefined,
+        archivedOn: archivedAt ? instantToLocal(archivedAt, user.timezone).date : null,
       }))}
     />
   );

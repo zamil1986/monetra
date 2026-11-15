@@ -12,10 +12,15 @@ describe("parseRupiah rejects what is not a whole rupiah amount", () => {
     ["empty", ""],
     ["letters", "abc"],
     ["a decimal comma", "18.000,50"],
-    ["a minus sign", "-5000"],
     ["a misplaced separator", "18.00"],
   ])("%s", (_label, input) => {
     expect(parseRupiah(input).ok).toBe(false);
+  });
+
+  it("reads a leading minus as a negative amount", () => {
+    expect(parseRupiah("-15.000")).toEqual({ ok: true, value: -15000 });
+    expect(parseRupiah("−Rp 15.000")).toEqual({ ok: true, value: -15000 });
+    expect(parseRupiah("-0")).toEqual({ ok: true, value: 0 });
   });
 
   it("accepts plain digits, spaces and an Rp prefix", () => {

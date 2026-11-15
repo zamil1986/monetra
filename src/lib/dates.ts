@@ -5,3 +5,5 @@ export const weekday = (iso: string) => asUtc(iso).toLocaleDateString("en-GB", {
 export const dayMonth = (iso: string) => asUtc(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 export const monthLong = (iso: string) => asUtc(iso).toLocaleDateString("en-GB", { month: "long", timeZone: "UTC" });
 export const monthShort = (iso: string) => asUtc(iso).toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" });
+export const longDate = (iso: string) =>
+  asUtc(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });

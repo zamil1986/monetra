@@ -2,11 +2,12 @@
 import { Search, SlidersHorizontal } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Button, Field, cx, inputClass, onlyMobile } from "@/components/ui";
 
 type Option = { id: string; name: string; archived: boolean };
 type Values = Record<string, string | number | undefined>;
 
-/** Every filter lives in the URL, so a filtered view can be reloaded or shared between devices. */
+/** Every filter lives in the URL, so a filtered view can be reloaded or opened on the other device. */
 export function Filters({ values, wallets, categories }: { values: Values; wallets: Option[]; categories: (Option & { type: string })[] }) {
   const router = useRouter();
   const path = usePathname();
@@ -27,43 +28,55 @@ export function Filters({ values, wallets, categories }: { values: Values; walle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
-  const select = (key: string) => ({ value: String(values[key] ?? ""), onChange: (e: { target: { value: string } }) => apply(key, e.target.value) });
+  const select = (key: string) => ({
+    value: String(values[key] ?? ""),
+    onChange: (e: { target: { value: string } }) => apply(key, e.target.value),
+    className: inputClass(),
+  });
   const group = (type: string) => categories.filter((c) => c.type === type);
+  // Desktop: every field sits in one wrapping row. Phone: the extra fields fold behind the Filters button.
+  const item = "flex-[1_1_118px] max-md:basis-[40%]";
 
   return (
-    <form className="toolbar" role="search" aria-label="Find transactions" onSubmit={(e) => e.preventDefault()}>
-      <div className="field search">
-        <label htmlFor="q">Search description</label>
-        <div className="search-wrap"><Search /><input className="input" id="q" type="search" placeholder="e.g. groceries" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
-      </div>
-      <button className="btn secondary only-mobile" type="button" aria-expanded={open} aria-controls="filters" onClick={() => setOpen(!open)}>
+    <form className="mb-4 flex flex-wrap items-end gap-2.5" role="search" aria-label="Find transactions" onSubmit={(e) => e.preventDefault()}>
+      <Field label="Search description" htmlFor="q" className="flex-[2_1_200px]">
+        <div className="relative">
+          <Search className="absolute top-[13px] left-3 text-ink-3" />
+          <input className={inputClass(false, "pl-[38px]")} id="q" type="search" placeholder="e.g. groceries" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </Field>
+      <Button variant="secondary" className={onlyMobile} aria-expanded={open} aria-controls="filters" onClick={() => setOpen(!open)}>
         <SlidersHorizontal />Filters{active ? ` · ${active}` : ""}
-      </button>
-      <div className="filters" id="filters" hidden={!open}>
-        <div className="field"><label htmlFor="f-type">Type</label>
-          <select className="input" id="f-type" {...select("type")}>
+      </Button>
+      <div id="filters" className={cx(open ? "flex" : "hidden", "basis-full flex-wrap gap-2.5 md:contents")}>
+        <Field label="Type" htmlFor="f-type" className={item}>
+          <select id="f-type" {...select("type")}>
             <option value="">All types</option><option value="INCOME">Income</option><option value="EXPENSE">Expense</option><option value="TRANSFER">Transfer</option>
-          </select></div>
-        <div className="field"><label htmlFor="f-cat">Category</label>
-          <select className="input" id="f-cat" {...select("categoryId")}>
+          </select>
+        </Field>
+        <Field label="Category" htmlFor="f-cat" className={item}>
+          <select id="f-cat" {...select("categoryId")}>
             <option value="">All categories</option>
             {["EXPENSE", "INCOME"].map((type) => (
               <optgroup key={type} label={type === "EXPENSE" ? "Expense" : "Income"}>
                 {group(type).map((c) => <option key={c.id} value={c.id}>{c.name}{c.archived ? " (archived)" : ""}</option>)}
               </optgroup>
             ))}
-          </select></div>
-        <div className="field"><label htmlFor="f-wal">Wallet</label>
-          <select className="input" id="f-wal" {...select("walletId")}>
+          </select>
+        </Field>
+        <Field label="Wallet" htmlFor="f-wal" className={item}>
+          <select id="f-wal" {...select("walletId")}>
             <option value="">All wallets</option>
             {wallets.map((w) => <option key={w.id} value={w.id}>{w.name}{w.archived ? " (archived)" : ""}</option>)}
-          </select></div>
-        <div className="field"><label htmlFor="f-from">From</label><input className="input" id="f-from" type="date" {...select("from")} /></div>
-        <div className="field"><label htmlFor="f-to">To</label><input className="input" id="f-to" type="date" {...select("to")} /></div>
-        <div className="field"><label htmlFor="f-sort">Sort by</label>
-          <select className="input" id="f-sort" {...select("sort")}>
+          </select>
+        </Field>
+        <Field label="From" htmlFor="f-from" className={cx(item, "md:flex-[1_1_146px]")}><input id="f-from" type="date" {...select("from")} /></Field>
+        <Field label="To" htmlFor="f-to" className={cx(item, "md:flex-[1_1_146px]")}><input id="f-to" type="date" {...select("to")} /></Field>
+        <Field label="Sort by" htmlFor="f-sort" className={item}>
+          <select id="f-sort" {...select("sort")}>
             <option value="">Newest first</option><option value="oldest">Oldest first</option><option value="amount_desc">Highest amount</option><option value="amount_asc">Lowest amount</option>
-          </select></div>
+          </select>
+        </Field>
       </div>
     </form>
   );

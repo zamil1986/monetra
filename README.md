@@ -21,7 +21,8 @@ Sign-in (PRD 3.1) is not built yet. In development every request acts as the acc
 - `src/domain` — pure business rules (Saldo, Transaksi rules, Dompet rules, rupiah parsing, local time). No database, no HTTP.
 - `src/server` — services that load data, apply the domain rules inside database transactions, and enforce ownership.
 - `src/app/api` — REST route handlers (PRD 8): parse with zod, call a service, map refusals to JSON errors.
-- `src/app` — screens ported from `prototype/`.
+- `src/app` — screens ported from `prototype/`, styled with Tailwind CSS v4.
+- `src/app/globals.css` — the design tokens (`@theme`) taken from the prototype; `src/components/ui.tsx` — shared buttons, fields, notices and layout classes.
 
 ## Tests
 

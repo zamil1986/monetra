@@ -1,9 +1,14 @@
 "use client";
-import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check, CircleAlert, Info } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { categoryIcon } from "@/components/icons";
+import {
+  Button, Field, FieldError, Notice, buttonClass, chipClass, cx, h2, hintClass, inputClass, onlyDesktop, rowClass, rowSub, rowTitle,
+  rowsClass, segButtonClass, segClass, sidePanel, splitClass,
+} from "@/components/ui";
+import { balancesByWallet } from "@/domain/balance";
 import { localToInstant } from "@/domain/local-time";
 import { formatRupiah, parseRupiah } from "@/domain/money";
 import type { TransactionType } from "@/domain/types";
@@ -30,7 +35,6 @@ type Props = {
   now: { date: string; time: string };
   wallets: FormWallet[];
   categories: FormCategory[];
-  totalBalance: number;
   initial: FormInitial;
 };
 
@@ -43,7 +47,7 @@ const TYPES = [
 const newId = () => crypto.randomUUID();
 const typeWord = (t: TransactionType) => t.toLowerCase();
 
-export function TransactionForm({ mode, timezone, now, wallets, categories, totalBalance, initial }: Props) {
+export function TransactionForm({ mode, timezone, now, wallets, categories, initial }: Props) {
   const router = useRouter();
   const online = useOnline();
   // The ID is made here, before sending, so a retried save can't create a duplicate (ADR 0003).
@@ -112,150 +116,174 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, tota
     }
   }
 
-  const invalid = (field: string) => (error?.field === field ? " invalid" : "");
-  const fieldError = (field: string) =>
-    error?.field === field ? <span className="error" role="alert"><CircleAlert />{error.message}</span> : null;
+  const errorFor = (field: string) => (error?.field === field ? error.message : null);
   const label = (w: FormWallet) => `${w.name} · ${formatRupiah(w.balance)}${w.archived ? " (archived)" : ""}`;
   const saveLabel = !online ? "Saving needs a connection" : mode === "edit" ? "Save changes" : `Save ${typeWord(type)}`;
+  const walletSelect = (id: string, value: string, onChange: (v: string) => void, options: FormWallet[], field: string) => (
+    <select className={inputClass(!!errorFor(field))} id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+      {id === "to" && <option value="" disabled>Choose a wallet</option>}
+      {options.map((w) => <option key={w.id} value={w.id}>{label(w)}</option>)}
+    </select>
+  );
 
   return (
-    <div className="split">
-      <form className={`form${mode === "edit" ? " narrow" : ""}`} onSubmit={(e) => submit(e)} noValidate>
-        <div className={`field${invalid("type")}`}>
-          <span className="legend" id="type-l">Type</span>
-          <div className="seg wide" role="group" aria-labelledby="type-l">
+    <div className={splitClass}>
+      <form className={cx("flex flex-col gap-5", mode === "edit" && "max-w-[560px]")} onSubmit={(e) => submit(e)} noValidate>
+        <Field
+          label="Type"
+          legendId="type-l"
+          error={errorFor("type")}
+          hint={
+            mode === "edit" &&
+            (initial.type === "TRANSFER"
+              ? "A transfer can't become income or expense: delete it and record the right type instead."
+              : "An expense can become income, and you pick the category again. It can't become a transfer: delete it and record a transfer instead.")
+          }
+        >
+          <div className={segClass} role="group" aria-labelledby="type-l">
             {availableTypes.map(({ value, label: text, Icon }) => (
-              <button key={value} type="button" aria-pressed={type === value} onClick={() => chooseType(value)}><Icon />{text}</button>
+              <button key={value} type="button" className={segButtonClass} aria-pressed={type === value} onClick={() => chooseType(value)}><Icon />{text}</button>
             ))}
           </div>
-          {mode === "edit" && (
-            <span className="type-lock">
-              {initial.type === "TRANSFER"
-                ? "A transfer can't become income or expense: delete it and record the right type instead."
-                : "An expense can become income, and you pick the category again. It can't become a transfer: delete it and record a transfer instead."}
-            </span>
-          )}
-          {fieldError("type")}
-        </div>
+        </Field>
 
-        <div className={`field${invalid("amount")}`}>
-          <label htmlFor="amt">Amount</label>
-          <div className="amount-input"><span>Rp</span>
-            <input className="fig" id="amt" inputMode="numeric" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)} aria-describedby="amt-h" aria-invalid={!!invalid("amount")} />
+        <Field label="Amount" htmlFor="amt" error={errorFor("amount")} hint="Whole rupiah, more than 0." hintId="amt-h">
+          <div
+            className={cx(
+              "flex items-baseline gap-2 border-b-2 pt-1 pb-1.5 focus-within:border-cobalt focus-within:shadow-[0_2px_0_var(--color-cobalt)]",
+              errorFor("amount") ? "border-red" : "border-ink",
+            )}
+          >
+            <span className="text-[22px] font-bold text-ink-2">Rp</span>
+            <input
+              className="fig min-w-0 flex-1 border-0 bg-transparent p-0 text-[44px] leading-[1.1] outline-0 md:text-[52px]"
+              id="amt" inputMode="numeric" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)}
+              aria-describedby="amt-h" aria-invalid={!!errorFor("amount")}
+            />
           </div>
-          {fieldError("amount")}
-          <span className="hint" id="amt-h">Whole rupiah, more than 0.</span>
-        </div>
+        </Field>
 
         {type === "TRANSFER" ? (
           <>
-            <div className="form-row">
-              <div className={`field${invalid("walletId")}`}><label htmlFor="from">From wallet</label>
-                <select className="input" id="from" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
-                  {walletChoices.map((w) => <option key={w.id} value={w.id}>{label(w)}</option>)}
-                </select>{fieldError("walletId")}</div>
-              <div className={`field${invalid("toWalletId")}`}><label htmlFor="to">To wallet</label>
-                <select className="input" id="to" value={toWalletId} onChange={(e) => setToWalletId(e.target.value)}>
-                  <option value="" disabled>Choose a wallet</option>
-                  {walletChoices.filter((w) => w.id !== walletId).map((w) => <option key={w.id} value={w.id}>{label(w)}</option>)}
-                </select>{fieldError("toWalletId")}</div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="From wallet" htmlFor="from" error={errorFor("walletId")}>
+                {walletSelect("from", walletId, setWalletId, walletChoices, "walletId")}
+              </Field>
+              <Field label="To wallet" htmlFor="to" error={errorFor("toWalletId")}>
+                {walletSelect("to", toWalletId, setToWalletId, walletChoices.filter((w) => w.id !== walletId), "toWalletId")}
+              </Field>
             </div>
-            <div className="notice info"><Info /><div>A transfer moves money between your own wallets. It never counts as income or expense. If you paid an admin fee, record it as a separate expense in Biaya Admin.</div></div>
+            <Notice tone="info">
+              A transfer moves money between your own wallets. It never counts as income or expense. If you paid an admin fee, record it as a separate
+              expense in Biaya Admin.
+            </Notice>
           </>
         ) : (
-          <div className={`field${invalid("walletId")}`}>
-            <label htmlFor="wal">Wallet</label>
-            <select className="input" id="wal" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
-              {walletChoices.map((w) => <option key={w.id} value={w.id}>{label(w)}</option>)}
-            </select>
-            {fieldError("walletId")}
-          </div>
+          <Field label="Wallet" htmlFor="wal" error={errorFor("walletId")}>
+            {walletSelect("wal", walletId, setWalletId, walletChoices, "walletId")}
+          </Field>
         )}
 
         {type !== "TRANSFER" && (
-          <div className={`field${invalid("categoryId")}`}>
-            <span className="legend" id="cat-l">Category</span>
-            <div className="chips" role="radiogroup" aria-labelledby="cat-l">
+          <Field
+            label="Category"
+            legendId="cat-l"
+            error={errorFor("categoryId")}
+            hint={mode === "edit" && type !== initial.type && !categoryId && `Choose an ${typeWord(type)} category to finish the change.`}
+          >
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="cat-l">
               {categoryChoices.map((c) => {
                 const Icon = categoryIcon(c.icon);
                 return (
-                  <button key={c.id} type="button" className="chip" role="radio" aria-checked={categoryId === c.id} onClick={() => setCategoryId(c.id)}><Icon />{c.name}</button>
+                  <button key={c.id} type="button" className={chipClass()} role="radio" aria-checked={categoryId === c.id} onClick={() => setCategoryId(c.id)}>
+                    <Icon />{c.name}
+                  </button>
                 );
               })}
             </div>
-            {fieldError("categoryId")}
-            {mode === "edit" && type !== initial.type && !categoryId && <span className="hint">Choose an {typeWord(type)} category to finish the change.</span>}
-          </div>
+          </Field>
         )}
 
-        <div className={`field${invalid("occurredAt")}`}>
-          <div className="form-row">
-            <div className="field"><label htmlFor="date">Date</label><input className="input" id="date" type="date" value={date} max={now.date} onChange={(e) => setDate(e.target.value)} /></div>
-            <div className="field"><label htmlFor="time">Time</label><input className="input" id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+        <div className="flex flex-col gap-1.5">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Date" htmlFor="date">
+              <input className={inputClass(!!errorFor("occurredAt"))} id="date" type="date" value={date} max={now.date} onChange={(e) => setDate(e.target.value)} />
+            </Field>
+            <Field label="Time" htmlFor="time">
+              <input className={inputClass(!!errorFor("occurredAt"))} id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+            </Field>
           </div>
-          {fieldError("occurredAt")}
-          <span className="hint">{mode === "new" ? "Set to now. " : ""}It can&apos;t be in the future. Times are in {timezone}.</span>
+          <FieldError message={errorFor("occurredAt")} />
+          <span className={hintClass}>{mode === "new" ? "Set to now. " : ""}It can&apos;t be in the future. Times are in {timezone}.</span>
         </div>
 
-        <div className={`field${invalid("description")}`}>
-          <label htmlFor="desc">Description <span className="muted" style={{ fontWeight: 400 }}>(optional)</span></label>
-          <input className="input" id="desc" maxLength={120} value={description} onChange={(e) => setDescription(e.target.value)} />
-          {fieldError("description")}
-        </div>
+        <Field label={<>Description <span className="font-normal text-ink-2">(optional)</span></>} htmlFor="desc" error={errorFor("description")}>
+          <input className={inputClass(!!errorFor("description"))} id="desc" maxLength={120} value={description} onChange={(e) => setDescription(e.target.value)} />
+        </Field>
 
-        {error && !error.field && <div className="notice danger" role="alert"><CircleAlert /><div><strong>Not saved.</strong> {error.message}</div></div>}
-        {savedNote && <div className="notice info" role="status"><Check /><div>{savedNote}</div></div>}
+        {error && !error.field && <Notice tone="danger" role="alert"><strong>Not saved.</strong> {error.message}</Notice>}
+        {savedNote && <Notice tone="info" icon={Check} role="status">{savedNote}</Notice>}
 
-        <div className="form-actions sticky-save">
-          <button className="btn lg" type="submit" disabled={saving || !online}>{saveLabel}</button>
+        <div
+          className={cx(
+            "flex flex-wrap items-center gap-2.5",
+            "max-md:sticky max-md:bottom-[62px] max-md:z-[5] max-md:border-t max-md:border-line max-md:bg-paper max-md:pt-3 max-md:pb-5 max-md:[&>button]:min-h-[50px] max-md:[&>button]:w-full",
+          )}
+        >
+          <Button type="submit" size="lg" disabled={saving || !online}>{saveLabel}</Button>
           {mode === "new" ? (
-            <button className="btn secondary lg only-desktop" type="button" disabled={saving || !online} onClick={(e) => submit(e, true)}>Save and add another</button>
+            <Button variant="secondary" size="lg" className={onlyDesktop} disabled={saving || !online} onClick={(e) => submit(e, true)}>Save and add another</Button>
           ) : (
-            <Link className="btn quiet lg only-desktop" href="/transactions">Cancel</Link>
+            <Link className={buttonClass("quiet", "lg", onlyDesktop)} href="/transactions">Cancel</Link>
           )}
         </div>
       </form>
 
       {mode === "new" && (
-        <AfterYouSave type={type} amount={parseRupiah(amount)} wallets={wallets} walletId={walletId} toWalletId={toWalletId} totalBalance={totalBalance} />
+        <AfterYouSave type={type} amount={parseRupiah(amount)} wallets={wallets} walletId={walletId} toWalletId={toWalletId} />
       )}
     </div>
   );
 }
 
-/** Shows how the Saldo and Total Balance move once this Transaksi is saved. */
+/** Shows how the Saldo and Total Balance move once this Transaksi is saved, using the same rules as the server. */
 function AfterYouSave(props: {
   type: TransactionType;
   amount: ReturnType<typeof parseRupiah>;
   wallets: FormWallet[];
   walletId: string;
   toWalletId: string;
-  totalBalance: number;
 }) {
-  const n = props.amount.ok ? props.amount.value : 0;
+  const amount = props.amount.ok && props.amount.value > 0 ? props.amount.value : 0;
+  const now = props.wallets.map((w) => ({ id: w.id, openingBalance: w.balance, archived: w.archived }));
+  const movement = { type: props.type, amount, walletId: props.walletId, toWalletId: props.type === "TRANSFER" ? props.toWalletId || null : null };
+  const after = balancesByWallet(now, [movement]);
+  const total = (balances: Map<string, number>) => now.filter((w) => !w.archived).reduce((sum, w) => sum + (balances.get(w.id) ?? 0), 0);
+  const before = balancesByWallet(now, []);
+
   const from = props.wallets.find((w) => w.id === props.walletId);
-  const to = props.wallets.find((w) => w.id === props.toWalletId);
-  const fig = (before: number, after: number) => (
-    <span className="fig">{before.toLocaleString("id-ID")}<span className="arrow">→</span>{after.toLocaleString("id-ID")}</span>
+  const to = props.type === "TRANSFER" ? props.wallets.find((w) => w.id === props.toWalletId) : undefined;
+  const fig = (a: number, b: number) => (
+    <span className="fig whitespace-nowrap text-lg">{a.toLocaleString("id-ID")}<span className="mx-1 text-ink-3">→</span>{b.toLocaleString("id-ID")}</span>
   );
-  const delta = props.type === "INCOME" ? n : -n;
+  const noChange = <span className="inline-flex items-center rounded-[3px] bg-white px-2 py-0.5 text-[12.5px] font-semibold text-ink-2">No change</span>;
+  const line = (title: string, sub: string, value: ReactNode) => (
+    <div className={rowClass}>
+      <span className="min-w-0 flex-1"><span className={rowTitle}>{title}</span><span className={rowSub}>{sub}</span></span>
+      {value}
+    </div>
+  );
+  const totalBefore = total(before);
+  const totalAfter = total(after);
+
   return (
-    <aside className="side only-desktop" aria-labelledby="after-h">
-      <h2 id="after-h">After you save</h2>
-      <div className="after">
-        {props.type === "TRANSFER" ? (
-          <>
-            {from && <div className="row"><span className="grow"><span className="t">{from.name}</span><span className="s">From wallet</span></span>{fig(from.balance, from.balance - n)}</div>}
-            {to && <div className="row"><span className="grow"><span className="t">{to.name}</span><span className="s">To wallet</span></span>{fig(to.balance, to.balance + n)}</div>}
-            <div className="row"><span className="grow"><span className="t">Total balance</span><span className="s">All wallets</span></span><span className="tag">No change</span></div>
-            <div className="row"><span className="grow"><span className="t">Income and expense</span><span className="s">A transfer is neither</span></span><span className="tag">No change</span></div>
-          </>
-        ) : (
-          <>
-            {from && <div className="row"><span className="grow"><span className="t">{from.name}</span><span className="s">Wallet balance</span></span>{fig(from.balance, from.balance + delta)}</div>}
-            <div className="row"><span className="grow"><span className="t">Total balance</span><span className="s">All wallets</span></span>{fig(props.totalBalance, props.totalBalance + delta)}</div>
-          </>
-        )}
+    <aside className={cx(sidePanel, onlyDesktop)} aria-labelledby="after-h">
+      <h2 id="after-h" className={cx(h2, "mb-4")}>After you save</h2>
+      <div className={rowsClass}>
+        {from && line(from.name, props.type === "TRANSFER" ? "From wallet" : "Wallet balance", fig(before.get(from.id)!, after.get(from.id)!))}
+        {to && line(to.name, "To wallet", fig(before.get(to.id)!, after.get(to.id)!))}
+        {line("Total balance", "All wallets", totalBefore === totalAfter ? noChange : fig(totalBefore, totalAfter))}
+        {props.type === "TRANSFER" && line("Income and expense", "A transfer is neither", noChange)}
       </div>
     </aside>
   );

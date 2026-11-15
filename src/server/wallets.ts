@@ -3,6 +3,7 @@ import type { Movement } from "@/domain/types";
 import {
   checkArchive,
   checkDelete,
+  checkEdit,
   validateWalletInput,
   type WalletColor,
   type WalletIcon,
@@ -107,14 +108,21 @@ export async function createWallet(userId: string, input: WalletInput) {
 }
 
 export async function updateWallet(userId: string, id: string, patch: Partial<WalletInput>) {
-  const current = await findOwned(db, userId, id);
-  const valid = validOrThrow({
-    name: patch.name ?? current.name,
-    openingBalance: patch.openingBalance ?? Number(current.openingBalance),
-    color: patch.color ?? current.color,
-    icon: patch.icon ?? current.icon,
+  return db.$transaction(async (tx) => {
+    // Locked so an archive can't land between this check and the update.
+    const [locked] = await lockWallets(tx, userId, [id]);
+    if (!locked) throw ServiceError.notFound("Wallet");
+    const editable = checkEdit({ name: locked.name, archived: locked.archived_at !== null });
+    if (!editable.ok) throw ServiceError.fromDomain(editable.error);
+    const current = await findOwned(tx, userId, id);
+    const valid = validOrThrow({
+      name: patch.name ?? current.name,
+      openingBalance: patch.openingBalance ?? Number(current.openingBalance),
+      color: patch.color ?? current.color,
+      icon: patch.icon ?? current.icon,
+    });
+    return tx.wallet.update({ where: { id }, data: { ...valid, openingBalance: BigInt(valid.openingBalance) } });
   });
-  return db.wallet.update({ where: { id }, data: { ...valid, openingBalance: BigInt(valid.openingBalance) } });
 }
 
 export async function archiveWallet(userId: string, id: string) {

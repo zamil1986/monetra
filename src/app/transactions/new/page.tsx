@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NotSignedIn } from "@/components/not-signed-in";
+import { Notice, Page, PageHead, buttonClass, h1, spacer } from "@/components/ui";
 import { currentUser } from "@/server/page-session";
 import { listTransactions } from "@/server/transactions";
 import { formData } from "../form-data";
@@ -21,14 +22,14 @@ export default async function NewTransactionPage({ searchParams }: { searchParam
 
   return (
     <>
-      <div className="page-head">
-        <h1>Add transaction</h1>
-        <span className="spacer" />
-        <Link className="btn quiet" href="/transactions">Cancel</Link>
-      </div>
-      <main className="page">
+      <PageHead>
+        <h1 className={h1}>Add transaction</h1>
+        <span className={spacer} />
+        <Link className={buttonClass("quiet")} href="/transactions">Cancel</Link>
+      </PageHead>
+      <Page>
         {active.length === 0 ? (
-          <div className="notice warn" role="alert"><div><strong>No active wallet.</strong> <Link href="/wallets">Create or unarchive a wallet</Link> first.</div></div>
+          <Notice tone="warn" role="alert"><strong>No active wallet.</strong> <Link href="/wallets">Create or unarchive a wallet</Link> first.</Notice>
         ) : (
           <TransactionForm
             mode="new"
@@ -45,7 +46,7 @@ export default async function NewTransactionPage({ searchParams }: { searchParam
             }}
           />
         )}
-      </main>
+      </Page>
     </>
   );
 }
