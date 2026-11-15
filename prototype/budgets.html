@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Budgets · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="budgets">
+<div class="main">
+  <div class="page-head">
+    <h1>Budgets</h1>
+    <span class="spacer"></span>
+    <div class="month-nav" role="group" aria-label="Month">
+      <button class="icon-btn" type="button" aria-label="October 2026"><i data-lucide="chevron-left"></i></button>
+      <strong>November 2026</strong>
+      <button class="icon-btn" type="button" aria-label="Next month" disabled><i data-lucide="chevron-right"></i></button>
+    </div>
+  </div>
+
+  <main class="page">
+    <div class="split">
+      <div class="stack">
+        <div class="notice danger" role="status"><i data-lucide="triangle-alert"></i><div><strong>Shopping is over budget.</strong> Rp 670.000 spent against Rp 600.000, with 16 days left in November.<div class="actions"><a href="transactions.html">See Shopping transactions</a></div></div></div>
+
+        <section aria-labelledby="all-h">
+          <div class="block-head" style="margin-bottom:0"><h2 id="all-h">All expenses</h2><span class="small muted">Repeats every month until you change it</span></div>
+          <div class="budget">
+            <div class="budget-top big"><span class="grow fig">Rp 3.412.000 <span class="muted">of 6.000.000</span></span><span class="tag">57% used</span><button class="icon-btn" type="button" aria-label="Edit overall budget"><i data-lucide="pencil"></i></button></div>
+            <div class="meter" style="--p:57;--day:47;height:18px" role="img" aria-label="57 percent used on day 14 of 30"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 2.588.000 left · Rp 161.750 a day for 16 days</span><span>Dotted line: day 14 of 30. Solid line: the limit.</span></div>
+          </div>
+        </section>
+
+        <section aria-labelledby="cat-h">
+          <div class="block block-head" style="margin-bottom:0"><h2 id="cat-h">By category</h2><span class="small muted">Each stands alone and need not add up to the overall budget</span></div>
+
+          <div class="budget">
+            <div class="budget-top"><span class="glyph" style="--c:var(--h-magenta)"><i data-lucide="shopping-bag"></i></span><span class="grow">Shopping</span><span class="tag over"><i data-lucide="triangle-alert"></i>112% · over</span><button class="icon-btn" type="button" aria-label="Edit Shopping budget"><i data-lucide="pencil"></i></button></div>
+            <div class="meter over" style="--p:112;--day:47" role="img" aria-label="112 percent, over budget"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 670.000 of Rp 600.000</span><span class="neg"><strong>Rp 70.000 over</strong></span></div>
+          </div>
+
+          <div class="budget">
+            <div class="budget-top"><span class="glyph" style="--c:var(--h-orange)"><i data-lucide="utensils"></i></span><span class="grow">Food</span><span class="tag warn"><i data-lucide="triangle-alert"></i>84% · close to the limit</span><button class="icon-btn" type="button" aria-label="Edit Food budget"><i data-lucide="pencil"></i></button></div>
+            <div class="meter warn" style="--p:84;--day:47" role="img" aria-label="84 percent used"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 842.000 of Rp 1.000.000</span><span>Rp 158.000 left · Rp 9.875 a day</span></div>
+          </div>
+
+          <div class="budget">
+            <div class="budget-top"><span class="glyph" style="--c:var(--h-slate)"><i data-lucide="receipt"></i></span><span class="grow">Bills</span><span class="tag">78%</span><button class="icon-btn" type="button" aria-label="Edit Bills budget"><i data-lucide="pencil"></i></button></div>
+            <div class="meter" style="--p:78;--day:47" role="img" aria-label="78 percent used"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 1.250.000 of Rp 1.600.000</span><span>Rp 350.000 left</span></div>
+          </div>
+
+          <div class="budget">
+            <div class="budget-top"><span class="glyph" style="--c:var(--h-blue)"><i data-lucide="bus"></i></span><span class="grow">Transportation</span><span class="tag">64%</span><button class="icon-btn" type="button" aria-label="Edit Transportation budget"><i data-lucide="pencil"></i></button></div>
+            <div class="meter" style="--p:64;--day:47" role="img" aria-label="64 percent used"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 318.000 of Rp 500.000</span><span>Rp 182.000 left</span></div>
+          </div>
+
+          <div class="budget">
+            <div class="budget-top"><span class="glyph" style="--c:var(--h-violet)"><i data-lucide="clapperboard"></i></span><span class="grow">Entertainment</span><span class="tag">54%</span><button class="icon-btn" type="button" aria-label="Edit Entertainment budget"><i data-lucide="pencil"></i></button></div>
+            <div class="meter" style="--p:54;--day:47" role="img" aria-label="54 percent used"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 215.000 of Rp 400.000</span><span>Rp 185.000 left</span></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="stack">
+        <aside class="side" aria-labelledby="nb-h">
+          <h2 id="nb-h">Set a budget</h2>
+          <form class="form" action="#">
+            <div class="field"><label for="b-cat">For</label>
+              <select class="input" id="b-cat"><option>Healthcare</option><option>Education</option><option>Personal Care</option><option>Admin Fee</option><option>Other Expense</option></select>
+              <span class="hint">Categories that already have a budget are edited in the list.</span></div>
+            <div class="field"><label for="b-amt">Monthly limit</label>
+              <div class="search-wrap"><input class="input fig" id="b-amt" inputmode="numeric" placeholder="0" style="padding-left:44px;font-size:20px" aria-describedby="b-amt-h"><span style="position:absolute;left:12px;top:11px;font-weight:700;color:var(--ink-2)">Rp</span></div>
+              <span class="hint" id="b-amt-h">Applies from November 2026 onward. Earlier months keep the limit they had.</span></div>
+            <button class="btn lg" type="submit">Set budget</button>
+          </form>
+        </aside>
+
+        <section aria-labelledby="bs-h">
+          <div class="block-head"><h2 id="bs-h" class="sheet-title">November 2026</h2><span class="small muted">Against Rp 200.000 a day</span></div>
+          <div class="sheet compact" data-sheet data-note="#b-note"></div>
+          <div class="day-note" id="b-note" aria-live="polite"><span><strong>5 red dates</strong> so far: 3, 7, 8, 12 and 14 Nov.</span></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

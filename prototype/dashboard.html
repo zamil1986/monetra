@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="dashboard">
+<div class="main">
+  <div class="page-head">
+    <h1>Dashboard</h1>
+    <span class="spacer"></span>
+    <div class="seg period" data-choice="period" role="group" aria-label="Period">
+      <button type="button" aria-pressed="false">Today</button>
+      <button type="button" aria-pressed="false"><span class="lg">This </span>week</button>
+      <button type="button" aria-pressed="true"><span class="lg">This </span>month</button>
+      <button type="button" aria-pressed="false"><span class="lg">This </span>year</button>
+      <button type="button" aria-pressed="false">Custom</button>
+    </div>
+  </div>
+
+  <main class="page stack">
+    <div class="split">
+      <div class="stack">
+        <section aria-labelledby="bal">
+          <div class="block-head" style="margin-bottom:0">
+            <h2 id="bal">Total balance</h2>
+            <span class="small muted">Current position. The period does not change it.</span>
+          </div>
+          <p class="total fig"><span class="rp">Rp</span>10.322.500</p>
+          <div class="strip">
+            <a href="wallets.html"><span class="name"><i class="dot" style="--c:var(--h-blue)"></i>BCA</span><span class="fig">6.240.000</span></a>
+            <a href="wallets.html"><span class="name"><i class="dot" style="--c:var(--h-orange)"></i>Jago Savings</span><span class="fig">3.500.000</span></a>
+            <a href="wallets.html"><span class="name"><i class="dot" style="--c:var(--h-olive)"></i>Cash</span><span class="fig">385.000</span></a>
+            <a href="wallets.html"><span class="name"><i class="dot" style="--c:var(--h-teal)"></i>GoPay</span><span class="fig">212.500</span></a>
+            <a href="wallets.html"><span class="name"><i class="dot" style="--c:var(--h-violet)"></i>OVO</span><span class="fig neg">−15.000</span></a>
+          </div>
+        </section>
+
+        <section aria-labelledby="flow">
+          <div class="block block-head">
+            <h2 id="flow">This month</h2>
+            <span class="small muted">1–14 Nov 2026 · transfers not counted</span>
+          </div>
+          <div class="flow">
+            <div><span class="name"><i data-lucide="arrow-down-left" class="pos"></i>Income</span><span class="fig">Rp 8.500.000</span></div>
+            <div><span class="name"><i data-lucide="arrow-up-right"></i>Expense</span><span class="fig">Rp 3.412.000</span></div>
+            <div><span class="name"><i data-lucide="equal"></i>Net cash flow</span><span class="fig pos">+Rp 5.088.000</span></div>
+          </div>
+        </section>
+
+        <section aria-labelledby="recent">
+          <div class="block-head">
+            <h2 id="recent">Recent transactions</h2>
+            <a class="small" href="transactions.html">View all</a>
+          </div>
+          <div class="rows">
+            <a class="row" href="transaction-edit.html"><span class="glyph" style="--c:var(--h-orange)"><i data-lucide="utensils"></i></span><span class="grow"><span class="t">Lunch at Warteg Bahari</span><span class="s">Food · Cash · Today 12:40</span></span><span class="fig">−Rp 24.000</span></a>
+            <a class="row" href="transaction-edit.html"><span class="glyph" style="--c:var(--h-magenta)"><i data-lucide="shopping-bag"></i></span><span class="grow"><span class="t">Weekly groceries</span><span class="s">Shopping · BCA · Today 10:15</span></span><span class="fig">−Rp 260.000</span></a>
+            <a class="row" href="transaction-edit.html"><span class="glyph plain"><i data-lucide="arrow-left-right"></i></span><span class="grow"><span class="t">Transfer to GoPay</span><span class="s">Transfer · BCA to GoPay · Fri 13 Nov 19:02</span></span><span class="fig neutral">Rp 200.000</span></a>
+            <a class="row" href="transaction-edit.html"><span class="glyph" style="--c:var(--h-blue)"><i data-lucide="bus"></i></span><span class="grow"><span class="t">KRL and ojek home</span><span class="s">Transportation · GoPay · Fri 13 Nov 18:30</span></span><span class="fig">−Rp 32.000</span></a>
+            <a class="row" href="transaction-edit.html"><span class="glyph" style="--c:var(--h-orange)"><i data-lucide="utensils"></i></span><span class="grow"><span class="t">Nasi padang with the team</span><span class="s">Food · Cash · Fri 13 Nov 12:10</span></span><span class="fig">−Rp 60.000</span></a>
+          </div>
+        </section>
+      </div>
+
+      <section aria-labelledby="sheet-h">
+        <div class="block-head">
+          <h2 id="sheet-h" class="sheet-title">November 2026</h2>
+          <span class="small muted">Spent per day</span>
+        </div>
+        <div class="sheet" data-sheet></div>
+        <div class="sheet-key">
+          <span><i style="--c:var(--red)"></i>Red date: over the Rp 200.000 daily pace</span>
+          <span><i style="--c:var(--yellow)"></i>Today</span>
+        </div>
+        <div class="day-note" id="day-note" aria-live="polite"><span class="muted">Select a day to see what was spent.</span></div>
+
+        <div class="budget" style="border-bottom:0;margin-top:8px">
+          <div class="budget-top"><span class="grow">Monthly budget</span><span class="fig">57%</span><span class="tag">Day 14 of 30</span></div>
+          <div class="meter" style="--p:57;--day:47" role="img" aria-label="57 percent of the monthly budget used on day 14 of 30"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+          <div class="budget-bottom"><span>Rp 3.412.000 of Rp 6.000.000</span><span>Rp 612.000 above the pace for day 14</span></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="cols-2">
+      <section aria-labelledby="brk">
+        <div class="block block-head"><h2 id="brk">Expense by category</h2><a class="small" href="reports.html">Open reports</a></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-slate)"></i>Bills</span><span class="bar" style="--p:100;--c:var(--h-slate)"></span><span class="fig">1.250.000</span><span class="pct">37%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-orange)"></i>Food</span><span class="bar" style="--p:67;--c:var(--h-orange)"></span><span class="fig">842.000</span><span class="pct">25%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-magenta)"></i>Shopping</span><span class="bar" style="--p:54;--c:var(--h-magenta)"></span><span class="fig">670.000</span><span class="pct">20%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-blue)"></i>Transportation</span><span class="bar" style="--p:25;--c:var(--h-blue)"></span><span class="fig">318.000</span><span class="pct">9%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-violet)"></i>Entertainment</span><span class="bar" style="--p:17;--c:var(--h-violet)"></span><span class="fig">215.000</span><span class="pct">6%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-teal)"></i>Healthcare</span><span class="bar" style="--p:5;--c:var(--h-teal)"></span><span class="fig">62.000</span><span class="pct">2%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-olive)"></i>Personal Care</span><span class="bar" style="--p:4;--c:var(--h-olive)"></span><span class="fig">45.000</span><span class="pct">1%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-brown)"></i>Admin Fee</span><span class="bar" style="--p:1;--c:var(--h-brown)"></span><span class="fig">10.000</span><span class="pct">&lt;1%</span></div>
+      </section>
+
+      <section aria-labelledby="ive">
+        <div class="block block-head"><h2 id="ive">Income vs expense</h2><span class="small muted">By week</span></div>
+        <div class="chart few" data-readout="#ive-out">
+          <div class="axis" aria-hidden="true"><span>8 M</span><span>6 M</span><span>4 M</span><span>2 M</span><span>0</span></div>
+          <div class="plot">
+            <button type="button" class="col" aria-pressed="false" data-label="26 Oct – 1 Nov (1 Nov only)" data-in="0" data-out="185000" aria-label="Week of 26 October"><i class="in" style="height:0"></i><i class="out" style="height:2.3%"></i></button>
+            <button type="button" class="col" aria-pressed="true" data-label="2 – 8 Nov" data-in="7500000" data-out="2285000" aria-label="Week of 2 November"><i class="in" style="height:93.75%"></i><i class="out" style="height:28.6%"></i></button>
+            <button type="button" class="col" aria-pressed="false" data-label="9 – 14 Nov (so far)" data-in="1000000" data-out="942000" aria-label="Week of 9 November"><i class="in" style="height:12.5%"></i><i class="out" style="height:11.8%"></i></button>
+          </div>
+          <div class="labels" aria-hidden="true"><span>26 Oct</span><span>2 Nov</span><span>9 Nov</span></div>
+        </div>
+        <div class="legend-row"><span><i class="dot" style="--c:var(--green)"></i>Income</span><span><i class="dot" style="--c:var(--ink)"></i>Expense</span></div>
+        <div class="readout" id="ive-out" aria-live="polite"></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

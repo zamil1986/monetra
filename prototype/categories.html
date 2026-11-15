@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Categories · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="categories">
+<div class="main">
+  <div class="page-head">
+    <h1>Categories</h1>
+    <span class="spacer"></span>
+    <div class="seg" data-choice="tab" role="group" aria-label="Category type">
+      <button type="button" data-value="expense" aria-pressed="true">Expense · 10</button>
+      <button type="button" data-value="income" aria-pressed="false">Income · 7</button>
+    </div>
+  </div>
+
+  <main class="page">
+    <div class="split">
+      <div class="stack">
+        <section data-tab="expense" aria-label="Expense categories">
+          <div class="rows" id="cat-expense"></div>
+          <div class="block block-head" style="margin-top:36px"><h2>Archived</h2><span class="small muted">Hidden when recording, kept in history and reports</span></div>
+          <div class="row" style="border-top:0"><span class="glyph plain"><i data-lucide="dumbbell"></i></span><span class="grow"><span class="t">Gym</span><span class="s">Archived 2 Aug 2026 · 14 transactions</span></span><span class="row-actions"><button class="btn quiet" type="button"><i data-lucide="archive-restore"></i>Unarchive</button></span></div>
+        </section>
+        <section data-tab="income" aria-label="Income categories" hidden>
+          <div class="rows" id="cat-income"></div>
+        </section>
+      </div>
+
+      <aside class="side" aria-labelledby="nc-h">
+        <h2 id="nc-h">New category</h2>
+        <form class="form" action="#">
+          <div class="field"><span class="legend" id="c-type">Type</span>
+            <div class="seg wide" data-choice="ctype" role="group" aria-labelledby="c-type" aria-describedby="c-type-h">
+              <button type="button" aria-pressed="true">Expense</button><button type="button" aria-pressed="false">Income</button>
+            </div>
+            <span class="hint" id="c-type-h">The type can't be changed after the category is created.</span></div>
+          <div class="field"><label for="c-name">Name</label><input class="input" id="c-name" placeholder="e.g. Pets" maxlength="40"></div>
+          <div class="field"><span class="legend" id="c-col">Color</span>
+            <div class="swatches" data-choice="color" role="radiogroup" aria-labelledby="c-col">
+              <button type="button" role="radio" aria-checked="false" aria-label="Blue" style="--c:var(--h-blue)"></button>
+              <button type="button" role="radio" aria-checked="true" aria-label="Teal" style="--c:var(--h-teal)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Olive" style="--c:var(--h-olive)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Orange" style="--c:var(--h-orange)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Violet" style="--c:var(--h-violet)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Magenta" style="--c:var(--h-magenta)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Slate" style="--c:var(--h-slate)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Brown" style="--c:var(--h-brown)"></button>
+            </div></div>
+          <div class="field"><span class="legend" id="c-ico">Icon</span>
+            <div class="chips" data-choice="icon" role="radiogroup" aria-labelledby="c-ico">
+              <button type="button" class="chip" role="radio" aria-checked="true" aria-label="Paw"><i data-lucide="paw-print"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Home"><i data-lucide="house"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Coffee"><i data-lucide="coffee"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Plane"><i data-lucide="plane"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Book"><i data-lucide="book-open"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Phone"><i data-lucide="smartphone"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Fuel"><i data-lucide="fuel"></i></button>
+              <button type="button" class="chip" role="radio" aria-checked="false" aria-label="Heart"><i data-lucide="heart"></i></button>
+            </div></div>
+          <button class="btn lg" type="submit">Create category</button>
+          <p class="small muted">A category that has never been used can be deleted. Once it has transactions it can only be archived.</p>
+        </form>
+      </aside>
+    </div>
+  </main>
+</div>
+<script>
+/* Synthetic demo data: name, icon, hue, transactions all time, amount this month */
+const EXP = [['Food','utensils','orange',212,842000],['Transportation','bus','blue',167,318000],['Education','graduation-cap','olive',9,0],['Shopping','shopping-bag','magenta',38,670000],['Entertainment','clapperboard','violet',31,215000],['Healthcare','heart-pulse','teal',12,62000],['Bills','receipt','slate',22,1250000],['Personal Care','scissors','olive',15,45000],['Admin Fee','landmark','brown',19,10000],['Other Expense','ellipsis','slate',0,0]];
+const INC = [['Salary','briefcase','blue',11,7500000],['Allowance','hand-coins','olive',0,0],['Freelance','laptop','teal',6,1000000],['Business','store','orange',0,0],['Investment','trending-up','violet',3,0],['Gift','gift','magenta',2,0],['Other Income','ellipsis','slate',1,0]];
+const rp = n => n.toLocaleString('id-ID');
+const row = ([n, icon, hue, count, amt]) => `<div class="row"><span class="glyph" style="--c:var(--h-${hue})"><i data-lucide="${icon}"></i></span><span class="grow"><span class="t">${n}</span><span class="s">${count ? count + ' transactions' : 'Never used'}</span></span><span class="fig ${amt ? '' : 'neutral'}">${amt ? 'Rp ' + rp(amt) : '–'}</span><span class="row-actions"><button class="icon-btn" type="button" aria-label="Edit ${n}"><i data-lucide="pencil"></i></button>${count ? `<button class="icon-btn" type="button" aria-label="Archive ${n}"><i data-lucide="archive"></i></button>` : `<button class="icon-btn danger" type="button" aria-label="Delete ${n}"><i data-lucide="trash-2"></i></button>`}</span></div>`;
+const head = '<div class="row list-head"><span class="grow">Category</span><span>This month</span><span class="row-actions" aria-hidden="true"></span></div>';
+document.querySelector('#cat-expense').innerHTML = head + EXP.map(row).join('');
+document.querySelector('#cat-income').innerHTML = head + INC.map(row).join('');
+</script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

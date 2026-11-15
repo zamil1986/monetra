@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="reports">
+<div class="main">
+  <div class="page-head">
+    <h1>Reports</h1>
+    <span class="spacer"></span>
+    <div class="seg period" data-choice="period" role="group" aria-label="Period">
+      <button type="button" aria-pressed="false">Today</button>
+      <button type="button" aria-pressed="false"><span class="lg">This </span>week</button>
+      <button type="button" aria-pressed="false"><span class="lg">This </span>month</button>
+      <button type="button" aria-pressed="true"><span class="lg">This </span>year</button>
+      <button type="button" aria-pressed="false">Custom</button>
+    </div>
+  </div>
+
+  <main class="page stack">
+    <section aria-labelledby="sum-h">
+      <div class="block-head"><h2 id="sum-h">Summary</h2><span class="small muted">1 Jan – 14 Nov 2026 · all wallets · transfers not counted</span></div>
+      <dl class="facts">
+        <div><dt>Total income</dt><dd class="fig">Rp 95.250.000</dd></div>
+        <div><dt>Total expense</dt><dd class="fig">Rp 61.312.000</dd></div>
+        <div><dt>Net cash flow</dt><dd class="fig pos">+Rp 33.938.000</dd></div>
+        <div><dt>Highest expense category</dt><dd class="fig">Rp 16.900.000<small>Bills · 28% of all expenses</small></dd></div>
+        <div><dt>Largest transaction</dt><dd class="fig">Rp 2.400.000<small>Eid trip tickets · Transportation · 14 Mar</small></dd></div>
+        <div><dt>Average daily expense</dt><dd class="fig">Rp 192.805<small>Across 318 days</small></dd></div>
+      </dl>
+    </section>
+
+    <div class="cols-2">
+      <section aria-labelledby="ive-h">
+        <div class="block block-head">
+          <h2 id="ive-h">Income vs expense</h2>
+          <div class="seg" data-choice="grain" role="group" aria-label="Group by">
+            <button type="button" aria-pressed="false">Daily</button><button type="button" aria-pressed="false">Weekly</button><button type="button" aria-pressed="true">Monthly</button><button type="button" aria-pressed="false">Yearly</button>
+          </div>
+        </div>
+        <div class="chart" data-readout="#ive-out">
+          <div class="axis" aria-hidden="true"><span>16 M</span><span>12 M</span><span>8 M</span><span>4 M</span><span>0</span></div>
+          <div class="plot" id="ive-plot"></div>
+          <div class="labels" id="ive-labels" aria-hidden="true"></div>
+        </div>
+        <div class="legend-row"><span><i class="dot" style="--c:var(--green)"></i>Income</span><span><i class="dot" style="--c:var(--ink)"></i>Expense</span></div>
+        <div class="readout" id="ive-out" aria-live="polite"></div>
+      </section>
+
+      <section aria-labelledby="brk-h">
+        <div class="block block-head"><h2 id="brk-h">Expense by category</h2><span class="small muted">Share of Rp 61.312.000</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-slate)"></i>Bills</span><span class="bar" style="--p:100;--c:var(--h-slate)"></span><span class="fig">16.900.000</span><span class="pct">28%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-orange)"></i>Food</span><span class="bar" style="--p:94;--c:var(--h-orange)"></span><span class="fig">15.840.000</span><span class="pct">26%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-magenta)"></i>Shopping</span><span class="bar" style="--p:57;--c:var(--h-magenta)"></span><span class="fig">9.620.000</span><span class="pct">16%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-blue)"></i>Transportation</span><span class="bar" style="--p:38;--c:var(--h-blue)"></span><span class="fig">6.450.000</span><span class="pct">11%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-violet)"></i>Entertainment</span><span class="bar" style="--p:26;--c:var(--h-violet)"></span><span class="fig">4.380.000</span><span class="pct">7%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-olive)"></i>Education</span><span class="bar" style="--p:19;--c:var(--h-olive)"></span><span class="fig">3.200.000</span><span class="pct">5%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-teal)"></i>Healthcare</span><span class="bar" style="--p:12;--c:var(--h-teal)"></span><span class="fig">2.100.000</span><span class="pct">3%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--h-brown)"></i>Personal Care</span><span class="bar" style="--p:9;--c:var(--h-brown)"></span><span class="fig">1.520.000</span><span class="pct">2%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--ink-3)"></i>Other Expense</span><span class="bar" style="--p:7;--c:var(--ink-3)"></span><span class="fig">1.160.000</span><span class="pct">2%</span></div>
+        <div class="hbar"><span class="name"><i class="dot" style="--c:var(--ink)"></i>Admin Fee</span><span class="bar" style="--p:1;--c:var(--ink)"></span><span class="fig">142.000</span><span class="pct">&lt;1%</span></div>
+      </section>
+    </div>
+
+    <div class="cols-2">
+      <section aria-labelledby="tr-h">
+        <div class="block block-head"><h2 id="tr-h">Expense trend</h2><span class="small muted">Change from the month before</span></div>
+        <div id="trend"></div>
+      </section>
+
+      <section aria-labelledby="yr-h">
+        <div class="block block-head"><h2 id="yr-h">Red dates in 2026</h2><span class="small muted">Days over the Rp 200.000 daily pace</span></div>
+        <p class="count-line"><span class="fig neg" data-red-count>0</span><span class="muted">of 318 days were red dates. March has the most, around Eid.</span></p>
+        <div class="year" data-year></div>
+        <div class="sheet-key"><span><i style="--c:var(--red)"></i>Red date</span><span><i style="--c:#C9D0DA"></i>Within pace</span><span><i style="--c:var(--panel)"></i>Not yet</span></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script>
+/* Synthetic demo data, in rupiah */
+const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const INC = [7500000,7500000,15000000,8300000,7500000,8700000,7500000,9000000,7500000,8250000,8500000,null];
+const EXP = [5420000,4870000,8960000,5710000,5180000,5100000,5630000,4920000,6310000,5800000,3412000,null];
+const MAX = 16000000, rp = n => n.toLocaleString('id-ID');
+document.querySelector('#ive-plot').innerHTML = M.map((m, i) => INC[i] === null
+  ? '<span class="col" style="cursor:default" aria-hidden="true"></span>'
+  : `<button type="button" class="col" aria-pressed="${i === 10}" data-label="${m} 2026${i === 10 ? ' (to 14 Nov)' : ''}" data-in="${INC[i]}" data-out="${EXP[i]}" aria-label="${m} 2026"><i class="in" style="height:${INC[i] / MAX * 100}%"></i><i class="out" style="height:${EXP[i] / MAX * 100}%"></i></button>`).join('');
+document.querySelector('#ive-labels').innerHTML = M.map(m => `<span>${m}</span>`).join('');
+const peak = Math.max(...EXP.filter(Boolean));
+document.querySelector('#trend').innerHTML = M.slice(0, 11).map((m, i) => {
+  const d = i ? Math.round((EXP[i] / EXP[i - 1] - 1) * 100) : null;
+  const delta = i === 10 ? '14 days' : d === null ? '–' : (d > 0 ? '+' : '−') + Math.abs(d) + '%';
+  return `<div class="hbar"><span class="name">${m}</span><span class="bar" style="--p:${EXP[i] / peak * 100}"></span><span class="fig">${rp(EXP[i])}</span><span class="delta">${delta}</span></div>`;
+}).join('');
+</script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

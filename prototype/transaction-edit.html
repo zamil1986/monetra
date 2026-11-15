@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit transaction · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="transactions">
+<div class="main">
+  <div class="page-head">
+    <a class="back" href="transactions.html"><i data-lucide="chevron-left"></i>Transactions</a>
+    <h1>Edit transaction</h1>
+    <span class="spacer"></span>
+    <button class="btn danger" type="button" data-open="#del"><i data-lucide="trash-2"></i>Delete</button>
+  </div>
+
+  <main class="page">
+    <form class="form narrow" action="transactions.html">
+      <div class="field">
+        <span class="legend" id="type-l">Type</span>
+        <div class="seg wide" data-choice="type" role="group" aria-labelledby="type-l" aria-describedby="type-h">
+          <button type="button" data-value="expense" aria-pressed="true"><i data-lucide="arrow-up-right"></i>Expense</button>
+          <button type="button" data-value="income" aria-pressed="false"><i data-lucide="arrow-down-left"></i>Income</button>
+        </div>
+        <span class="type-lock" id="type-h">An expense can become income, and you pick the category again. It can't become a transfer: delete it and record a transfer instead.</span>
+      </div>
+
+      <div class="field">
+        <label for="amt">Amount</label>
+        <div class="amount-input"><span>Rp</span><input class="fig" id="amt" inputmode="numeric" autocomplete="off" value="24.000"></div>
+      </div>
+
+      <div class="field">
+        <label for="wal">Wallet</label>
+        <select class="input" id="wal"><option selected>Cash · Rp 385.000</option><option>BCA · Rp 6.240.000</option><option>GoPay · Rp 212.500</option><option>Jago Savings · Rp 3.500.000</option><option>OVO · −Rp 15.000</option></select>
+      </div>
+
+      <div class="field" data-for="expense">
+        <span class="legend" id="cat-l">Category</span>
+        <div class="chips" data-choice="cat" role="radiogroup" aria-labelledby="cat-l">
+          <button type="button" class="chip" role="radio" aria-checked="true"><i data-lucide="utensils"></i>Food</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="bus"></i>Transportation</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="shopping-bag"></i>Shopping</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="receipt"></i>Bills</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="clapperboard"></i>Entertainment</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="graduation-cap"></i>Education</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="heart-pulse"></i>Healthcare</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="scissors"></i>Personal Care</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="landmark"></i>Admin Fee</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="ellipsis"></i>Other Expense</button>
+        </div>
+      </div>
+      <div class="field" data-for="income" hidden>
+        <span class="legend" id="cati-l">Category</span>
+        <div class="chips" data-choice="cati" role="radiogroup" aria-labelledby="cati-l" aria-describedby="cati-h">
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="briefcase"></i>Salary</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="hand-coins"></i>Allowance</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="laptop"></i>Freelance</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="store"></i>Business</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="trending-up"></i>Investment</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="gift"></i>Gift</button>
+          <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="ellipsis"></i>Other Income</button>
+        </div>
+        <span class="hint" id="cati-h">Choose an income category to finish the change.</span>
+      </div>
+
+      <div class="form-row">
+        <div class="field"><label for="date">Date</label><input class="input" id="date" type="date" value="2026-11-14" max="2026-11-14"></div>
+        <div class="field"><label for="time">Time</label><input class="input" id="time" type="time" value="12:40"></div>
+      </div>
+
+      <div class="field">
+        <label for="desc">Description <span class="muted" style="font-weight:400">(optional)</span></label>
+        <input class="input" id="desc" value="Lunch at Warteg Bahari" maxlength="120">
+      </div>
+
+      <div class="form-actions sticky-save">
+        <button class="btn lg" type="submit">Save changes</button>
+        <a class="btn quiet lg only-desktop" href="transactions.html">Cancel</a>
+      </div>
+      <p class="meta-line">Recorded Sat 14 Nov 2026, 12:41 on this device. Not edited since.</p>
+    </form>
+  </main>
+</div>
+
+<dialog id="del" aria-labelledby="del-h">
+  <h2 id="del-h">Delete this transaction?</h2>
+  <p class="muted">It disappears from every list, balance and report. This can't be undone.</p>
+  <div class="summary"><span><strong>Lunch at Warteg Bahari</strong><br><span class="small muted">Food · Cash · Sat 14 Nov 12:40</span></span><span class="fig" style="font-size:20px">−Rp 24.000</span></div>
+  <div class="dialog-actions"><button class="btn secondary" type="button" data-close>Keep it</button><a class="btn danger solid" href="transactions.html">Delete transaction</a></div>
+</dialog>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

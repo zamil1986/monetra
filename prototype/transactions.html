@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transactions · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="transactions">
+<div class="main">
+  <div class="page-head">
+    <h1>Transactions</h1>
+    <span class="spacer"></span>
+    <a class="btn only-desktop" href="transaction-new.html"><i data-lucide="plus"></i>Add transaction</a>
+  </div>
+
+  <main class="page">
+    <form class="toolbar" role="search" aria-label="Find transactions" action="#">
+      <div class="field search">
+        <label for="q">Search description</label>
+        <div class="search-wrap"><i data-lucide="search"></i><input class="input" id="q" type="search" placeholder="e.g. groceries"></div>
+      </div>
+      <button class="btn secondary only-mobile" type="button" data-toggle="#filters" aria-controls="filters"><i data-lucide="sliders-horizontal"></i>Filters · 1</button>
+      <div class="filters" id="filters" hidden>
+        <div class="field"><label for="f-type">Type</label><select class="input" id="f-type"><option>All types</option><option>Income</option><option>Expense</option><option>Transfer</option></select></div>
+        <div class="field"><label for="f-cat">Category</label><select class="input" id="f-cat"><option>All categories</option><optgroup label="Expense"><option>Food</option><option>Transportation</option><option>Education</option><option>Shopping</option><option>Entertainment</option><option>Healthcare</option><option>Bills</option><option>Personal Care</option><option>Admin Fee</option><option>Other Expense</option></optgroup><optgroup label="Income"><option>Salary</option><option>Allowance</option><option>Freelance</option><option>Business</option><option>Investment</option><option>Gift</option><option>Other Income</option></optgroup></select></div>
+        <div class="field"><label for="f-wal">Wallet</label><select class="input" id="f-wal"><option>All wallets</option><option>BCA</option><option>Jago Savings</option><option>Cash</option><option>GoPay</option><option>OVO</option><option>Mandiri Payroll (archived)</option></select></div>
+        <div class="field"><label for="f-from">From</label><input class="input" id="f-from" type="date" value="2026-11-01" max="2026-11-14"></div>
+        <div class="field"><label for="f-to">To</label><input class="input" id="f-to" type="date" value="2026-11-14" max="2026-11-14"></div>
+        <div class="field"><label for="f-sort">Sort by</label><select class="input" id="f-sort"><option>Newest first</option><option>Oldest first</option><option>Highest amount</option><option>Lowest amount</option></select></div>
+      </div>
+    </form>
+
+    <div class="applied">
+      <span class="muted">Filters:</span>
+      <button type="button" aria-label="Remove date filter">1–14 Nov 2026<i data-lucide="x"></i></button>
+      <span class="muted" style="margin-left:auto">63 transactions · Income Rp 8.500.000 · Expense Rp 3.412.000</span>
+    </div>
+
+    <table class="tbl only-desktop" id="tx-table">
+      <thead><tr><th>Transaction</th><th>Category</th><th>Wallet</th><th>Type</th><th>Time</th><th class="num">Amount (Rp)</th><th><span class="sr">Actions</span></th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="only-mobile" id="tx-list"></div>
+
+    <div class="pager">
+      <span>1–25 of 63</span>
+      <span><button class="btn secondary" type="button" disabled><i data-lucide="chevron-left"></i>Newer</button> <button class="btn secondary" type="button">Older<i data-lucide="chevron-right"></i></button></span>
+    </div>
+  </main>
+</div>
+
+<dialog id="del" aria-labelledby="del-h">
+  <h2 id="del-h">Delete this transaction?</h2>
+  <p class="muted">It disappears from every list, balance and report. This can't be undone.</p>
+  <div class="summary"><span><strong id="del-title">Lunch at Warteg Bahari</strong><br><span class="small muted" id="del-meta">Food · Cash · Sat 14 Nov 12:40</span></span><span class="fig" id="del-amt" style="font-size:20px">−Rp 24.000</span></div>
+  <div class="dialog-actions"><button class="btn secondary" type="button" data-close>Keep it</button><button class="btn danger solid" type="button" data-close>Delete transaction</button></div>
+</dialog>
+
+<script>
+/* Synthetic demo data. t: e expense, i income, x transfer. */
+const C = {Food:['utensils','orange'],Shopping:['shopping-bag','magenta'],Transportation:['bus','blue'],Entertainment:['clapperboard','violet'],Healthcare:['heart-pulse','teal'],'Personal Care':['scissors','olive'],'Admin Fee':['landmark','brown'],Freelance:['laptop','teal']};
+const DAYS = [
+  ['14','Sat',284000,true,[['12:40','Lunch at Warteg Bahari','Food','Cash','e',24000],['10:15','Weekly groceries','Shopping','BCA','e',260000]]],
+  ['13','Fri',92000,false,[['19:02','Transfer to GoPay','','BCA → GoPay','x',200000],['18:30','KRL and ojek home','Transportation','GoPay','e',32000],['12:10','Nasi padang with the team','Food','Cash','e',60000]]],
+  ['12','Thu',310000,true,[['20:15','Cinema, two tickets','Entertainment','GoPay','e',110000],['13:05','Food','Food','Cash','e',35000],['09:30','Headphones','Shopping','BCA','e',165000]]],
+  ['11','Wed',121000,false,[['19:40','Sate ayam dinner','Food','Cash','e',46000],['15:20','Pharmacy, vitamins','Healthcare','BCA','e',45000],['08:05','Transportation','Transportation','GoPay','e',30000]]],
+  ['10','Tue',47000,false,[['12:30','Food','Food','Cash','e',22000],['07:50','Ojek to campus','Transportation','GoPay','e',25000]]],
+  ['9','Mon',88000,false,[['18:45','Haircut','Personal Care','Cash','e',45000],['16:20','Freelance: logo project','Freelance','BCA','i',1000000],['12:20','Mie ayam','Food','Cash','e',18000],['08:10','Ojek to campus','Transportation','GoPay','e',25000]]],
+  ['8','Sun',265000,true,[['19:30','Dinner with family','Food','BCA','e',185000],['15:10','Board game cafe','Entertainment','GoPay','e',80000],['10:05','Transfer to Cash','','BCA → Cash','x',300000]]],
+  ['7','Sat',410000,true,[['20:00','Concert ticket deposit','Entertainment','BCA','e',110000],['16:40','Work shirt and socks','Shopping','BCA','e',245000],['13:15','Food','Food','Cash','e',54000],['09:21','Top-up fee','Admin Fee','BCA','e',1000],['09:20','Transfer to GoPay','','BCA → GoPay','x',100000]]],
+];
+const rp = n => n.toLocaleString('id-ID');
+const TYPE = {e:['Expense','expense','arrow-up-right','−',''],i:['Income','income','arrow-down-left','+','pos'],x:['Transfer','transfer','arrow-left-right','','neutral']};
+let rows = '', list = '';
+for (const [d, wd, sum, red, items] of DAYS) {
+  const tag = red ? ' <span class="tag over"><i data-lucide="triangle-alert"></i>Red date</span>' : '';
+  rows += `<tr class="day"><td colspan="7"><span class="fig${red ? ' neg' : ''}">${d}</span>${wd}, November · Rp ${rp(sum)} spent${tag}</td></tr>`;
+  list += `<div class="day-head${red ? ' red' : ''}"><span class="fig">${d}</span>${wd}, Nov${red ? ' · red date' : ''}<span class="sum">Rp ${rp(sum)} spent</span></div>`;
+  for (const [time, title, cat, wallet, t, amt] of items) {
+    const [tn, tc, ti, sign, cls] = TYPE[t];
+    const [icon, hue] = C[cat] || ['arrow-left-right', ''];
+    const glyph = cat ? `<span class="glyph" style="--c:var(--h-${hue})"><i data-lucide="${icon}"></i></span>` : `<span class="glyph plain"><i data-lucide="arrow-left-right"></i></span>`;
+    const meta = `${cat || 'Transfer'} · ${wallet} · ${wd} ${d} Nov ${time}`;
+    rows += `<tr><td><span class="title-cell">${glyph}<a href="transaction-edit.html">${title}</a></span></td><td class="sub">${cat || '<span aria-label="No category">–</span>'}</td><td class="sub">${wallet}</td><td><span class="type ${tc}"><i data-lucide="${ti}"></i>${tn}</span></td><td class="sub">${time}</td><td class="num fig ${cls}">${sign}${rp(amt)}</td>` +
+      `<td class="act"><a class="icon-btn" href="transaction-edit.html" aria-label="Edit ${title}"><i data-lucide="pencil"></i></a><button class="icon-btn danger" type="button" data-open="#del" data-title="${title}" data-meta="${meta}" data-amt="${sign}Rp ${rp(amt)}" aria-label="Delete ${title}"><i data-lucide="trash-2"></i></button></td></tr>`;
+    list += `<a class="row" href="transaction-edit.html">${glyph}<span class="grow"><span class="t">${title}</span><span class="s">${cat || 'Transfer'} · ${wallet} · ${time}</span></span><span class="fig ${cls}">${sign}Rp ${rp(amt)}</span></a>`;
+  }
+}
+document.querySelector('#tx-table tbody').innerHTML = rows;
+document.querySelector('#tx-list').innerHTML = list;
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-open="#del"]');
+  if (!b) return;
+  document.querySelector('#del-title').textContent = b.dataset.title;
+  document.querySelector('#del-meta').textContent = b.dataset.meta;
+  document.querySelector('#del-amt').textContent = b.dataset.amt;
+}, true);
+</script>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

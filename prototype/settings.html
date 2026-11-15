@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="settings">
+<div class="main">
+  <div class="page-head"><h1>Settings</h1></div>
+
+  <main class="page">
+    <div class="cols-2">
+      <div class="stack">
+        <section aria-labelledby="pf-h">
+          <div class="block block-head"><h2 id="pf-h">Profile</h2></div>
+          <form class="form" action="#">
+            <div class="field"><label for="s-name">Full name</label><input class="input" id="s-name" value="Dina Maharani" autocomplete="name"></div>
+            <div class="field"><label for="s-email">Email</label><input class="input" id="s-email" type="email" value="dina@example.com" autocomplete="email"></div>
+            <div class="field"><label for="s-tz">Time zone</label>
+              <select class="input" id="s-tz" aria-describedby="s-tz-h"><option selected>Asia/Jakarta (WIB, UTC+7)</option><option>Asia/Makassar (WITA, UTC+8)</option><option>Asia/Jayapura (WIT, UTC+9)</option><option>Asia/Singapore (UTC+8)</option></select>
+              <span class="hint" id="s-tz-h">Decides where each day, week and month begins on every device. Changing it can move transactions near midnight into a different day.</span></div>
+            <div><button class="btn" type="submit">Save profile</button></div>
+          </form>
+        </section>
+
+        <section aria-labelledby="pw-h">
+          <div class="block block-head"><h2 id="pw-h">Password</h2></div>
+          <form class="form" action="#">
+            <div class="field"><label for="p-cur">Current password</label><input class="input" id="p-cur" type="password" autocomplete="current-password"></div>
+            <div class="form-row">
+              <div class="field"><label for="p-new">New password</label><input class="input" id="p-new" type="password" autocomplete="new-password" aria-describedby="p-new-h"><span class="hint" id="p-new-h">At least 8 characters.</span></div>
+              <div class="field"><label for="p-rep">Repeat new password</label><input class="input" id="p-rep" type="password" autocomplete="new-password"></div>
+            </div>
+            <div><button class="btn secondary" type="submit">Change password</button></div>
+          </form>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section aria-labelledby="mg-h">
+          <h2 id="mg-h" style="margin-bottom:12px">Money setup</h2>
+          <nav class="linklist" aria-label="Money setup">
+            <a href="wallets.html"><span class="glyph plain"><i data-lucide="wallet"></i></span><span>Wallets<span class="s">5 active, 1 archived</span></span><i data-lucide="chevron-right"></i></a>
+            <a href="categories.html"><span class="glyph plain"><i data-lucide="tags"></i></span><span>Categories<span class="s">10 expense, 7 income</span></span><i data-lucide="chevron-right"></i></a>
+            <a href="budgets.html"><span class="glyph plain"><i data-lucide="gauge"></i></span><span>Budgets<span class="s">Overall and 5 categories · 1 over</span></span><i data-lucide="chevron-right"></i></a>
+          </nav>
+        </section>
+
+        <section aria-labelledby="ac-h">
+          <div class="block block-head"><h2 id="ac-h">Account</h2></div>
+          <dl class="kv" style="margin-bottom:18px">
+            <dt>Signed in as</dt><dd>dina@example.com</dd>
+            <dt>Account created</dt><dd>2 Aug 2026</dd>
+            <dt>Data</dt><dd>Stored on the server and the same on every device you sign in to.</dd>
+          </dl>
+          <a class="btn secondary" href="login.html"><i data-lucide="log-out"></i>Log out</a>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

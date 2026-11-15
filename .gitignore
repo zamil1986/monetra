@@ -4,6 +4,8 @@ out/
 src/generated/
 .env
 .env*.local
+.claude/
+.impeccable/hook.cache.json
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store

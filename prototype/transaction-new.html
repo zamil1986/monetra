@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add transaction · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="add">
+<div class="main">
+  <div class="page-head">
+    <h1>Add transaction</h1>
+    <span class="spacer"></span>
+    <a class="btn quiet" href="transactions.html">Cancel</a>
+  </div>
+
+  <main class="page">
+    <div class="split">
+      <form class="form" action="transactions.html">
+        <div class="field">
+          <span class="legend" id="type-l">Type</span>
+          <div class="seg wide" data-choice="type" role="group" aria-labelledby="type-l">
+            <button type="button" data-value="expense" aria-pressed="true"><i data-lucide="arrow-up-right"></i>Expense</button>
+            <button type="button" data-value="income" aria-pressed="false"><i data-lucide="arrow-down-left"></i>Income</button>
+            <button type="button" data-value="transfer" aria-pressed="false"><i data-lucide="arrow-left-right"></i>Transfer</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="amt">Amount</label>
+          <div class="amount-input"><span>Rp</span><input class="fig" id="amt" inputmode="numeric" autocomplete="off" value="18.000" aria-describedby="amt-h"></div>
+          <span class="hint" id="amt-h">Whole rupiah, more than 0.</span>
+        </div>
+
+        <div class="field" data-for="expense income">
+          <label for="wal">Wallet</label>
+          <select class="input" id="wal" aria-describedby="wal-h"><option selected>Cash · Rp 385.000</option><option>BCA · Rp 6.240.000</option><option>GoPay · Rp 212.500</option><option>Jago Savings · Rp 3.500.000</option><option>OVO · −Rp 15.000</option></select>
+          <span class="hint" id="wal-h">Preselected: the wallet you used last.</span>
+        </div>
+
+        <div class="form-row" data-for="transfer" hidden>
+          <div class="field"><label for="from">From wallet</label><select class="input" id="from"><option selected>BCA · Rp 6.240.000</option><option>Cash · Rp 385.000</option><option>GoPay · Rp 212.500</option><option>Jago Savings · Rp 3.500.000</option><option>OVO · −Rp 15.000</option></select></div>
+          <div class="field"><label for="to">To wallet</label><select class="input" id="to"><option>Cash · Rp 385.000</option><option selected>GoPay · Rp 212.500</option><option>Jago Savings · Rp 3.500.000</option><option>OVO · −Rp 15.000</option></select></div>
+        </div>
+        <div class="notice info" data-for="transfer" hidden><i data-lucide="info"></i><div>A transfer moves money between your own wallets. It never counts as income or expense. If you paid an admin fee, record it as a separate expense in Admin Fee.</div></div>
+
+        <div class="field" data-for="expense">
+          <span class="legend" id="cat-l">Category</span>
+          <div class="chips" data-choice="cat" role="radiogroup" aria-labelledby="cat-l">
+            <button type="button" class="chip" role="radio" aria-checked="true"><i data-lucide="utensils"></i>Food</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="bus"></i>Transportation</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="shopping-bag"></i>Shopping</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="receipt"></i>Bills</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="clapperboard"></i>Entertainment</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="graduation-cap"></i>Education</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="heart-pulse"></i>Healthcare</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="scissors"></i>Personal Care</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="landmark"></i>Admin Fee</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="ellipsis"></i>Other Expense</button>
+          </div>
+        </div>
+        <div class="field" data-for="income" hidden>
+          <span class="legend" id="cati-l">Category</span>
+          <div class="chips" data-choice="cati" role="radiogroup" aria-labelledby="cati-l">
+            <button type="button" class="chip" role="radio" aria-checked="true"><i data-lucide="briefcase"></i>Salary</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="hand-coins"></i>Allowance</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="laptop"></i>Freelance</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="store"></i>Business</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="trending-up"></i>Investment</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="gift"></i>Gift</button>
+            <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="ellipsis"></i>Other Income</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="form-row">
+            <div class="field"><label for="date">Date</label><input class="input" id="date" type="date" value="2026-11-14" max="2026-11-14"></div>
+            <div class="field"><label for="time">Time</label><input class="input" id="time" type="time" value="15:42"></div>
+          </div>
+          <span class="hint">Set to now. It can't be in the future. Times are in Asia/Jakarta.</span>
+        </div>
+
+        <div class="field">
+          <label for="desc">Description <span class="muted" style="font-weight:400">(optional)</span></label>
+          <input class="input" id="desc" value="Iced coffee" maxlength="120">
+        </div>
+
+        <div class="form-actions sticky-save">
+          <button class="btn lg" type="submit" data-save>Save expense</button>
+          <button class="btn secondary lg only-desktop" type="button">Save and add another</button>
+        </div>
+      </form>
+
+      <aside class="side only-desktop" aria-labelledby="after-h">
+        <h2 id="after-h">After you save</h2>
+        <div class="after" data-for="expense">
+          <div class="row"><span class="grow"><span class="t">Cash</span><span class="s">Wallet balance</span></span><span class="fig">385.000<span class="arrow">→</span>367.000</span></div>
+          <div class="row"><span class="grow"><span class="t">Total balance</span><span class="s">All wallets</span></span><span class="fig">10.322.500<span class="arrow">→</span>10.304.500</span></div>
+          <div class="row"><span class="grow"><span class="t">Today, Sat 14 Nov</span><span class="s">Already a red date</span></span><span class="fig neg">284.000<span class="arrow">→</span>302.000</span></div>
+          <div class="row"><span class="grow"><span class="t">Food budget</span><span class="s">Rp 860.000 of Rp 1.000.000</span></span><span class="tag warn"><i data-lucide="triangle-alert"></i>84% → 86%</span></div>
+        </div>
+        <div class="after" data-for="income" hidden>
+          <div class="row"><span class="grow"><span class="t">Cash</span><span class="s">Wallet balance</span></span><span class="fig">385.000<span class="arrow">→</span>403.000</span></div>
+          <div class="row"><span class="grow"><span class="t">Total balance</span><span class="s">All wallets</span></span><span class="fig">10.322.500<span class="arrow">→</span>10.340.500</span></div>
+          <div class="row"><span class="grow"><span class="t">Income this month</span><span class="s">1–14 Nov</span></span><span class="fig pos">8.500.000<span class="arrow">→</span>8.518.000</span></div>
+          <div class="row"><span class="grow"><span class="t">Budgets</span><span class="s">Income never affects a budget</span></span><span class="tag">No change</span></div>
+        </div>
+        <div class="after" data-for="transfer" hidden>
+          <div class="row"><span class="grow"><span class="t">BCA</span><span class="s">From wallet</span></span><span class="fig">6.240.000<span class="arrow">→</span>6.222.000</span></div>
+          <div class="row"><span class="grow"><span class="t">GoPay</span><span class="s">To wallet</span></span><span class="fig">212.500<span class="arrow">→</span>230.500</span></div>
+          <div class="row"><span class="grow"><span class="t">Total balance</span><span class="s">All wallets</span></span><span class="tag">No change</span></div>
+          <div class="row"><span class="grow"><span class="t">Income, expense, budgets</span><span class="s">A transfer is neither</span></span><span class="tag">No change</span></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screen index · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body>
+<header class="index-band">
+  <div class="index">
+    <span class="wordmark" style="padding:0">MONETRA<b>.</b></span>
+    <h1>Design prototype</h1>
+    <p>Every screen in the PRD as static HTML, laid out for a Mac browser with a sidebar and for a Redmi phone with a bottom bar. Narrow the window below 900px to see the phone layout. All names and figures are sample data.</p>
+  </div>
+</header>
+
+<main class="index stack">
+  <section aria-labelledby="i-auth">
+    <h2 id="i-auth" style="margin-bottom:12px">Getting in</h2>
+    <nav class="screens" aria-label="Sign-in screens">
+      <a href="login.html"><strong>Login</strong><span>Email and password, plus Try demo for reviewers</span><em class="small muted">PRD 3.1</em></a>
+      <a href="register.html"><strong>Register</strong><span>Name, email, password and time zone. No email verification</span><em class="small muted">PRD 3.1</em></a>
+      <a href="forgot-password.html"><strong>Forgot Password</strong><span>Request a reset link by email</span><em class="small muted">PRD 3.1</em></a>
+      <a href="reset-password.html"><strong>Reset Password</strong><span>Set a new password from the link</span><em class="small muted">PRD 3.1</em></a>
+    </nav>
+  </section>
+
+  <section aria-labelledby="i-core">
+    <h2 id="i-core" style="margin-bottom:12px">Recording and reading money</h2>
+    <nav class="screens" aria-label="Core screens">
+      <a href="dashboard.html"><strong>Dashboard</strong><span>Total balance, wallets, period totals, the month sheet, recent transactions</span><em class="small muted">Phase 1</em></a>
+      <a href="transactions.html"><strong>Transactions</strong><span>History with search, combined filters, sorting and paging</span><em class="small muted">Phase 1</em></a>
+      <a href="transaction-new.html"><strong>Add Transaction</strong><span>Expense, Income or Transfer, with a preview of what changes</span><em class="small muted">Phase 1</em></a>
+      <a href="transaction-edit.html"><strong>Edit Transaction</strong><span>Change any field, or delete with confirmation</span><em class="small muted">Phase 1</em></a>
+    </nav>
+  </section>
+
+  <section aria-labelledby="i-setup">
+    <h2 id="i-setup" style="margin-bottom:12px">Setup and insight</h2>
+    <nav class="screens" aria-label="Setup and insight screens">
+      <a href="wallets.html"><strong>Wallets</strong><span>Balances, opening balance, archive at Rp 0 only</span><em class="small muted">Phase 1</em></a>
+      <a href="categories.html"><strong>Categories</strong><span>Expense and income categories with color and icon</span><em class="small muted">Phase 2</em></a>
+      <a href="budgets.html"><strong>Budgets</strong><span>Monthly limits, utilization, warnings at 80% and 100%</span><em class="small muted">Phase 3</em></a>
+      <a href="reports.html"><strong>Reports</strong><span>Summary, income vs expense, breakdown, trend, red dates</span><em class="small muted">Phase 2</em></a>
+      <a href="settings.html"><strong>Settings</strong><span>Profile, time zone, password, log out</span><em class="small muted">Phase 1</em></a>
+      <a href="states.html"><strong>UI states</strong><span>Loading, empty, validation, success, error, offline, dialogs</span><em class="small muted">PRD 4.4</em></a>
+    </nav>
+  </section>
+
+  <section aria-labelledby="i-dir">
+    <div class="block block-head"><h2 id="i-dir">Direction: Wall Calendar</h2></div>
+    <div class="cols-2">
+      <div style="max-width:60ch">
+        <p style="margin-bottom:12px">Monetra borrows from the giveaway wall calendar found in Indonesian homes: a saturated band at the top, heavy condensed numerals, and red dates. Here a red date is a day spent above the daily pace, so the month reads at a glance.</p>
+        <p class="muted">Red is reserved for overspending and negative balances. Expenses are ink with a minus sign, income is green with a plus sign, and transfers stay grey because they are neither. Every amount is set in tabular figures on a shared right edge.</p>
+      </div>
+      <div>
+        <div class="sheet compact" data-sheet data-static></div>
+        <div class="sheet-key"><span><i style="--c:var(--red)"></i>Red date</span><span><i style="--c:var(--yellow)"></i>Today</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="i-col">
+    <div class="block block-head"><h2 id="i-col">Color</h2></div>
+    <div class="tokens">
+      <div class="token"><i style="--c:var(--cobalt)"></i><strong>Cobalt</strong><span>#1B3FAB · shell, primary action</span></div>
+      <div class="token"><i style="--c:var(--paper)"></i><strong>Paper</strong><span>#FBFCFD · ground</span></div>
+      <div class="token"><i style="--c:var(--panel)"></i><strong>Panel</strong><span>#F1F4F8 · side panels</span></div>
+      <div class="token"><i style="--c:var(--ink)"></i><strong>Ink</strong><span>#14161A · text, rules, figures</span></div>
+      <div class="token"><i style="--c:var(--red)"></i><strong>Calendar red</strong><span>#D0261C · over pace, negative</span></div>
+      <div class="token"><i style="--c:var(--yellow)"></i><strong>Today yellow</strong><span>#FFD83A · today, Add</span></div>
+      <div class="token"><i style="--c:var(--green)"></i><strong>Income green</strong><span>#0B7343 · income</span></div>
+      <div class="token"><i style="--c:var(--amber-fill)"></i><strong>Amber</strong><span>#D98A00 · budget from 80%</span></div>
+    </div>
+    <h3 style="margin:24px 0 10px">Wallet and category hues</h3>
+    <div class="tokens">
+      <div class="token"><i style="--c:var(--h-blue)"></i><strong>Blue</strong><span>#2A5BD7</span></div>
+      <div class="token"><i style="--c:var(--h-teal)"></i><strong>Teal</strong><span>#0B8C8C</span></div>
+      <div class="token"><i style="--c:var(--h-olive)"></i><strong>Olive</strong><span>#5E7A12</span></div>
+      <div class="token"><i style="--c:var(--h-orange)"></i><strong>Orange</strong><span>#C95F12</span></div>
+      <div class="token"><i style="--c:var(--h-violet)"></i><strong>Violet</strong><span>#7A3FC4</span></div>
+      <div class="token"><i style="--c:var(--h-magenta)"></i><strong>Magenta</strong><span>#B8296F</span></div>
+      <div class="token"><i style="--c:var(--h-slate)"></i><strong>Slate</strong><span>#48566A</span></div>
+      <div class="token"><i style="--c:var(--h-brown)"></i><strong>Brown</strong><span>#8A5A2B</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="i-type">
+    <div class="block block-head"><h2 id="i-type">Type</h2><span class="small muted">Archivo, one variable family</span></div>
+    <p class="fig" style="font-size:72px;line-height:1"><span class="rp">Rp</span>10.322.500</p>
+    <p class="small muted" style="margin:4px 0 20px">Figures: width 68, weight 800, tabular. Used for every amount and for calendar numerals.</p>
+    <p style="font-size:24px;font-weight:700">Page title, 24 / 700</p>
+    <p style="font-size:18px;font-weight:700;margin-top:8px">Section heading, 18 / 700</p>
+    <p style="margin-top:8px;max-width:62ch">Body, 15 / 400. Labels and help text are 13px. Text never drops below 11.5px, and that size is used only for the amounts inside calendar cells.</p>
+  </section>
+</main>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

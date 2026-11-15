@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wallets · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="wallets">
+<div class="main">
+  <div class="page-head">
+    <h1>Wallets</h1>
+    <span class="spacer"></span>
+    <a class="btn only-mobile" href="#new-wallet"><i data-lucide="plus"></i>New wallet</a>
+  </div>
+
+  <main class="page">
+    <div class="split">
+      <div class="stack">
+        <section aria-labelledby="act-h">
+          <div class="block-head" style="margin-bottom:0"><h2 id="act-h">Total balance</h2><span class="small muted">5 active wallets</span></div>
+          <p class="total fig" style="margin-bottom:18px"><span class="rp">Rp</span>10.322.500</p>
+
+          <div class="rows">
+            <div class="row">
+              <span class="glyph" style="--c:var(--h-blue)"><i data-lucide="landmark"></i></span>
+              <span class="grow"><span class="t">BCA</span><span class="s">Opening balance Rp 2.000.000<span class="only-desktop"> · 60% of total</span></span><span class="bar-share" style="--p:60;--c:var(--h-blue)"></span></span>
+              <span class="fig">Rp 6.240.000</span>
+              <span class="row-actions"><button class="icon-btn" type="button" aria-label="Edit BCA"><i data-lucide="pencil"></i></button><button class="icon-btn" type="button" data-toggle="#refuse-bca" aria-label="Archive BCA"><i data-lucide="archive"></i></button></span>
+            </div>
+            <div class="notice warn" id="refuse-bca" role="alert" tabindex="-1" hidden><i data-lucide="triangle-alert"></i><div><strong>BCA still holds Rp 6.240.000.</strong> A wallet can be archived only when its balance is exactly Rp 0.<div class="actions"><a href="transaction-new.html">Transfer the balance out</a><a href="transaction-new.html">Record it as an expense</a></div></div></div>
+
+            <div class="row">
+              <span class="glyph" style="--c:var(--h-orange)"><i data-lucide="piggy-bank"></i></span>
+              <span class="grow"><span class="t">Jago Savings</span><span class="s">Opening balance Rp 3.000.000<span class="only-desktop"> · 34% of total</span></span><span class="bar-share" style="--p:34;--c:var(--h-orange)"></span></span>
+              <span class="fig">Rp 3.500.000</span>
+              <span class="row-actions"><button class="icon-btn" type="button" aria-label="Edit Jago Savings"><i data-lucide="pencil"></i></button><button class="icon-btn" type="button" data-toggle="#refuse-jago" aria-label="Archive Jago Savings"><i data-lucide="archive"></i></button></span>
+            </div>
+            <div class="notice warn" id="refuse-jago" role="alert" tabindex="-1" hidden><i data-lucide="triangle-alert"></i><div><strong>Jago Savings still holds Rp 3.500.000.</strong> A wallet can be archived only when its balance is exactly Rp 0.<div class="actions"><a href="transaction-new.html">Transfer the balance out</a><a href="transaction-new.html">Record it as an expense</a></div></div></div>
+
+            <div class="row">
+              <span class="glyph" style="--c:var(--h-olive)"><i data-lucide="banknote"></i></span>
+              <span class="grow"><span class="t">Cash</span><span class="s">Opening balance Rp 0<span class="only-desktop"> · 4% of total</span></span><span class="bar-share" style="--p:4;--c:var(--h-olive)"></span></span>
+              <span class="fig">Rp 385.000</span>
+              <span class="row-actions"><button class="icon-btn" type="button" aria-label="Edit Cash"><i data-lucide="pencil"></i></button><button class="icon-btn" type="button" data-toggle="#refuse-cash" aria-label="Archive Cash"><i data-lucide="archive"></i></button></span>
+            </div>
+            <div class="notice warn" id="refuse-cash" role="alert" tabindex="-1" hidden><i data-lucide="triangle-alert"></i><div><strong>Cash still holds Rp 385.000.</strong> A wallet can be archived only when its balance is exactly Rp 0.<div class="actions"><a href="transaction-new.html">Transfer the balance out</a><a href="transaction-new.html">Record it as an expense</a></div></div></div>
+
+            <div class="row">
+              <span class="glyph" style="--c:var(--h-teal)"><i data-lucide="smartphone"></i></span>
+              <span class="grow"><span class="t">GoPay</span><span class="s">Opening balance Rp 50.000<span class="only-desktop"> · 2% of total</span></span><span class="bar-share" style="--p:2;--c:var(--h-teal)"></span></span>
+              <span class="fig">Rp 212.500</span>
+              <span class="row-actions"><button class="icon-btn" type="button" aria-label="Edit GoPay"><i data-lucide="pencil"></i></button><button class="icon-btn" type="button" data-toggle="#refuse-gopay" aria-label="Archive GoPay"><i data-lucide="archive"></i></button></span>
+            </div>
+            <div class="notice warn" id="refuse-gopay" role="alert" tabindex="-1" hidden><i data-lucide="triangle-alert"></i><div><strong>GoPay still holds Rp 212.500.</strong> A wallet can be archived only when its balance is exactly Rp 0.<div class="actions"><a href="transaction-new.html">Transfer the balance out</a><a href="transaction-new.html">Record it as an expense</a></div></div></div>
+
+            <div class="row">
+              <span class="glyph" style="--c:var(--h-violet)"><i data-lucide="smartphone"></i></span>
+              <span class="grow"><span class="t">OVO</span><span class="s"><span class="neg">Below zero.</span> A top-up may be missing.</span></span>
+              <span class="fig neg">−Rp 15.000</span>
+              <span class="row-actions"><button class="icon-btn" type="button" aria-label="Edit OVO"><i data-lucide="pencil"></i></button><button class="icon-btn" type="button" data-toggle="#refuse-ovo" aria-label="Archive OVO"><i data-lucide="archive"></i></button></span>
+            </div>
+            <div class="notice warn" id="refuse-ovo" role="alert" tabindex="-1" hidden><i data-lucide="triangle-alert"></i><div><strong>OVO is at −Rp 15.000.</strong> A wallet can be archived only when its balance is exactly Rp 0.<div class="actions"><a href="transaction-new.html">Record the missing top-up as a transfer</a><a href="#new-wallet">Correct the opening balance</a></div></div></div>
+          </div>
+        </section>
+
+        <section aria-labelledby="arch-h">
+          <div class="block block-head"><h2 id="arch-h">Archived</h2><span class="small muted">Hidden from new transactions, kept in history</span></div>
+          <div class="row" style="border-top:0">
+            <span class="glyph plain"><i data-lucide="landmark"></i></span>
+            <span class="grow"><span class="t">Mandiri Payroll</span><span class="s">Archived 30 Sep 2026 · 41 transactions</span></span>
+            <span class="fig neutral">Rp 0</span>
+            <span class="row-actions"><button class="btn quiet" type="button"><i data-lucide="archive-restore"></i>Unarchive</button></span>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side" id="new-wallet" aria-labelledby="nw-h">
+        <h2 id="nw-h">New wallet</h2>
+        <form class="form" action="#">
+          <div class="field"><label for="w-name">Name</label><input class="input" id="w-name" placeholder="e.g. BCA, Cash, GoPay" maxlength="40"></div>
+          <div class="field"><label for="w-open">Opening balance</label>
+            <div class="search-wrap"><input class="input fig" id="w-open" inputmode="numeric" value="0" style="padding-left:44px;font-size:20px" aria-describedby="w-open-h"><span style="position:absolute;left:12px;top:11px;font-weight:700;color:var(--ink-2)">Rp</span></div>
+            <span class="hint" id="w-open-h">What the wallet held before its first recorded transaction. You can change it later and the balance follows.</span></div>
+          <div class="field"><span class="legend" id="w-col">Color</span>
+            <div class="swatches" data-choice="color" role="radiogroup" aria-labelledby="w-col">
+              <button type="button" role="radio" aria-checked="true" aria-label="Blue" style="--c:var(--h-blue)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Teal" style="--c:var(--h-teal)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Olive" style="--c:var(--h-olive)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Orange" style="--c:var(--h-orange)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Violet" style="--c:var(--h-violet)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Magenta" style="--c:var(--h-magenta)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Slate" style="--c:var(--h-slate)"></button>
+              <button type="button" role="radio" aria-checked="false" aria-label="Brown" style="--c:var(--h-brown)"></button>
+            </div></div>
+          <div class="field"><span class="legend" id="w-ico">Icon</span>
+            <div class="chips" data-choice="icon" role="radiogroup" aria-labelledby="w-ico">
+              <button type="button" class="chip" role="radio" aria-checked="true"><i data-lucide="landmark"></i>Bank</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="banknote"></i>Cash</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="smartphone"></i>E-wallet</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"><i data-lucide="piggy-bank"></i>Savings</button>
+            </div></div>
+          <button class="btn lg" type="submit">Create wallet</button>
+          <p class="small muted">A wallet that has never been used can be deleted. Once it has transactions it can only be archived.</p>
+        </form>
+      </aside>
+    </div>
+  </main>
+</div>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

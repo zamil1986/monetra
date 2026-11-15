@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI states · Monetra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="monetra.css">
+</head>
+<body data-page="states">
+<div class="main">
+  <div class="offline-bar" role="status"><i data-lucide="wifi-off"></i><span><strong>You're offline.</strong> Showing figures from 12:41. Recording needs a connection.</span></div>
+  <div class="page-head">
+    <h1>UI states</h1>
+    <span class="spacer"></span>
+    <a class="btn quiet" href="index.html">All screens</a>
+  </div>
+
+  <main class="page">
+    <p class="muted" style="max-width:68ch;margin-bottom:28px">Every page handles loading, empty, success, error, validation and offline (PRD 4.4). The bar above is the offline state as it appears on any page. The rest are shown one by one below.</p>
+
+    <section class="state" aria-labelledby="st-load">
+      <div><h2 id="st-load">Loading</h2><p>Skeletons hold the layout of what is coming. No spinner in the middle of content.</p></div>
+      <div class="demo">
+        <div class="fullw" aria-busy="true" aria-label="Loading dashboard">
+          <span class="skel" style="width:110px;height:16px"></span>
+          <span class="skel" style="width:min(380px,90%);height:60px;margin-top:10px"></span>
+          <div class="strip" style="margin-top:18px">
+            <div><span class="skel" style="width:60%;height:13px"></span><span class="skel" style="width:85%;height:24px;margin-top:8px"></span></div>
+            <div><span class="skel" style="width:60%;height:13px"></span><span class="skel" style="width:85%;height:24px;margin-top:8px"></span></div>
+            <div><span class="skel" style="width:60%;height:13px"></span><span class="skel" style="width:85%;height:24px;margin-top:8px"></span></div>
+            <div><span class="skel" style="width:60%;height:13px"></span><span class="skel" style="width:85%;height:24px;margin-top:8px"></span></div>
+          </div>
+        </div>
+        <button class="btn loading" type="button" aria-label="Saving">Save expense</button>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-empty">
+      <div><h2 id="st-empty">Empty</h2><p>An empty state says what belongs here and offers the next step.</p></div>
+      <div class="demo">
+        <div class="empty" style="padding:0">
+          <h3>Nothing recorded this month yet</h3>
+          <p>Your wallets hold Rp 0 in total. Record what you spend or receive and this page fills in: totals, the month sheet and your recent transactions.</p>
+          <a class="btn" href="transaction-new.html"><i data-lucide="plus"></i>Add your first transaction</a>
+        </div>
+        <div class="empty" style="padding:0">
+          <h3>No transactions match</h3>
+          <p>Nothing contains "kopi" in Food from GoPay between 1 and 14 Nov. Try a wider date range or fewer filters.</p>
+          <button class="btn secondary" type="button">Clear all filters</button>
+        </div>
+        <div class="notice info fullw"><i data-lucide="info"></i><div><strong>No red dates yet.</strong> Set a monthly budget and the month sheet marks every day you spend above the daily pace.<div class="actions"><a href="budgets.html">Set a budget</a></div></div></div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-val">
+      <div><h2 id="st-val">Validation</h2><p>Shown under the field on blur or on save. The message names the problem and the fix.</p></div>
+      <div class="demo">
+        <div class="form fullw" style="max-width:480px">
+          <div class="field invalid"><label for="v-amt">Amount</label>
+            <div class="amount-input"><span>Rp</span><input class="fig" id="v-amt" value="0" aria-invalid="true" aria-describedby="v-amt-e"></div>
+            <span class="error" id="v-amt-e"><i data-lucide="circle-alert"></i>Enter an amount above Rp 0, in whole rupiah.</span></div>
+          <div class="field invalid"><label for="v-to">To wallet</label>
+            <select class="input" id="v-to" aria-invalid="true" aria-describedby="v-to-e"><option>BCA · Rp 6.240.000</option></select>
+            <span class="error" id="v-to-e"><i data-lucide="circle-alert"></i>Choose a wallet other than BCA. A transfer needs two different wallets.</span></div>
+          <div class="field invalid"><label for="v-time">Time</label>
+            <input class="input" id="v-time" type="time" value="23:30" aria-invalid="true" aria-describedby="v-time-e">
+            <span class="error" id="v-time-e"><i data-lucide="circle-alert"></i>That is later than now (15:42). Transactions can't be in the future.</span></div>
+          <div class="field invalid"><label for="v-email">Email</label>
+            <input class="input" id="v-email" type="email" value="dina@example.com" aria-invalid="true" aria-describedby="v-email-e">
+            <span class="error" id="v-email-e"><i data-lucide="circle-alert"></i>An account already uses this email. Sign in instead, or reset the password.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-ok">
+      <div><h2 id="st-ok">Success</h2><p>A toast confirms the save and states the new balance. It leaves after 5 seconds.</p></div>
+      <div class="demo">
+        <div class="toast" role="status"><i data-lucide="circle-check"></i><span>Expense saved. Cash is now Rp 367.000.</span><a href="transaction-edit.html">View</a></div>
+        <div class="toast" role="status"><i data-lucide="circle-check"></i><span>Transfer saved. Total balance is unchanged.</span></div>
+        <div class="toast" role="status"><i data-lucide="circle-check"></i><span>Transaction deleted.</span></div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-err">
+      <div><h2 id="st-err">Error</h2><p>Says what failed and what to do. What the user typed is never lost.</p></div>
+      <div class="demo">
+        <div class="notice danger fullw" role="alert"><i data-lucide="circle-alert"></i><div><strong>Couldn't load your transactions.</strong> The server didn't answer. Your data is safe.<div class="actions"><a href="#">Try again</a></div></div></div>
+        <div class="notice danger fullw" role="alert"><i data-lucide="circle-alert"></i><div><strong>Not saved.</strong> The connection dropped while saving. Your entry is still in the form, and saving again won't create a duplicate.<div class="actions"><a href="#">Save again</a></div></div></div>
+        <div class="notice danger fullw" role="alert"><i data-lucide="circle-alert"></i><div><strong>Email or password is incorrect.</strong> Check both and try again, or <a href="forgot-password.html">reset your password</a>.</div></div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-off">
+      <div><h2 id="st-off">Offline</h2><p>Cached pages stay readable. Saving is disabled and says why.</p></div>
+      <div class="demo">
+        <div class="offline-bar fullw" style="padding:8px 14px;border-radius:4px"><i data-lucide="wifi-off"></i><span><strong>You're offline.</strong> Showing figures from 12:41. Recording needs a connection.</span></div>
+        <button class="btn lg" type="button" disabled aria-describedby="off-why"><i data-lucide="wifi-off"></i>Save expense</button>
+        <span class="small muted" id="off-why">Reconnect to save. What you typed stays in the form.</span>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-del">
+      <div><h2 id="st-del">Confirm delete</h2><p>The only modal in the app. Deleting is permanent, so it interrupts.</p></div>
+      <div class="demo">
+        <div class="dialog-static">
+          <h2 style="font-size:20px;margin-bottom:8px">Delete this transaction?</h2>
+          <p class="muted">It disappears from every list, balance and report. This can't be undone.</p>
+          <div class="summary" style="margin:14px 0 0;padding:10px 12px;background:var(--panel);border-radius:4px;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center"><span><strong>Lunch at Warteg Bahari</strong><br><span class="small muted">Food · Cash · Sat 14 Nov 12:40</span></span><span class="fig" style="font-size:20px">−Rp 24.000</span></div>
+          <div class="dialog-actions"><button class="btn secondary" type="button">Keep it</button><button class="btn danger solid" type="button">Delete transaction</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-arch">
+      <div><h2 id="st-arch">Archive refused</h2><p>A wallet archives only at exactly Rp 0. The refusal offers both ways to get there.</p></div>
+      <div class="demo">
+        <div class="notice warn fullw" role="alert"><i data-lucide="triangle-alert"></i><div><strong>Cash still holds Rp 50.000.</strong> A wallet can be archived only when its balance is exactly Rp 0.<div class="actions"><a href="transaction-new.html">Transfer the balance out</a><a href="transaction-new.html">Record it as an expense</a></div></div></div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-bud">
+      <div><h2 id="st-bud">Budget warnings</h2><p>Amber from 80%. Red from 100%, where the bar runs past the limit line.</p></div>
+      <div class="demo">
+        <div class="fullw">
+          <div class="budget" style="border-top:2px solid var(--ink)">
+            <div class="budget-top"><span class="grow">Transportation</span><span class="tag">64%</span></div>
+            <div class="meter" style="--p:64;--day:47"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 318.000 of Rp 500.000</span><span>Rp 182.000 left</span></div>
+          </div>
+          <div class="budget">
+            <div class="budget-top"><span class="grow">Food</span><span class="tag warn"><i data-lucide="triangle-alert"></i>84% · close to the limit</span></div>
+            <div class="meter warn" style="--p:84;--day:47"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 842.000 of Rp 1.000.000</span><span>Rp 158.000 left</span></div>
+          </div>
+          <div class="budget">
+            <div class="budget-top"><span class="grow">Shopping</span><span class="tag over"><i data-lucide="triangle-alert"></i>112% · over</span></div>
+            <div class="meter over" style="--p:112;--day:47"><div class="track"></div><div class="fill"></div><div class="pace"></div><div class="limit"></div></div>
+            <div class="budget-bottom"><span>Rp 670.000 of Rp 600.000</span><span class="neg"><strong>Rp 70.000 over</strong></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-neg">
+      <div><h2 id="st-neg">Negative balance</h2><p>Allowed, because records are often incomplete. Red plus a minus sign, never red alone.</p></div>
+      <div class="demo">
+        <div class="strip fullw" style="margin-top:0;max-width:420px">
+          <div><span class="name"><i class="dot" style="--c:var(--h-teal)"></i>GoPay</span><span class="fig">212.500</span></div>
+          <div><span class="name"><i class="dot" style="--c:var(--h-violet)"></i>OVO</span><span class="fig neg">−15.000</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="state" aria-labelledby="st-demo">
+      <div><h2 id="st-demo">Demo account</h2><p>Reviewers enter with one click. The banner sits under the page head until the account expires.</p></div>
+      <div class="demo">
+        <div class="notice info fullw"><i data-lucide="clock"></i><div><strong>Demo account.</strong> Change or delete anything. It expires in 23 h 12 min and its data is then removed.<div class="actions"><a href="register.html">Create a real account</a></div></div></div>
+        <div class="empty" style="padding:0">
+          <h3>This demo has expired</h3>
+          <p>Demo accounts last 24 hours. Start a fresh one, or create an account to keep your records.</p>
+          <span style="display:flex;flex-wrap:wrap;gap:10px"><a class="btn" href="dashboard.html">Start a new demo</a><a class="btn secondary" href="register.html">Create account</a></span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script src="monetra.js"></script>
+</body>
+</html>

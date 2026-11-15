@@ -1,0 +1,81 @@
+# Personal Finance Tracker
+
+Pencatatan keuangan pribadi satu orang: di mana uangnya berada, dari mana datangnya, ke mana perginya, dan batas belanja yang ia tetapkan sendiri.
+
+## Language
+
+### Orang dan akses
+
+**Pengguna**:
+Satu orang yang mencatat keuangannya sendiri. Semua data lain dimiliki tepat satu Pengguna.
+_Avoid_: member, customer
+
+**Akun**:
+Identitas login milik satu Pengguna.
+_Avoid_: memakai "akun" atau "account" untuk tempat uang (itu Dompet)
+
+**Akun demo**:
+Akun sementara berisi data contoh yang dibuat untuk satu pengunjung dan kedaluwarsa setelah 24 jam.
+_Avoid_: guest, akun tamu
+
+### Uang
+
+**Dompet** (Wallet):
+Tempat uang Pengguna berada: tunai, rekening bank, atau e-wallet.
+_Avoid_: account, akun, rekening sebagai istilah umum
+
+**Saldo awal**:
+Jumlah uang di sebuah Dompet sebelum Transaksi pertamanya dicatat.
+_Avoid_: modal, initial deposit
+
+**Saldo**:
+Posisi uang terkini di satu Dompet: Saldo awal ditambah semua yang masuk, dikurangi semua yang keluar.
+_Avoid_: saldo per periode, saldo akhir bulan
+
+**Total Balance**:
+Jumlah Saldo semua Dompet aktif. Selalu posisi terkini, tidak bergantung pada Periode.
+_Avoid_: net total, kekayaan bersih
+
+### Pergerakan uang
+
+**Transaksi**:
+Satu catatan pergerakan uang. Selalu salah satu dari tiga tipe: Income, Expense, atau Transfer.
+_Avoid_: entry, mutasi
+
+**Income**:
+Uang yang masuk ke satu Dompet dari luar milik Pengguna.
+_Avoid_: menyebut uang masuk dari Transfer sebagai income
+
+**Expense**:
+Uang yang keluar dari satu Dompet ke luar milik Pengguna.
+_Avoid_: menyebut top-up atau tarik tunai sebagai expense
+
+**Transfer**:
+Perpindahan uang antara dua Dompet milik Pengguna yang sama. Bukan Income dan bukan Expense.
+_Avoid_: mutasi, top-up, pemindahan
+
+**Waktu transaksi**:
+Momen sebuah Transaksi terjadi (tanggal dan jam), bukan momen ia dicatat.
+_Avoid_: transaction date, tanggal input
+
+**Kategori**:
+Label jenis sebuah Income atau Expense. Setiap Kategori hanya berlaku untuk salah satu dari keduanya; Transfer tidak punya Kategori.
+_Avoid_: tag, label
+
+### Ringkasan dan batas
+
+**Periode**:
+Rentang waktu yang dipakai untuk meringkas Transaksi, dengan batas hari menurut zona waktu di profil Pengguna.
+_Avoid_: range, filter tanggal
+
+**Net Cash Flow**:
+Total Income dikurangi total Expense dalam satu Periode. Transfer tidak ikut dihitung.
+_Avoid_: profit, selisih saldo
+
+**Budget**:
+Batas Expense untuk satu bulan kalender, bagi satu Kategori atau bagi seluruh Expense, yang berulang tiap bulan sampai diubah.
+_Avoid_: anggaran sekali pakai, target
+
+**Arsip**:
+Keadaan Dompet atau Kategori yang tidak lagi bisa dipilih untuk Transaksi baru tetapi tetap tampil di riwayat dan laporan.
+_Avoid_: hapus (untuk yang sudah pernah dipakai), nonaktif
