@@ -1,13 +1,14 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Plus, ReceiptText, Wallet, WifiOff } from "lucide-react";
+import { House, LayoutDashboard, Plus, ReceiptText, Wallet, WifiOff } from "lucide-react";
 import type { ReactNode } from "react";
 import { useOnline } from "@/lib/use-online";
 import { buttonClass, cx } from "./ui";
 
-/** Only screens that exist are linked; Dashboard, Reports and the rest arrive with their features. */
+/** Only screens that exist are linked; Categories, Reports and the rest arrive with their features. */
 const NAV = [
+  { href: "/", label: "Dashboard", Icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", Icon: ReceiptText },
   { href: "/wallets", label: "Wallets", Icon: Wallet },
 ];
@@ -25,7 +26,7 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
     <>
       {/* Desktop: cobalt rail on the left */}
       <aside className="fixed inset-y-0 left-0 hidden w-[232px] flex-col gap-0.5 overflow-y-auto bg-cobalt px-3.5 pt-[22px] pb-4 text-white md:flex [&_:focus-visible]:outline-yellow">
-        <Link className={cx(wordmark, "px-2.5 pb-[22px] text-[28px]")} href="/transactions" aria-label="Monetra home">MONETRA<b>.</b></Link>
+        <Link className={cx(wordmark, "px-2.5 pb-[22px] text-[28px]")} href="/" aria-label="Monetra home">MONETRA<b>.</b></Link>
         <nav aria-label="Main" className="flex flex-col gap-0.5">
           {NAV.map(({ href, label, Icon }) => (
             <Link
@@ -58,7 +59,7 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
       <div className="min-w-0 max-md:pb-[84px] md:ml-[232px]">
         {/* Phone: cobalt band on top */}
         <header className="sticky top-0 z-20 flex h-[52px] items-center justify-between bg-cobalt px-4 text-white md:hidden [&_:focus-visible]:outline-yellow">
-          <Link className={cx(wordmark, "text-2xl")} href="/transactions" aria-label="Monetra home">MONETRA<b>.</b></Link>
+          <Link className={cx(wordmark, "text-2xl")} href="/" aria-label="Monetra home">MONETRA<b>.</b></Link>
           <span className="inline-grid size-8 place-items-center rounded-full bg-white text-meta font-bold text-cobalt" aria-label={user?.name}>{initials}</span>
         </header>
         {!online && (
@@ -75,7 +76,7 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
         className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t-2 border-ink bg-paper px-1 pt-1.5 pb-[calc(6px+env(safe-area-inset-bottom))] md:hidden"
       >
         {[
-          { href: "/wallets", label: "Wallets", Icon: House },
+          { href: "/", label: "Home", Icon: House },
           { href: "/transactions/new", label: "Add", Icon: Plus, add: true },
           { href: "/transactions", label: "Transactions", Icon: ReceiptText },
         ].map(({ href, label, Icon, add }) => (

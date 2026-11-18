@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PERIOD_KINDS } from "@/domain/period";
 
 /** Whole rupiah in JSON: an integer, never a string or a fraction (ADR 0002). */
 const rupiah = z.number("Enter a whole rupiah amount.").int("Enter a whole rupiah amount, with no fractions.").refine(Number.isSafeInteger, "That amount is too large.");
@@ -48,4 +49,10 @@ export const transactionQuerySchema = z.object({
   sort: z.enum(["newest", "oldest", "amount_desc", "amount_asc"]).optional(),
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().optional(),
+});
+
+export const dashboardQuerySchema = z.object({
+  period: z.enum(PERIOD_KINDS).default("month"),
+  from: z.string().optional(),
+  to: z.string().optional(),
 });
