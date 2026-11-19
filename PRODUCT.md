@@ -4,11 +4,11 @@
 
 ## Platform
 
-web
+web, android
 
 ## Stack
 
-Next.js (TypeScript) + Tailwind CSS, PWA, Prisma + PostgreSQL (Neon), deployed on Vercel. Source: `finance_tracker_prd.md` section 6. No code exists yet; the first design deliverable is a static HTML prototype of every screen, chosen by the user on 2026-11-14.
+Next.js (TypeScript) + Tailwind CSS, installable web app (manifest only), Prisma + PostgreSQL (Neon), deployed on Vercel. Android app: Flutter in `mobile/`, offline-first with a local SQLite copy synced to the Next.js API (ADR 0005), distributed as an APK from GitHub Releases. Source: `finance_tracker_prd.md` section 6. No code exists yet; the first design deliverable is a static HTML prototype of every screen, chosen by the user on 2026-11-14.
 
 ## Users
 
@@ -28,7 +28,8 @@ Money lives in Wallets, and moving it between them is a Transfer, never Income o
 - Recording happens on the phone, right after spending, often standing or in transit. Reviewing happens on the Mac.
 - Rupiah only, whole numbers, no decimals (ADR 0002). Amounts are large: Rp25.000 is a snack, Rp2.000.000 is a wallet balance.
 - Typical wallets: Cash, BCA, GoPay and similar e-wallets.
-- Online-only for writes in the MVP. Offline shows cached pages, an offline status, and disables saving.
+- The web app is online-only: offline shows a banner and disables every write.
+- The Android app (Flutter, user decision 2026-11-19, ADR 0005) is offline-first: it records and computes figures locally, then syncs when online. It is an APK from GitHub Releases, not the Play Store. iPhone is postponed (native distribution needs a paid Apple account). No push notifications: budget warnings appear only inside the app.
 
 ## Capabilities and Constraints
 
