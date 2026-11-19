@@ -3,6 +3,7 @@ import { Archivo } from "next/font/google";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
+import { demoTimeLeft } from "@/domain/presentation";
 import { currentUser } from "@/server/page-session";
 import "./globals.css";
 
@@ -30,7 +31,14 @@ export default async function RootLayout({ children, modal }: { children: ReactN
   return (
     <html lang="en" className={archivo.variable}>
       <body>
-        <AppShell user={user && { name: user.name, email: user.email }} defaultOpen={sidebarOpen} modal={modal}>{children}</AppShell>
+        <AppShell
+          user={user && {
+            name: user.name,
+            email: user.email,
+            // An Akun demo shows how long it has left instead of its throwaway address.
+            demo: user.isDemo && user.demoExpiresAt ? demoTimeLeft(user.demoExpiresAt) : null,
+          }}
+          defaultOpen={sidebarOpen} modal={modal}>{children}</AppShell>
       </body>
     </html>
   );

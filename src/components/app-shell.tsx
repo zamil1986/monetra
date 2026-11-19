@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Plus, ReceiptText, Tags, Wallet, WifiOff } from "lucide-react";
+import { House, Plus, ReceiptText, Settings, Tags, Wallet, WifiOff } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import {
   Sidebar,
@@ -20,12 +20,13 @@ import { SignOutButton } from "./sign-out-button";
 import { Tabbar } from "./tabbar";
 import { buttonClass, cx } from "./ui";
 
-/** Only screens that exist are linked; Reports, Budgets and the rest arrive with their features. */
+/** Only screens that exist are linked; Reports and Budgets arrive with their features. */
 const NAV = [
   { href: "/dashboard", label: "Dashboard", Icon: House },
   { href: "/transactions", label: "Transactions", Icon: ReceiptText },
   { href: "/wallets", label: "Wallets", Icon: Wallet },
   { href: "/categories", label: "Categories", Icon: Tags },
+  { href: "/settings", label: "Settings", Icon: Settings },
 ];
 
 /** Sign-in screens draw their own full-page layout, without the rail and tab bar. */
@@ -42,7 +43,8 @@ export function AppShell({
   modal,
   children,
 }: {
-  user: { name: string; email: string } | null;
+  /** `demo` is how long an Akun demo has left ("expires in 23h"), shown instead of its throwaway email. */
+  user: { name: string; email: string; demo: string | null } | null;
   defaultOpen?: boolean;
   /** The @modal slot: Add transaction opened over the current screen. */
   modal?: ReactNode;
@@ -111,10 +113,17 @@ export function AppShell({
           </SidebarContent>
 
           {user && (
-            <SidebarFooter className={cx("mx-3.5 mb-4 border-t border-cobalt-line px-2.5 pt-3.5 text-meta text-on-cobalt", hideInRail)}>
-              <div>
-                <strong className="block text-sm font-semibold text-white">{user.name}</strong>
-                {user.email}
+            <SidebarFooter className={cx("mx-3.5 mb-4 min-w-0 border-t border-cobalt-line px-2.5 pt-3.5 text-meta text-on-cobalt", hideInRail)}>
+              <div className="min-w-0">
+                <strong className="block truncate text-sm font-semibold text-white">{user.name}</strong>
+                {user.demo ? (
+                  <>
+                    <span className="block">Demo account</span>
+                    <span className="block first-letter:uppercase">{user.demo}</span>
+                  </>
+                ) : (
+                  <span className="block truncate" title={user.email}>{user.email}</span>
+                )}
               </div>
               <SignOutButton className="mt-2 text-on-cobalt underline hover:text-white" />
             </SidebarFooter>
@@ -127,7 +136,14 @@ export function AppShell({
           {/* Installed on iPhone the status bar is translucent, so the band grows under it by the notch height. */}
           <header className="sticky top-0 z-20 flex h-[calc(52px+env(safe-area-inset-top))] items-center justify-between bg-cobalt px-4 pt-[env(safe-area-inset-top)] text-white md:hidden [&_:focus-visible]:outline-yellow">
             <Link className={cx(wordmark, "text-2xl")} href="/dashboard" aria-label="Monetra home">MONETRA<b>.</b></Link>
-            <span className="inline-grid size-8 place-items-center rounded-full bg-white text-meta font-bold text-cobalt" aria-label={user?.name}>{initials}</span>
+            <Link
+              className="inline-grid size-10 place-items-center rounded-full no-underline"
+              href="/settings"
+              aria-label="Settings"
+              aria-current={current("/settings")}
+            >
+              <span className="inline-grid size-8 place-items-center rounded-full bg-white text-meta font-bold text-cobalt" aria-hidden>{initials}</span>
+            </Link>
           </header>
           {!online && (
             <div className="flex items-center gap-2.5 bg-ink px-4 py-2 text-sm text-white md:px-8" role="status">
@@ -142,8 +158,11 @@ export function AppShell({
         <Tabbar
           items={[
             { href: "/dashboard", label: "Home", Icon: House, active: !!current("/dashboard") },
-            { href: "/transactions/new", label: "Add", Icon: Plus, primary: true, ariaLabel: "Add transaction" },
             { href: "/transactions", label: "Transactions", Icon: ReceiptText, active: !!current("/transactions") },
+            { href: "/transactions/new", label: "Add", Icon: Plus, primary: true, ariaLabel: "Add transaction" },
+            // Wallets holds this slot until Reports exists; then it moves into Settings (PRD 4.3).
+            { href: "/wallets", label: "Wallets", Icon: Wallet, active: !!current("/wallets") },
+            { href: "/settings", label: "Settings", Icon: Settings, active: !!current("/settings") },
           ]}
         />
       </SidebarProvider>

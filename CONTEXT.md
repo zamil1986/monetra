@@ -71,7 +71,7 @@ Label jenis sebuah Income atau Expense. Setiap Kategori hanya berlaku untuk sala
 _Avoid_: tag, label
 
 **Kategori default**:
-Kategori yang disalin ke setiap Akun baru. Sesudah disalin, ia milik Pengguna dan sama persis dengan Kategori buatan Pengguna sendiri.
+Kategori yang disalin ke setiap Akun baru. Sesudah disalin, ia milik Pengguna dan sama persis dengan Kategori buatan Pengguna sendiri. Namanya sengaja berbahasa Indonesia (Makanan, Gaji), begitu juga Dompet pertama (Tunai): nama adalah data milik Pengguna, sedangkan teks antarmuka berbahasa Inggris.
 _Avoid_: kategori sistem, kategori bawaan yang terkunci
 
 ### Ringkasan dan batas

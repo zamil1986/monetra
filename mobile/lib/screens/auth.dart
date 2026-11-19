@@ -146,7 +146,7 @@ class RegisterScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => AuthScaffold(
         title: 'Create your account',
-        lead: 'You start with a Tunai wallet and the usual categories.',
+        lead: 'You start with a cash wallet and the usual categories.',
         children: [
           _AuthForm(
             submitLabel: 'Create account',

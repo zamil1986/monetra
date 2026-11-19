@@ -56,7 +56,7 @@ export function Filters({ values, wallets, categories }: { values: Values; walle
             <option value="">All types</option><option value="INCOME">Income</option><option value="EXPENSE">Expense</option><option value="TRANSFER">Transfer</option>
           </select>
         </Field>
-        <Field label="Category" htmlFor="f-cat" className={item}>
+        <Field label="Category" htmlFor="f-cat" className={cx(item, "md:flex-[1_1_160px]")}>
           <select id="f-cat" {...select("categoryId")}>
             <option value="">All categories</option>
             {["EXPENSE", "INCOME"].map((type) => (
