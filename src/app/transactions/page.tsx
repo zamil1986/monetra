@@ -7,7 +7,8 @@ import { TYPE_META, TypeTag, signedAmount } from "@/components/transaction-type"
 import { Notice, Page, PageHead, buttonClass, cx, h1, onlyDesktop, onlyMobile, rowFig, rowSub, rowTitle, spacer } from "@/components/ui";
 import { instantToLocal } from "@/domain/local-time";
 import { formatRupiah } from "@/domain/money";
-import { dayMonth, monthLong, monthShort, weekday } from "@/lib/dates";
+import { daySummary } from "@/domain/presentation";
+import { dayMonth, monthShort, weekday } from "@/lib/dates";
 import { listCategories } from "@/server/categories";
 import { currentUser } from "@/server/page-session";
 import { transactionQuerySchema } from "@/server/schemas";
@@ -23,6 +24,8 @@ type Row = TransactionView & { date: string; time: string; walletLabel: string }
 
 const th = "whitespace-nowrap border-b border-ink py-2 pr-3 text-left text-meta font-semibold text-ink-2";
 const td = "border-b border-line py-[11px] pr-3 align-middle";
+/** Edit and delete wait for the pointer or keyboard focus on the row; touch screens always show them. */
+const rowActions = "transition-opacity duration-150 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100";
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[]>> }) {
   const user = await currentUser();
@@ -42,7 +45,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     <PageHead>
       <h1 className={h1}>Transactions</h1>
       <span className={spacer} />
-      <Link className={buttonClass("primary", "md", onlyDesktop)} href="/transactions/new"><Plus />Add transaction</Link>
+      <Link className={buttonClass("yellow", "md", onlyDesktop)} href="/transactions/new"><Plus />Add transaction</Link>
     </PageHead>
   );
   const filterBar = (
@@ -71,7 +74,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
     walletLabel: t.type === "TRANSFER" ? `${t.walletName} → ${t.toWalletName}` : t.walletName,
   }));
   const byDay = !filters.sort || filters.sort === "newest" || filters.sort === "oldest";
-  const groups = byDay ? groupByDay(rows) : [{ date: null, spent: 0, rows }];
+  const groups = byDay ? groupByDay(rows) : [{ date: null, spent: 0, received: 0, rows }];
   const first = (result.page - 1) * result.pageSize + 1;
   const last = first + rows.length - 1;
   const filtered = Object.keys(raw).length > 0;
@@ -111,13 +114,13 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                   g.date && (
                     <tr key={`d-${g.date}`}>
                       <td colSpan={7} className="border-b border-line bg-panel px-2.5 py-1.5 text-meta font-semibold">
-                        <span className="fig mr-2 align-[-2px] text-xl">{Number(g.date.slice(8))}</span>
-                        {weekday(g.date)}, {monthLong(g.date)} · {formatRupiah(g.spent)} spent
+                        <DayLabel date={g.date} />
+                        {daySummary(g) && <span className="text-ink-2"> · {daySummary(g)}</span>}
                       </td>
                     </tr>
                   ),
                   ...g.rows.map((t) => (
-                    <tr key={t.id} className="hover:[&>td]:bg-panel">
+                    <tr key={t.id} className="group hover:[&>td]:bg-panel">
                       <td className={td}>
                         <span className="flex min-w-0 items-center gap-2.5">
                           <Glyph Icon={categoryIcon(t.categoryIcon)} color={t.categoryColor} />
@@ -131,7 +134,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       <td className={cx(td, "fig whitespace-nowrap pr-0 text-right text-[17px]", TYPE_META[t.type].amount)}>
                         {TYPE_META[t.type].sign}{t.amount.toLocaleString("id-ID")}
                       </td>
-                      <td className={cx(td, "w-[1%] whitespace-nowrap pr-0 text-right")}>
+                      <td className={cx(td, "w-[1%] whitespace-nowrap pr-0 text-right", rowActions)}>
                         <DeleteTransactionButton
                           id={t.id}
                           title={t.title}
@@ -150,9 +153,8 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                 <div key={g.date ?? "all"}>
                   {g.date && (
                     <div className="flex items-baseline gap-2 border-b border-ink pt-3.5 pb-1.5 text-meta font-semibold text-ink-2">
-                      <span className="fig text-[26px] leading-none text-ink">{Number(g.date.slice(8))}</span>
-                      {weekday(g.date)}, {monthShort(g.date)}
-                      <span className="ml-auto">{formatRupiah(g.spent)} spent</span>
+                      <span className="text-ink"><DayLabel date={g.date} big /></span>
+                      <span className="ml-auto">{daySummary(g)}</span>
                     </div>
                   )}
                   {g.rows.map((t) => (
@@ -189,13 +191,25 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
   );
 }
 
+/** "Thu 19 Nov", with the day number in the calendar numeral voice. */
+function DayLabel({ date, big = false }: { date: string; big?: boolean }) {
+  return (
+    <>
+      {weekday(date)}{" "}
+      <span className={cx("fig align-[-2px] text-ink", big ? "text-[26px] leading-none" : "text-xl")}>{Number(date.slice(8))}</span>{" "}
+      {monthShort(date)}
+    </>
+  );
+}
+
 function groupByDay(rows: Row[]) {
-  const groups: { date: string; spent: number; rows: Row[] }[] = [];
+  const groups: { date: string; spent: number; received: number; rows: Row[] }[] = [];
   for (const row of rows) {
     let g = groups.at(-1);
-    if (!g || g.date !== row.date) groups.push((g = { date: row.date, spent: 0, rows: [] }));
+    if (!g || g.date !== row.date) groups.push((g = { date: row.date, spent: 0, received: 0, rows: [] }));
     g.rows.push(row);
     if (row.type === "EXPENSE") g.spent += row.amount;
+    if (row.type === "INCOME") g.received += row.amount;
   }
   return groups;
 }

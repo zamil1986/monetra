@@ -103,7 +103,7 @@ export function Field(props: {
 
 export function chipClass(className?: string) {
   return cx(
-    "inline-flex min-h-10 cursor-pointer items-center gap-2 rounded border border-field bg-white px-3 py-[7px] text-sm font-medium",
+    "inline-flex min-h-10 cursor-pointer items-center gap-2 rounded border border-field bg-white px-3 py-[7px] text-sm font-medium text-ink",
     "transition-[background-color,border-color] duration-150 ease-out-expo hover:border-ink [&_svg]:size-4!",
     "aria-checked:border-ink aria-checked:bg-ink aria-checked:text-white aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white",
     className,
