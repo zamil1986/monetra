@@ -1,0 +1,66 @@
+# Builds the Android APK and publishes it on GitHub Releases, where /download and the in-app
+# update check find it (ADR 0005). Release by pushing a tag: git tag v0.1.0 && git push origin v0.1.0
+name: Android release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check release settings
+        env:
+          KEYSTORE: ${{ secrets.MONETRA_KEYSTORE_BASE64 }}
+          API_URL: ${{ vars.MONETRA_API_URL }}
+        run: |
+          # Without the same key every time, Android won't install an update over the last version.
+          [ -n "$KEYSTORE" ] || { echo "::error::Secret MONETRA_KEYSTORE_BASE64 is missing"; exit 1; }
+          case "$API_URL" in https://*) ;; *) echo "::error::Variable MONETRA_API_URL must be the https URL of the web app"; exit 1;; esac
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze
+      # Includes the shared fixtures that the server's tests also run (shared/fixtures).
+      - run: flutter test
+
+      - name: Build signed APK
+        env:
+          KEYSTORE: ${{ secrets.MONETRA_KEYSTORE_BASE64 }}
+          MONETRA_KEYSTORE_PASSWORD: ${{ secrets.MONETRA_KEYSTORE_PASSWORD }}
+          MONETRA_KEY_ALIAS: ${{ secrets.MONETRA_KEY_ALIAS }}
+          MONETRA_KEY_PASSWORD: ${{ secrets.MONETRA_KEY_PASSWORD }}
+          API_URL: ${{ vars.MONETRA_API_URL }}
+        run: |
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
+          export MONETRA_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
+          VERSION="${GITHUB_REF_NAME#v}"
+          flutter build apk --release \
+            --build-name="$VERSION" --build-number="${{ github.run_number }}" \
+            --dart-define=API_URL="$API_URL"
+          cp build/app/outputs/flutter-apk/app-release.apk monetra.apk
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: mobile/monetra.apk
+          generate_release_notes: true
