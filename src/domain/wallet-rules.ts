@@ -1,10 +1,10 @@
 import type { DomainError } from "./errors";
 import { formatRupiah } from "./money";
+import { type Color, isColor } from "./palette";
 import { err, ok, type Result } from "./result";
 
-export const WALLET_COLORS = ["blue", "teal", "olive", "orange", "violet", "magenta", "slate", "brown"] as const;
 export const WALLET_ICONS = ["bank", "cash", "ewallet", "savings"] as const;
-export type WalletColor = (typeof WALLET_COLORS)[number];
+export type WalletColor = Color;
 export type WalletIcon = (typeof WALLET_ICONS)[number];
 
 export type WalletInput = { name: string; openingBalance: number; color: string; icon: string };
@@ -21,7 +21,7 @@ export function validateWalletInput(input: WalletInput): Result<ValidWalletInput
   if (!Number.isSafeInteger(input.openingBalance)) {
     return invalid("openingBalance", "The opening balance is a whole rupiah amount.");
   }
-  if (!(WALLET_COLORS as readonly string[]).includes(input.color)) return invalid("color", "Pick one of the colors.");
+  if (!isColor(input.color)) return invalid("color", "Pick one of the colors.");
   if (!(WALLET_ICONS as readonly string[]).includes(input.icon)) return invalid("icon", "Pick one of the icons.");
   return ok({ name, openingBalance: input.openingBalance, color: input.color as WalletColor, icon: input.icon as WalletIcon });
 }
@@ -36,7 +36,7 @@ export function checkArchive(wallet: { name: string; balance: number }): Result<
   });
 }
 
-/** PRD 3.3 rule 6: a Dompet that was ever used is archived, never deleted. */
+/** PRD 3.3 rule 6: a Dompet with Transaksi is archived, never deleted. */
 export function checkDelete(wallet: { transactionCount: number }): Result<void, DomainError> {
   if (wallet.transactionCount === 0) return ok(undefined);
   return err({

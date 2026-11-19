@@ -9,7 +9,8 @@ import {
   noticeActions, onlyDesktop, onlyMobile, rowClass, rowFig, rowSub, rowTitle, rowsClass, sidePanel, spacer, splitClass,
 } from "@/components/ui";
 import { formatRupiah, parseRupiah } from "@/domain/money";
-import { WALLET_COLORS, type WalletColor, type WalletIcon } from "@/domain/wallet-rules";
+import { COLORS } from "@/domain/palette";
+import type { WalletColor, WalletIcon } from "@/domain/wallet-rules";
 import { api, ApiError } from "@/lib/api";
 import { longDate } from "@/lib/dates";
 import { useOnline } from "@/lib/use-online";
@@ -212,7 +213,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
         </Field>
         <Field label="Color" legendId="w-col">
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="w-col">
-            {WALLET_COLORS.map((c) => (
+            {COLORS.map((c) => (
               <button
                 key={c} type="button" role="radio" aria-checked={color === c} aria-label={c[0]!.toUpperCase() + c.slice(1)}
                 className="size-8 cursor-pointer rounded border-2 border-white bg-(--c) outline-1 outline-line aria-checked:outline-2 aria-checked:outline-ink"
@@ -236,7 +237,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
         {wallet ? (
           <Button variant="quiet" onClick={onCancel}>Cancel</Button>
         ) : (
-          <p className="text-meta text-ink-2">A wallet that has never been used can be deleted. Once it has transactions it can only be archived.</p>
+          <p className="text-meta text-ink-2">A wallet with no transactions can be deleted. Once it has transactions it can only be archived.</p>
         )}
       </form>
     </aside>

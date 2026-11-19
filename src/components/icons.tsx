@@ -1,17 +1,23 @@
 import {
-  Banknote, BriefcaseBusiness, Bus, Clapperboard, Ellipsis, Gift, GraduationCap, HandCoins, HeartPulse,
-  Landmark, Laptop, PiggyBank, Receipt, Scissors, ShoppingBag, Smartphone, Store, TrendingUp, Utensils,
-  ArrowLeftRight, type LucideIcon,
+  ArrowLeftRight, Baby, Banknote, BookOpen, BriefcaseBusiness, Bus, Car, Clapperboard, Coffee, Coins, Dog,
+  Dumbbell, Ellipsis, Fuel, Gamepad2, Gift, GraduationCap, HandCoins, Heart, HeartPulse, House, Landmark, Laptop,
+  Music, PiggyBank, Pill, Plane, Receipt, Scissors, Shirt, ShoppingBag, ShoppingCart, Smartphone, Store,
+  TrendingUp, Utensils, Wallet, Wifi, Wrench, Zap, type LucideIcon,
 } from "lucide-react";
+import type { CategoryIcon } from "@/domain/category-rules";
 import { cx } from "./ui";
 
-/** Kategori icons are stored as lucide names; only the ones in use need mapping. */
-const CATEGORY_ICONS: Record<string, LucideIcon> = {
+/** Every icon a Kategori may use (CATEGORY_ICONS), keyed by its stored lucide name. */
+export const CATEGORY_ICON_COMPONENTS: Record<CategoryIcon, LucideIcon> = {
   briefcase: BriefcaseBusiness, "hand-coins": HandCoins, laptop: Laptop, store: Store, "trending-up": TrendingUp,
-  gift: Gift, ellipsis: Ellipsis, utensils: Utensils, bus: Bus, "graduation-cap": GraduationCap,
-  "shopping-bag": ShoppingBag, clapperboard: Clapperboard, "heart-pulse": HeartPulse, receipt: Receipt,
-  scissors: Scissors, landmark: Landmark,
+  gift: Gift, coins: Coins, "piggy-bank": PiggyBank, wallet: Wallet, utensils: Utensils, coffee: Coffee,
+  "shopping-bag": ShoppingBag, "shopping-cart": ShoppingCart, bus: Bus, car: Car, fuel: Fuel, plane: Plane,
+  house: House, zap: Zap, wifi: Wifi, smartphone: Smartphone, receipt: Receipt, landmark: Landmark,
+  "graduation-cap": GraduationCap, "book-open": BookOpen, "heart-pulse": HeartPulse, pill: Pill, scissors: Scissors,
+  shirt: Shirt, baby: Baby, dog: Dog, clapperboard: Clapperboard, "gamepad-2": Gamepad2, music: Music,
+  dumbbell: Dumbbell, heart: Heart, wrench: Wrench, ellipsis: Ellipsis,
 };
+const CATEGORY_ICONS: Record<string, LucideIcon> = CATEGORY_ICON_COMPONENTS;
 
 export const WALLET_ICONS: Record<string, { Icon: LucideIcon; label: string }> = {
   bank: { Icon: Landmark, label: "Bank" },

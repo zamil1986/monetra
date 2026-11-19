@@ -11,11 +11,9 @@ export const GET = (request: Request) =>
     return NextResponse.json(await listTransactions(userId, transactionQuerySchema.parse(query)));
   });
 
-/** The client sends the ID (ADR 0003): 201 when recorded, 200 when this is a retry of a recorded one. */
 export const POST = (request: Request) =>
   handle(async () => {
     const userId = await currentUserId();
     const input = transactionCreateSchema.parse(await readJson(request));
-    const { transaction, created } = await createTransaction(userId, input);
-    return NextResponse.json(transaction, { status: created ? 201 : 200 });
+    return NextResponse.json(await createTransaction(userId, input), { status: 201 });
   });

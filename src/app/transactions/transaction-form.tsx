@@ -13,6 +13,7 @@ import { localToInstant } from "@/domain/local-time";
 import { formatRupiah, parseRupiah } from "@/domain/money";
 import type { TransactionType } from "@/domain/types";
 import { api, ApiError } from "@/lib/api";
+import { haptic } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
 
 export type FormWallet = { id: string; name: string; balance: number; archived: boolean };
@@ -36,6 +37,10 @@ type Props = {
   wallets: FormWallet[];
   categories: FormCategory[];
   initial: FormInitial;
+  /** Opened as the phone sheet over another screen: no tab bar under the Save bar, and saving closes the sheet. */
+  inSheet?: boolean;
+  /** Replaces "go to Transactions" after a save, e.g. closing the sheet back to where it was opened. */
+  onSaved?: () => void;
 };
 
 const TYPES = [
@@ -44,14 +49,11 @@ const TYPES = [
   { value: "TRANSFER", label: "Transfer", Icon: ArrowLeftRight },
 ] as const;
 
-const newId = () => crypto.randomUUID();
 const typeWord = (t: TransactionType) => t.toLowerCase();
 
-export function TransactionForm({ mode, timezone, now, wallets, categories, initial }: Props) {
+export function TransactionForm({ mode, timezone, now, wallets, categories, initial, inSheet = false, onSaved }: Props) {
   const router = useRouter();
   const online = useOnline();
-  // The ID is made here, before sending, so a retried save can't create a duplicate (ADR 0003).
-  const [id, setId] = useState(mode === "new" ? newId : () => initial.id);
   const [type, setType] = useState<TransactionType>(initial.type);
   const [amount, setAmount] = useState(initial.amount ? initial.amount.toLocaleString("id-ID") : "");
   const [walletId, setWalletId] = useState(initial.walletId);
@@ -97,14 +99,16 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
     setSaving(true);
     setError(null);
     try {
-      if (mode === "new") await api("/api/transactions", { method: "POST", body: { id, ...body } });
-      else await api(`/api/transactions/${id}`, { method: "PATCH", body });
+      if (mode === "new") await api("/api/transactions", { method: "POST", body });
+      else await api(`/api/transactions/${initial.id}`, { method: "PATCH", body });
+      haptic();
       if (addAnother) {
-        setId(newId());
         setAmount("");
         setDescription("");
         setSavedNote(`Saved ${typeWord(type)} of ${formatRupiah(parsed.value)}.`);
         router.refresh();
+      } else if (onSaved) {
+        onSaved();
       } else {
         router.push("/transactions");
         router.refresh();
@@ -157,7 +161,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
             <span className="text-[22px] font-bold text-ink-2">Rp</span>
             <input
               className="fig min-w-0 flex-1 border-0 bg-transparent p-0 text-[44px] leading-[1.1] outline-0 md:text-[52px]"
-              id="amt" inputMode="numeric" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)}
+              id="amt" inputMode="numeric" enterKeyHint="done" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)}
               aria-describedby="amt-h" aria-invalid={!!errorFor("amount")}
             />
           </div>
@@ -189,7 +193,11 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
             label="Category"
             legendId="cat-l"
             error={errorFor("categoryId")}
-            hint={mode === "edit" && type !== initial.type && !categoryId && `Choose an ${typeWord(type)} category to finish the change.`}
+            hint={
+              mode === "edit" && type !== initial.type && !categoryId
+                ? `Choose an ${typeWord(type)} category to finish the change.`
+                : <Link href="/categories">Manage categories</Link>
+            }
           >
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="cat-l">
               {categoryChoices.map((c) => {
@@ -218,7 +226,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         </div>
 
         <Field label={<>Description <span className="font-normal text-ink-2">(optional)</span></>} htmlFor="desc" error={errorFor("description")}>
-          <input className={inputClass(!!errorFor("description"))} id="desc" maxLength={120} value={description} onChange={(e) => setDescription(e.target.value)} />
+          <input className={inputClass(!!errorFor("description"))} id="desc" maxLength={120} enterKeyHint="done" value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
 
         {error && !error.field && <Notice tone="danger" role="alert"><strong>Not saved.</strong> {error.message}</Notice>}
@@ -227,7 +235,11 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         <div
           className={cx(
             "flex flex-wrap items-center gap-2.5",
-            "max-md:sticky max-md:bottom-[62px] max-md:z-[5] max-md:border-t max-md:border-line max-md:bg-paper max-md:pt-3 max-md:pb-5 max-md:[&>button]:min-h-[50px] max-md:[&>button]:w-full",
+            "max-md:sticky max-md:z-[5] max-md:border-t max-md:border-line max-md:bg-paper max-md:pt-3 max-md:[&>button]:min-h-[50px] max-md:[&>button]:w-full",
+            // On a screen the bar sits on the tab bar; in the sheet it sits on the bottom edge, above the home indicator.
+            inSheet
+              ? "max-md:bottom-0 max-md:pb-[calc(12px+env(safe-area-inset-bottom))]"
+              : "max-md:bottom-[calc(62px+env(safe-area-inset-bottom))] max-md:pb-5",
           )}
         >
           <Button type="submit" size="lg" disabled={saving || !online}>{saveLabel}</Button>

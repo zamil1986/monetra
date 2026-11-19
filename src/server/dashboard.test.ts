@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { TransactionDraft } from "@/domain/transaction-rules";
 import { resetDatabase } from "@/test/db";
@@ -21,16 +20,15 @@ async function setup() {
   const cat = (name: string) => categories.find((c) => c.name === name)!.id;
   const record = (draft: Partial<TransactionDraft>) =>
     createTransaction(user.id, {
-      id: randomUUID(),
       type: "EXPENSE",
       amount: 10_000,
       walletId: bca.id,
       toWalletId: null,
-      categoryId: cat("Food"),
+      categoryId: cat("Makanan"),
       description: null,
       occurredAt: new Date("2026-11-10T05:00:00Z"),
       ...draft,
-    }).then((r) => r.transaction);
+    });
   return { user, bca, gopay, cat, record };
 }
 

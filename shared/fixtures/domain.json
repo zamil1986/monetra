@@ -1,0 +1,466 @@
+{
+  "_doc": "Shared by the TypeScript server tests and the Dart app tests (ADR 0005). Both must agree on every case. Period boundaries were computed independently with Python zoneinfo.",
+  "balances": [
+    {
+      "name": "Income, expense and a transfer between active wallets; an archived wallet is left out of the total",
+      "wallets": [
+        {
+          "id": "a",
+          "openingBalance": 100000,
+          "archived": false
+        },
+        {
+          "id": "b",
+          "openingBalance": 0,
+          "archived": false
+        },
+        {
+          "id": "c",
+          "openingBalance": 5000,
+          "archived": true
+        }
+      ],
+      "movements": [
+        {
+          "type": "INCOME",
+          "amount": 50000,
+          "walletId": "a",
+          "toWalletId": null
+        },
+        {
+          "type": "EXPENSE",
+          "amount": 20000,
+          "walletId": "a",
+          "toWalletId": null
+        },
+        {
+          "type": "TRANSFER",
+          "amount": 30000,
+          "walletId": "a",
+          "toWalletId": "b"
+        },
+        {
+          "type": "EXPENSE",
+          "amount": 1000,
+          "walletId": "c",
+          "toWalletId": null
+        }
+      ],
+      "expected": {
+        "byWallet": {
+          "a": 100000,
+          "b": 30000,
+          "c": 4000
+        },
+        "total": 130000
+      }
+    },
+    {
+      "name": "A negative opening balance, and a transfer to a wallet that isn't listed",
+      "wallets": [
+        {
+          "id": "d",
+          "openingBalance": -50000,
+          "archived": false
+        }
+      ],
+      "movements": [
+        {
+          "type": "EXPENSE",
+          "amount": 10000,
+          "walletId": "d",
+          "toWalletId": null
+        },
+        {
+          "type": "TRANSFER",
+          "amount": 5000,
+          "walletId": "d",
+          "toWalletId": "x"
+        }
+      ],
+      "expected": {
+        "byWallet": {
+          "d": -65000
+        },
+        "total": -65000
+      }
+    },
+    {
+      "name": "No movements at all",
+      "wallets": [
+        {
+          "id": "e",
+          "openingBalance": 2000000,
+          "archived": false
+        }
+      ],
+      "movements": [],
+      "expected": {
+        "byWallet": {
+          "e": 2000000
+        },
+        "total": 2000000
+      }
+    }
+  ],
+  "cashFlow": [
+    {
+      "name": "Transfers count as neither income nor expense",
+      "movements": [
+        {
+          "type": "INCOME",
+          "amount": 4500000
+        },
+        {
+          "type": "EXPENSE",
+          "amount": 245000
+        },
+        {
+          "type": "TRANSFER",
+          "amount": 500000
+        },
+        {
+          "type": "EXPENSE",
+          "amount": 1000
+        }
+      ],
+      "expected": {
+        "income": 4500000,
+        "expense": 246000,
+        "net": 4254000
+      }
+    },
+    {
+      "name": "Spending more than earned gives a negative net",
+      "movements": [
+        {
+          "type": "EXPENSE",
+          "amount": 60000
+        }
+      ],
+      "expected": {
+        "income": 0,
+        "expense": 60000,
+        "net": -60000
+      }
+    }
+  ],
+  "periods": [
+    {
+      "name": "Jakarta, an ordinary Wednesday evening",
+      "period": {
+        "kind": "today"
+      },
+      "now": "2026-11-18T13:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-18",
+        "to": "2026-11-18",
+        "start": "2026-11-17T17:00:00.000Z",
+        "endExclusive": "2026-11-18T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, 01:30 local is already the next day",
+      "period": {
+        "kind": "today"
+      },
+      "now": "2026-11-15T18:30:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-16",
+        "to": "2026-11-16",
+        "start": "2026-11-15T17:00:00.000Z",
+        "endExclusive": "2026-11-16T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, week runs Monday to Sunday",
+      "period": {
+        "kind": "week"
+      },
+      "now": "2026-11-18T13:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-16",
+        "to": "2026-11-22",
+        "start": "2026-11-15T17:00:00.000Z",
+        "endExclusive": "2026-11-22T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, Sunday still belongs to the week that began Monday",
+      "period": {
+        "kind": "week"
+      },
+      "now": "2026-11-22T10:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-16",
+        "to": "2026-11-22",
+        "start": "2026-11-15T17:00:00.000Z",
+        "endExclusive": "2026-11-22T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, Monday 00:30 local starts a new week",
+      "period": {
+        "kind": "week"
+      },
+      "now": "2026-11-22T17:30:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-23",
+        "to": "2026-11-29",
+        "start": "2026-11-22T17:00:00.000Z",
+        "endExclusive": "2026-11-29T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, November has 30 days",
+      "period": {
+        "kind": "month"
+      },
+      "now": "2026-11-18T13:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-01",
+        "to": "2026-11-30",
+        "start": "2026-10-31T17:00:00.000Z",
+        "endExclusive": "2026-11-30T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, February in a non-leap year",
+      "period": {
+        "kind": "month"
+      },
+      "now": "2027-02-10T03:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2027-02-01",
+        "to": "2027-02-28",
+        "start": "2027-01-31T17:00:00.000Z",
+        "endExclusive": "2027-02-28T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Jakarta, February in a leap year",
+      "period": {
+        "kind": "month"
+      },
+      "now": "2028-02-10T03:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2028-02-01",
+        "to": "2028-02-29",
+        "start": "2028-01-31T17:00:00.000Z",
+        "endExclusive": "2028-02-29T17:00:00.000Z"
+      }
+    },
+    {
+      "name": "Makassar, 00:30 on 1 January is already the new year",
+      "period": {
+        "kind": "year"
+      },
+      "now": "2026-12-31T16:30:00.000Z",
+      "timeZone": "Asia/Makassar",
+      "expected": {
+        "from": "2027-01-01",
+        "to": "2027-12-31",
+        "start": "2026-12-31T16:00:00.000Z",
+        "endExclusive": "2027-12-31T16:00:00.000Z"
+      }
+    },
+    {
+      "name": "New York, the week the clocks go back",
+      "period": {
+        "kind": "week"
+      },
+      "now": "2026-11-01T12:00:00.000Z",
+      "timeZone": "America/New_York",
+      "expected": {
+        "from": "2026-10-26",
+        "to": "2026-11-01",
+        "start": "2026-10-26T04:00:00.000Z",
+        "endExclusive": "2026-11-02T05:00:00.000Z"
+      }
+    },
+    {
+      "name": "New York, the day the clocks go back is 25 hours",
+      "period": {
+        "kind": "today"
+      },
+      "now": "2026-11-01T12:00:00.000Z",
+      "timeZone": "America/New_York",
+      "expected": {
+        "from": "2026-11-01",
+        "to": "2026-11-01",
+        "start": "2026-11-01T04:00:00.000Z",
+        "endExclusive": "2026-11-02T05:00:00.000Z"
+      }
+    },
+    {
+      "name": "Custom range is taken as given",
+      "period": {
+        "kind": "custom",
+        "from": "2026-11-01",
+        "to": "2026-11-14"
+      },
+      "now": "2026-11-18T13:00:00.000Z",
+      "timeZone": "Asia/Jakarta",
+      "expected": {
+        "from": "2026-11-01",
+        "to": "2026-11-14",
+        "start": "2026-10-31T17:00:00.000Z",
+        "endExclusive": "2026-11-14T17:00:00.000Z"
+      }
+    }
+  ],
+  "rupiah": {
+    "format": [
+      [
+        0,
+        "Rp 0"
+      ],
+      [
+        999,
+        "Rp 999"
+      ],
+      [
+        24000,
+        "Rp 24.000"
+      ],
+      [
+        6240000,
+        "Rp 6.240.000"
+      ],
+      [
+        -15000,
+        "−Rp 15.000"
+      ],
+      [
+        1000000000000,
+        "Rp 1.000.000.000.000"
+      ]
+    ],
+    "parse": [
+      [
+        "18.000",
+        18000
+      ],
+      [
+        "Rp 18.000",
+        18000
+      ],
+      [
+        "rp18000",
+        18000
+      ],
+      [
+        "2500000",
+        2500000
+      ],
+      [
+        "0",
+        0
+      ],
+      [
+        "-15.000",
+        -15000
+      ],
+      [
+        "−Rp 15.000",
+        -15000
+      ],
+      [
+        "Rp -15.000",
+        -15000
+      ],
+      [
+        "18,000",
+        null
+      ],
+      [
+        "1.00",
+        null
+      ],
+      [
+        "12.5000",
+        null
+      ],
+      [
+        "abc",
+        null
+      ],
+      [
+        "",
+        null
+      ],
+      [
+        "1.000.000",
+        1000000
+      ]
+    ]
+  },
+  "categoryNameClash": {
+    "existing": [
+      {
+        "id": "kopi",
+        "name": "Kopi",
+        "type": "EXPENSE",
+        "archived": false
+      },
+      {
+        "id": "gaji",
+        "name": "Gaji",
+        "type": "INCOME",
+        "archived": true
+      }
+    ],
+    "cases": [
+      {
+        "name": "Case and outer spaces don't make a new name",
+        "input": "kopi ",
+        "type": "EXPENSE",
+        "selfId": null,
+        "clashId": "kopi"
+      },
+      {
+        "name": "Inner spaces collapse",
+        "input": "  KOPI  ",
+        "type": "EXPENSE",
+        "selfId": null,
+        "clashId": "kopi"
+      },
+      {
+        "name": "The same name in the other type is fine",
+        "input": "Kopi",
+        "type": "INCOME",
+        "selfId": null,
+        "clashId": null
+      },
+      {
+        "name": "Archived Kategori still hold their name",
+        "input": "gaji",
+        "type": "INCOME",
+        "selfId": null,
+        "clashId": "gaji"
+      },
+      {
+        "name": "A Kategori may keep its own name",
+        "input": "Kopi",
+        "type": "EXPENSE",
+        "selfId": "kopi",
+        "clashId": null
+      },
+      {
+        "name": "An accent makes a different name",
+        "input": "Kópi",
+        "type": "EXPENSE",
+        "selfId": null,
+        "clashId": null
+      }
+    ]
+  }
+}

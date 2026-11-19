@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { TransactionDraft } from "@/domain/transaction-rules";
 import { resetDatabase } from "@/test/db";
@@ -21,14 +20,13 @@ async function setup(email = "dina@example.com") {
   const gopay = await createWallet(user.id, { name: "GoPay", openingBalance: 50_000, color: "teal", icon: "ewallet" });
   const categories = await listCategories(user.id);
   const cat = (name: string) => categories.find((c) => c.name === name)!.id;
-  const record = (draft: Partial<TransactionDraft> & { id?: string }) =>
+  const record = (draft: Partial<TransactionDraft>) =>
     createTransaction(user.id, {
-      id: randomUUID(),
       type: "EXPENSE",
       amount: 10_000,
       walletId: bca.id,
       toWalletId: null,
-      categoryId: cat("Food"),
+      categoryId: cat("Makanan"),
       description: null,
       occurredAt: new Date("2026-11-10T05:00:00Z"),
       ...draft,
@@ -54,46 +52,17 @@ describe("recording a Transaksi", () => {
     expect(summary).toEqual({ income: 0, expense: 1_000 });
   });
 
-  it("does not make a second Transaksi when the same request is sent again", async () => {
-    const { user, bca, record } = await setup();
-    const id = randomUUID();
-    const first = await record({ id, amount: 24_000 });
-    const retry = await record({ id, amount: 24_000 });
-
-    expect(first.created).toBe(true);
-    expect(retry.created).toBe(false);
-    expect(retry.transaction.id).toBe(id);
-    expect((await listTransactions(user.id, {})).total).toBe(1);
-    expect(await balanceOf(user.id, bca.id)).toBe(1_976_000);
-  });
-
-  it("survives two copies of the same request arriving at once", async () => {
-    const { user, record } = await setup();
-    const id = randomUUID();
-    const results = await Promise.all([record({ id }), record({ id }), record({ id })]);
-    expect(results.filter((r) => r.created)).toHaveLength(1);
-    expect((await listTransactions(user.id, {})).total).toBe(1);
-  });
-
   it("refuses a wallet belonging to someone else", async () => {
     const dina = await setup();
     const other = await setup("other@example.com");
     await expect(dina.record({ walletId: other.bca.id })).rejects.toMatchObject({ status: 422, field: "walletId" });
-  });
-
-  it("refuses to reuse an ID another Pengguna already took", async () => {
-    const dina = await setup();
-    const other = await setup("other@example.com");
-    const id = randomUUID();
-    await dina.record({ id });
-    await expect(other.record({ id })).rejects.toMatchObject({ status: 409 });
   });
 });
 
 describe("editing a Transaksi", () => {
   it("changes the Saldo of both the old and the new wallet", async () => {
     const { user, bca, gopay, record } = await setup();
-    const { transaction } = await record({ amount: 20_000 });
+    const transaction = await record({ amount: 20_000 });
     await updateTransaction(user.id, transaction.id, { walletId: gopay.id, amount: 30_000 });
 
     expect(await balanceOf(user.id, bca.id)).toBe(2_000_000);
@@ -102,26 +71,26 @@ describe("editing a Transaksi", () => {
 
   it("turns an expense into income with an income category", async () => {
     const { user, bca, cat, record } = await setup();
-    const { transaction } = await record({ amount: 20_000 });
-    const updated = await updateTransaction(user.id, transaction.id, { type: "INCOME", categoryId: cat("Salary") });
+    const transaction = await record({ amount: 20_000 });
+    const updated = await updateTransaction(user.id, transaction.id, { type: "INCOME", categoryId: cat("Gaji") });
 
     expect(updated.type).toBe("INCOME");
-    expect(updated.categoryName).toBe("Salary");
+    expect(updated.categoryName).toBe("Gaji");
     expect(await balanceOf(user.id, bca.id)).toBe(2_020_000);
   });
 
   it("refuses to turn a transfer into an expense", async () => {
     const { user, gopay, cat, record } = await setup();
-    const { transaction } = await record({ type: "TRANSFER", toWalletId: gopay.id, categoryId: null });
+    const transaction = await record({ type: "TRANSFER", toWalletId: gopay.id, categoryId: null });
     await expect(
-      updateTransaction(user.id, transaction.id, { type: "EXPENSE", toWalletId: null, categoryId: cat("Food") }),
+      updateTransaction(user.id, transaction.id, { type: "EXPENSE", toWalletId: null, categoryId: cat("Makanan") }),
     ).rejects.toMatchObject({ status: 422, code: "TYPE_CHANGE_NOT_ALLOWED" });
   });
 
   it("can't touch another Pengguna's Transaksi", async () => {
     const dina = await setup();
     const other = await setup("other@example.com");
-    const { transaction } = await dina.record({});
+    const transaction = await dina.record({});
     await expect(updateTransaction(other.user.id, transaction.id, { amount: 1 })).rejects.toMatchObject({ status: 404 });
     await expect(deleteTransaction(other.user.id, transaction.id)).rejects.toMatchObject({ status: 404 });
     await expect(getTransaction(other.user.id, transaction.id)).rejects.toMatchObject({ status: 404 });
@@ -131,7 +100,7 @@ describe("editing a Transaksi", () => {
 describe("deleting a Transaksi", () => {
   it("removes it from every list and from the Saldo", async () => {
     const { user, bca, record } = await setup();
-    const { transaction } = await record({ amount: 50_000 });
+    const transaction = await record({ amount: 50_000 });
     await deleteTransaction(user.id, transaction.id);
 
     expect(await balanceOf(user.id, bca.id)).toBe(2_000_000);
@@ -139,21 +108,19 @@ describe("deleting a Transaksi", () => {
     await expect(getTransaction(user.id, transaction.id)).rejects.toMatchObject({ status: 404 });
   });
 
-  it("does not bring it back when the original save request is retried", async () => {
-    const { user, record } = await setup();
-    const id = randomUUID();
-    await record({ id });
-    await deleteTransaction(user.id, id);
-    await expect(record({ id })).rejects.toMatchObject({ status: 409, code: "TRANSACTION_DELETED" });
-    expect((await listTransactions(user.id, {})).total).toBe(0);
-  });
-
-  it("keeps the wallet from being deleted afterwards", async () => {
+  it("lets the wallet be deleted once its only transaction is gone (ADR 0005)", async () => {
     const { user, gopay, cat, record } = await setup();
-    const { transaction } = await record({ walletId: gopay.id, categoryId: cat("Food") });
+    const transaction = await record({ walletId: gopay.id, categoryId: cat("Makanan") });
     await deleteTransaction(user.id, transaction.id);
     const wallet = (await listWallets(user.id)).wallets.find((w) => w.id === gopay.id)!;
-    expect(wallet.deletable).toBe(false);
+    expect(wallet.deletable).toBe(true);
+  });
+
+  it("answers a second delete of the same Transaksi with not found", async () => {
+    const { user, record } = await setup();
+    const transaction = await record({});
+    await deleteTransaction(user.id, transaction.id);
+    await expect(deleteTransaction(user.id, transaction.id)).rejects.toMatchObject({ status: 404 });
   });
 });
 
@@ -161,7 +128,7 @@ describe("transaction history", () => {
   async function history() {
     const ctx = await setup();
     const { record, cat, gopay } = ctx;
-    await record({ description: "Weekly groceries", amount: 260_000, categoryId: cat("Shopping"), occurredAt: new Date("2026-11-14T03:15:00Z") });
+    await record({ description: "Weekly groceries", amount: 260_000, categoryId: cat("Belanja"), occurredAt: new Date("2026-11-14T03:15:00Z") });
     await record({ description: "Lunch at Warteg", amount: 24_000, occurredAt: new Date("2026-11-14T05:40:00Z") });
     await record({ type: "TRANSFER", amount: 200_000, toWalletId: gopay.id, categoryId: null, occurredAt: new Date("2026-11-13T12:02:00Z") });
     await record({ type: "INCOME", amount: 1_000_000, categoryId: cat("Freelance"), description: "Logo project", occurredAt: new Date("2026-11-09T09:20:00Z") });
@@ -187,7 +154,7 @@ describe("transaction history", () => {
     const { user, cat } = await history();
     const november = { from: "2026-11-01", to: "2026-11-14" };
     expect((await listTransactions(user.id, { ...november, type: "EXPENSE" })).total).toBe(2);
-    expect((await listTransactions(user.id, { ...november, type: "EXPENSE", categoryId: cat("Food") })).total).toBe(1);
+    expect((await listTransactions(user.id, { ...november, type: "EXPENSE", categoryId: cat("Makanan") })).total).toBe(1);
     expect((await listTransactions(user.id, { to: "2026-10-31" })).items.map((t) => t.title)).toEqual(["Late snack"]);
   });
 

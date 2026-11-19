@@ -5,7 +5,7 @@
 **Version:** 1.1\
 **Status:** Refined Product Specification\
 **Product Type:** Personal Finance Management Application\
-**Target Platforms:** macOS Desktop and Android Mobile (Redmi)\
+**Target Platforms:** macOS Desktop (MacBook), Android Mobile, dan iPhone (iOS)\
 **Primary Locale:** Indonesia\
 **Currency:** Indonesian Rupiah (IDR) saja
 
@@ -74,7 +74,7 @@ yang sudah terisi data (lihat Akun demo di 3.1).
 
 ## 2. Platform Requirements
 
-### 2.1 Desktop --- macOS
+### 2.1 Desktop --- macOS (MacBook)
 
 -   Dapat diakses melalui browser modern.
 -   Mendukung instalasi sebagai PWA apabila browser mendukungnya.
@@ -82,29 +82,32 @@ yang sudah terisi data (lihat Akun demo di 3.1).
 -   Mendukung penggunaan keyboard dan mouse.
 -   Menggunakan sidebar navigation untuk akses fitur utama.
 
-### 2.2 Mobile --- Android (Redmi)
+### 2.2 Mobile --- Android dan iPhone
 
--   Dapat digunakan melalui browser Android.
--   Mendukung instalasi PWA ke home screen.
--   Responsif untuk berbagai ukuran layar Redmi.
+-   Dapat digunakan melalui browser Android (Chrome) dan iPhone (Safari).
+-   Mendukung instalasi PWA ke home screen: lewat prompt install di
+    Android, dan lewat menu Share → "Add to Home Screen" di iPhone.
+-   Responsif untuk berbagai ukuran layar Android (termasuk Redmi) dan
+    iPhone, termasuk safe area (notch / Dynamic Island dan home
+    indicator) di iPhone.
 -   Menggunakan touch-friendly interface.
 -   Navigasi sederhana dan nyaman digunakan dengan satu tangan.
 -   Form pencatatan transaksi harus nyaman digunakan di layar kecil.
 
 ### 2.3 Cross-device Synchronization
 
-Data pengguna harus konsisten antara desktop dan mobile.
+Data pengguna harus konsisten antara MacBook, Android, dan iPhone.
 
 Contoh alur:
 
-1.  Pengguna mencatat pengeluaran Rp25.000 melalui HP Redmi.
+1.  Pengguna mencatat pengeluaran Rp25.000 melalui HP Android atau
+    iPhone.
 2.  Transaksi tersimpan di server.
 3.  Pengguna membuka aplikasi di MacBook.
 4.  Transaksi yang sama muncul tanpa perlu dicatat ulang.
 
-Sistem mencegah duplikasi transaksi akibat pengiriman request berulang:
-setiap transaksi membawa ID yang dibuat di perangkat, dan server
-memperlakukan ID yang sudah ada sebagai pengulangan (lihat 5.3).
+Sistem mencegah duplikasi transaksi akibat tap ganda: tombol simpan
+dikunci selama permintaan berjalan (lihat 5.3).
 
 Angka ringkasan (Today, This Month, dan seterusnya) dihitung server
 dengan zona waktu di profil pengguna, sehingga dua perangkat di zona
@@ -239,8 +242,8 @@ bank, atau e-wallet. Setiap transaksi terjadi pada satu Dompet.
     dipindahkan dulu lewat Transfer atau dicatat sebagai Expense.
 5.  Dompet yang diarsipkan tidak bisa dipilih untuk transaksi baru,
     tetapi tetap tampil di riwayat.
-6.  Dompet yang sudah pernah dipakai dalam transaksi tidak bisa dihapus
-    permanen, hanya diarsipkan.
+6.  Dompet yang dipakai dalam transaksi tidak bisa dihapus permanen,
+    hanya diarsipkan.
 7.  Pengguna tidak boleh mengakses Dompet milik pengguna lain.
 
 **Acceptance Criteria:**
@@ -280,7 +283,7 @@ GoPay) dan satu Expense Rp1.000 dari BCA.
 
   Field              Description
   ------------------ ----------------------------------------------------
-  ID                 UUID yang dibuat di perangkat sebelum dikirim
+  ID                 UUID yang dibuat server
   User ID            Pemilik transaksi
   Type               Income / Expense / Transfer
   Amount             Nominal, bilangan bulat rupiah, lebih besar dari nol
@@ -291,7 +294,6 @@ GoPay) dan satu Expense Rp1.000 dari BCA.
   Occurred At        Waktu transaksi: tanggal dan jam kejadian
   Created At         Waktu dicatat
   Updated At         Waktu terakhir diubah
-  Deleted At         Tanda terhapus; kosong selama transaksi masih ada
 
 #### Transaction Operations
 
@@ -381,26 +383,26 @@ Kategori melabeli jenis sebuah Income atau Expense.
 
 **Default Income Categories:**
 
--   Salary.
--   Allowance.
+-   Gaji.
+-   Uang Saku.
 -   Freelance.
--   Business.
--   Investment.
--   Gift.
--   Other Income.
+-   Bisnis.
+-   Investasi.
+-   Hadiah.
+-   Pemasukan Lain.
 
 **Default Expense Categories:**
 
--   Food.
--   Transportation.
--   Education.
--   Shopping.
--   Entertainment.
--   Healthcare.
--   Bills.
--   Personal Care.
+-   Makanan.
+-   Transportasi.
+-   Pendidikan.
+-   Belanja.
+-   Hiburan.
+-   Kesehatan.
+-   Tagihan.
+-   Perawatan Diri.
 -   Biaya Admin.
--   Other Expense.
+-   Pengeluaran Lain.
 
 **Fitur (mulai Phase 2; Phase 1 hanya memakai kategori default):**
 
@@ -422,6 +424,27 @@ Kategori melabeli jenis sebuah Income atau Expense.
     permanen, hanya diarsipkan: hilang dari pilihan saat input, tetap
     tampil di riwayat dan laporan.
 -   Pengguna tidak boleh mengakses kategori milik pengguna lain.
+-   Kategori dianggap dipakai bila direferensikan Transaksi apa pun.
+    Transaksi yang dihapus dibuang permanen, jadi tidak lagi dihitung.
+    Hanya kategori yang tidak dipakai yang bisa dihapus permanen.
+-   Nama kategori 1--30 karakter dan unik per tipe tanpa membedakan
+    huruf besar/kecil, termasuk terhadap kategori yang diarsipkan.
+    Nama yang sudah dipakai kategori arsip ditolak dengan arahan untuk
+    membatalkan arsipnya. Karena itu batalkan arsip tidak pernah
+    bentrok nama.
+-   Kategori aktif terakhir dari satu tipe tidak bisa diarsipkan atau
+    dihapus, agar Income dan Expense selalu bisa dicatat.
+-   Kategori yang diarsipkan tetap boleh diedit (nama, ikon, warna).
+    Mengganti nama berlaku untuk seluruh riwayat.
+-   Ikon dan warna dipilih dari daftar tetap. Palet warna sama dengan
+    Dompet.
+-   Kategori default tidak istimewa, termasuk "Biaya Admin": boleh
+    diganti nama dan diarsipkan, dan aplikasi tidak bergantung pada
+    namanya.
+-   Urutan: kategori default sesuai daftar di atas, lalu kategori
+    buatan pengguna menurut waktu dibuat. Tidak ada pengurutan manual.
+-   Filter kategori di Transaction History tetap menampilkan kategori
+    yang diarsipkan, dalam grup "Diarsip".
 
 ### 3.7 Financial Analytics & Reports
 
@@ -593,7 +616,8 @@ Setiap halaman harus menangani:
 -   Success state.
 -   Error state.
 -   Validation state.
--   Offline state.
+-   Offline state: di web, banner bahwa aplikasi butuh koneksi dan aksi
+    tulis nonaktif; di Android, penanda perubahan belum tersinkron.
 
 ------------------------------------------------------------------------
 
@@ -632,11 +656,10 @@ Setiap halaman harus menangani:
     zona waktu di profil.
 -   Gunakan database transaction untuk operasi yang membutuhkan
     konsistensi.
--   Duplicate submission dicegah dengan ID transaksi yang dibuat di
-    perangkat: permintaan simpan dengan ID yang sudah ada mengembalikan
-    transaksi yang tersimpan tanpa membuat yang baru.
--   Transaksi yang dihapus hanya ditandai terhapus di database dan
-    dikecualikan dari semua pembacaan.
+-   Duplicate submission akibat tap ganda dicegah dengan mengunci tombol
+    simpan selama permintaan berjalan. ID transaksi dibuat server
+    ([ADR 0004](docs/adr/0004-online-penuh-id-server-hapus-fisik.md)).
+-   Transaksi yang dihapus dibuang permanen dari database.
 -   Gunakan server sebagai sumber data utama.
 -   Perhitungan keuangan harus konsisten di seluruh perangkat.
 
@@ -644,28 +667,29 @@ Setiap halaman harus menangani:
 
 Target browser:
 
--   macOS: Chrome, Safari, dan browser modern.
--   Android: Chrome dan browser berbasis Chromium.
--   Redmi: berbagai ukuran layar dan versi Android yang didukung
-    browser.
+-   macOS (MacBook): Chrome, Safari, dan browser modern.
+-   Android: Chrome dan browser berbasis Chromium, di berbagai ukuran
+    layar (termasuk Redmi) dan versi Android yang didukung browser.
+-   iPhone (iOS): Safari, termasuk mode PWA standalone dari home screen,
+    di berbagai ukuran layar iPhone dan versi iOS yang didukung.
 
 ### 5.5 Offline Support
 
-**MVP offline behavior (online-only untuk penulisan):**
+Web online-only, Android offline-first
+([ADR 0005](docs/adr/0005-offline-first-android-sinkronisasi.md)):
 
--   Menampilkan halaman yang sebelumnya telah di-cache.
--   Menampilkan status offline.
--   Menonaktifkan penyimpanan transaksi dan memberi tahu bahwa
-    pencatatan membutuhkan koneksi.
-
-**Future enhancement (Phase 4):**
-
--   Menyimpan transaksi sementara secara lokal.
--   Melakukan synchronization ketika koneksi kembali tersedia.
--   Menangani konflik perubahan data antarperangkat.
-
-ID transaksi dari perangkat dan tanda terhapus (5.3) sudah dipilih sejak
-Phase 1 supaya enhancement ini tidak membutuhkan migrasi data.
+-   **Web**: tidak ada service worker dan tidak ada cache halaman. Bila
+    koneksi putus saat aplikasi terbuka, tampil banner offline dan semua
+    aksi tulis dinonaktifkan. Isi form tetap di layar agar bisa dicoba
+    ulang.
+-   **Android**: semua pencatatan, pengeditan, penghapusan, Saldo, dan
+    Dashboard tetap berfungsi tanpa koneksi. Perubahan disimpan di
+    Perangkat dan disinkronkan saat online. Login pertama wajib online.
+-   Perangkat menampilkan penanda bila ada perubahan yang belum
+    tersinkron.
+-   Konflik diselesaikan menurut ADR 0005: edit terakhir menang per
+    record, hapus selalu menang, Kategori kembar digabung.
+-   iPhone belum didukung.
 
 ------------------------------------------------------------------------
 
@@ -678,7 +702,7 @@ satu repo dan satu deploy.
 
 -   Next.js dengan TypeScript.
 -   Tailwind CSS dan responsive component system.
--   PWA support.
+-   Web app manifest (installable), tanpa service worker.
 -   Chart library.
 -   REST API melalui route handlers Next.js.
 -   Prisma ORM.
@@ -730,7 +754,7 @@ pengguna.
 ### 6.4 High-Level Architecture
 
 ``` text
-User (Mac / Redmi)
+User (MacBook / Android / iPhone)
         |
         v
    PWA Frontend  ----+
@@ -789,7 +813,7 @@ adalah data domain.
 
 ### 7.4 Transactions
 
--   id (UUID dari perangkat)
+-   id (UUID dari server)
 -   user_id
 -   type
 -   amount
@@ -800,7 +824,6 @@ adalah data domain.
 -   occurred_at
 -   created_at
 -   updated_at
--   deleted_at
 
 ### 7.5 Budgets
 
@@ -908,8 +931,8 @@ Prioritas tertinggi:
 **Definition of Done:**
 
 Pengguna dapat mencatat, melihat, mengubah, dan menghapus Income,
-Expense, dan Transfer dari Mac maupun Redmi. Saldo tiap Dompet dan angka
-dashboard pada kedua perangkat harus sama. Reviewer dapat membuka URL
+Expense, dan Transfer dari MacBook, Android, maupun iPhone. Saldo tiap
+Dompet dan angka dashboard di semua perangkat harus sama. Reviewer dapat membuka URL
 publik, menekan "Coba demo", dan melihat dashboard yang terisi.
 
 ### Phase 2 --- Financial Insights
@@ -930,8 +953,6 @@ publik, menekan "Coba demo", dan melihat dashboard yang terisi.
 
 ### Phase 4 --- Advanced Features
 
--   Offline transaction recording.
--   Automatic synchronization.
 -   CSV export.
 -   PDF financial reports.
 -   Recurring transactions.
@@ -959,6 +980,7 @@ Fitur berikut tidak termasuk dalam roadmap saat ini:
 -   Financial goals (belum punya definisi).
 -   Verifikasi email saat register.
 -   Halaman sampah atau pemulihan transaksi terhapus.
+-   Menggabungkan (merge) kategori.
 
 Fitur tersebut dapat dipertimbangkan setelah kebutuhan inti terpenuhi.
 
@@ -979,7 +1001,7 @@ Keberhasilan produk dievaluasi melalui:
 
 -   Tidak ada kebocoran data antarpengguna.
 -   Tidak ada kesalahan perhitungan pada Saldo dan ringkasan keuangan.
--   Tidak ada duplikasi transaksi akibat pengiriman request berulang.
+-   Tidak ada duplikasi transaksi akibat tap ganda pada tombol simpan.
 -   Transfer tidak pernah mengubah Total Income, Total Expense, atau
     Total Balance.
 -   Seluruh fitur CRUD utama berjalan di desktop dan mobile.
@@ -999,15 +1021,16 @@ Keberhasilan produk dievaluasi melalui:
 5.  Transaksi punya tiga tipe: Income, Expense, Transfer. Transfer tidak
     berkategori dan biaya adminnya dicatat sebagai Expense terpisah
     ([ADR 0001](docs/adr/0001-transfer-sebagai-tipe-transaksi.md)).
-6.  ID transaksi dibuat di perangkat dan penghapusan hanya ditandai
-    ([ADR 0003](docs/adr/0003-id-transaksi-dibuat-klien.md)).
+6.  Aplikasi online-only; ID transaksi dibuat server dan penghapusan
+    bersifat permanen
+    ([ADR 0004](docs/adr/0004-online-penuh-id-server-hapus-fisik.md)).
 7.  Waktu transaksi mencakup tanggal dan jam; batas periode mengikuti
     zona waktu di profil.
-8.  Dompet dan kategori yang sudah terpakai diarsipkan, tidak dihapus.
+8.  Dompet dan kategori yang terpakai diarsipkan, tidak dihapus.
 9.  Budget berulang per bulan kalender dan menyimpan riwayat nominalnya.
 10. Data disimpan di server agar dapat diakses lintas perangkat; server
     menjadi sumber kebenaran untuk seluruh perhitungan finansial.
-11. Satu aplikasi Next.js fullstack sebagai PWA, di-deploy ke Vercel
+11. Satu aplikasi Next.js fullstack yang bisa di-install (manifest saja), di-deploy ke Vercel
     dengan PostgreSQL di Neon.
 12. Registrasi terbuka tanpa verifikasi email, ditambah Akun demo
     sementara per pengunjung.

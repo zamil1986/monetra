@@ -53,7 +53,8 @@ export function iconButtonClass(danger = false) {
 /* Form controls */
 export function inputClass(invalid = false, className?: string) {
   return cx(
-    "min-h-11 w-full rounded border bg-white px-3 py-[9px] text-[15px] placeholder:text-ink-3",
+    // 16px, not 15: iOS Safari zooms the page into any focused field set smaller than 16px.
+    "min-h-11 w-full rounded border bg-white px-3 py-[9px] text-[16px] placeholder:text-ink-3",
     "transition-[border-color,box-shadow] duration-150 ease-out-expo hover:border-ink",
     "focus-visible:border-cobalt focus-visible:shadow-[0_0_0_2px_var(--color-cobalt)] focus-visible:outline-0",
     "disabled:border-line disabled:bg-panel disabled:text-ink-3",
@@ -168,7 +169,7 @@ export const spacer = "flex-1";
 
 /** Main column plus a 440px side panel, stacked until the window is wide enough. */
 export const splitClass = "grid grid-cols-[minmax(0,1fr)] items-start gap-8 wide:grid-cols-[minmax(0,1fr)_440px] wide:gap-10";
-export const sidePanel = "rounded-md bg-panel p-5";
+export const sidePanel = "rounded-xl bg-panel p-5";
 
 /* Lists of rows separated by hairlines */
 export const rowsClass = "border-t-2 border-ink";

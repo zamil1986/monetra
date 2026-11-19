@@ -14,6 +14,14 @@ _Avoid_: member, customer
 Identitas login milik satu Pengguna.
 _Avoid_: memakai "akun" atau "account" untuk tempat uang (itu Dompet)
 
+**Perangkat**:
+Tempat Pengguna membuka Monetra: app Android di HP atau browser di komputer. Satu Pengguna bisa memakai beberapa Perangkat.
+_Avoid_: device, klien, client
+
+**Sinkronisasi**:
+Penyamaan catatan antara semua Perangkat milik satu Pengguna, sehingga Saldo dan ringkasan yang tampil sama di mana pun. Catatan yang dibuat tanpa koneksi ikut disamakan begitu Perangkat kembali online.
+_Avoid_: sync sebagai istilah domain, backup, upload
+
 **Akun demo**:
 Akun sementara berisi data contoh yang dibuat untuk satu pengunjung dan kedaluwarsa setelah 24 jam.
 _Avoid_: guest, akun tamu
@@ -62,6 +70,10 @@ _Avoid_: transaction date, tanggal input
 Label jenis sebuah Income atau Expense. Setiap Kategori hanya berlaku untuk salah satu dari keduanya; Transfer tidak punya Kategori.
 _Avoid_: tag, label
 
+**Kategori default**:
+Kategori yang disalin ke setiap Akun baru. Sesudah disalin, ia milik Pengguna dan sama persis dengan Kategori buatan Pengguna sendiri.
+_Avoid_: kategori sistem, kategori bawaan yang terkunci
+
 ### Ringkasan dan batas
 
 **Periode**:
@@ -77,5 +89,5 @@ Batas Expense untuk satu bulan kalender, bagi satu Kategori atau bagi seluruh Ex
 _Avoid_: anggaran sekali pakai, target
 
 **Arsip**:
-Keadaan Dompet atau Kategori yang tidak lagi bisa dipilih untuk Transaksi baru tetapi tetap tampil di riwayat dan laporan.
+Keadaan Dompet atau Kategori yang tidak lagi bisa dipilih untuk Transaksi baru tetapi tetap tampil di riwayat dan laporan. Dompet atau Kategori yang dipakai Transaksi hanya bisa diarsip, tidak bisa dihapus. Dompet atau Kategori yang dihapus di satu Perangkat tetapi ternyata dipakai Transaksi dari Perangkat lain kembali sebagai Arsip.
 _Avoid_: hapus (untuk yang sudah pernah dipakai), nonaktif

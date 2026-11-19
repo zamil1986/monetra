@@ -33,7 +33,9 @@ export function Filters({ values, wallets, categories }: { values: Values; walle
     onChange: (e: { target: { value: string } }) => apply(key, e.target.value),
     className: inputClass(),
   });
-  const group = (type: string) => categories.filter((c) => c.type === type);
+  const group = (type: string) => categories.filter((c) => c.type === type && !c.archived);
+  // Archived Kategori still label old Transaksi, so they stay filterable in a group of their own (PRD 3.6).
+  const archivedCategories = categories.filter((c) => c.archived);
   // Desktop: every field sits in one wrapping row. Phone: the extra fields fold behind the Filters button.
   const item = "flex-[1_1_118px] max-md:basis-[40%]";
 
@@ -59,9 +61,16 @@ export function Filters({ values, wallets, categories }: { values: Values; walle
             <option value="">All categories</option>
             {["EXPENSE", "INCOME"].map((type) => (
               <optgroup key={type} label={type === "EXPENSE" ? "Expense" : "Income"}>
-                {group(type).map((c) => <option key={c.id} value={c.id}>{c.name}{c.archived ? " (archived)" : ""}</option>)}
+                {group(type).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </optgroup>
             ))}
+            {archivedCategories.length > 0 && (
+              <optgroup label="Archived">
+                {archivedCategories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.type === "INCOME" ? "income" : "expense"})</option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </Field>
         <Field label="Wallet" htmlFor="f-wal" className={item}>

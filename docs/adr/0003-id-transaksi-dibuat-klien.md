@@ -1,5 +1,7 @@
 # ID Transaksi dibuat di perangkat, dan penghapusan hanya ditandai
 
+> **Digantikan oleh [ADR 0004](0004-online-penuh-id-server-hapus-fisik.md).**
+
 PRD mewajibkan tidak ada Transaksi ganda akibat request yang terkirim ulang, dan menempatkan pencatatan offline di Phase 4. Kami memutuskan ID Transaksi berupa UUID yang dibuat di perangkat sebelum request dikirim: server memperlakukan permintaan simpan dengan ID yang sudah ada sebagai pengulangan dan mengembalikan Transaksi yang sudah tersimpan, bukan membuat yang baru. Transaksi yang dihapus tidak dibuang dari database melainkan ditandai terhapus, lalu dikecualikan dari semua tampilan dan perhitungan.
 
 ## Considered Options

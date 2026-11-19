@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button, FieldError, cx, iconButtonClass } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
+import { haptic } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
 
 type Props = { id: string; title: string; meta: string; amount: string; variant?: "icon" | "button"; after?: string };
@@ -21,7 +22,13 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
     setBusy(true);
     setError(null);
     try {
-      await api(`/api/transactions/${id}`, { method: "DELETE" });
+      try {
+        await api(`/api/transactions/${id}`, { method: "DELETE" });
+      } catch (e) {
+        // A repeat of a delete that already went through: it's gone, which is what was asked.
+        if (!(e instanceof ApiError && e.status === 404)) throw e;
+      }
+      haptic();
       dialog.current?.close();
       if (after) router.push(after);
       router.refresh();
@@ -46,7 +53,7 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
         ref={dialog}
         aria-labelledby={`del-h-${id}`}
         className={cx(
-          "w-[min(440px,calc(100vw-32px))] rounded-md border-0 bg-white p-6 text-left text-ink whitespace-normal shadow-[0_18px_48px_-12px_rgb(20_22_26/0.45)]",
+          "w-[min(440px,calc(100vw-32px))] rounded-xl border-0 bg-white p-6 text-left text-ink whitespace-normal shadow-[0_18px_48px_-12px_rgb(20_22_26/0.45)]",
           "m-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-t-[10px] max-md:rounded-b-none max-md:px-4 max-md:pt-[22px] max-md:pb-[calc(18px+env(safe-area-inset-bottom))]",
         )}
       >

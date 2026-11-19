@@ -3,7 +3,7 @@ import type { DomainError } from "@/domain/errors";
 /** A refusal a route handler turns into an HTTP response. */
 export class ServiceError extends Error {
   constructor(
-    readonly status: 400 | 404 | 409 | 422,
+    readonly status: 400 | 401 | 404 | 409 | 422,
     readonly code: string,
     message: string,
     readonly field?: string,
