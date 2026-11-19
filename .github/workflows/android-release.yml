@@ -1,13 +1,26 @@
 # Builds the Android APK and publishes it on GitHub Releases, where /download and the in-app
-# update check find it (ADR 0005). Release by pushing a tag: git tag v0.1.0 && git push origin v0.1.0
+# update check find it (ADR 0005).
+# - Every push to main that touches the app releases the next patch version (v0.1.4 -> v0.1.5).
+# - For a bigger jump, push a tag yourself: git tag v0.2.0 && git push origin v0.2.0
 name: Android release
 
 on:
   push:
+    branches: [main]
+    paths:
+      - "mobile/**"
+      - "shared/**"
+      - ".github/workflows/android-release.yml"
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+# Two pushes close together must not both pick the same next version.
+concurrency:
+  group: android-release
+  cancel-in-progress: false
 
 jobs:
   apk:
@@ -17,6 +30,22 @@ jobs:
         working-directory: mobile
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the tags, to find the last version
+
+      - name: Pick the version
+        id: version
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            LAST=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+            LAST="${LAST#v}"
+            IFS=. read -r MAJOR MINOR PATCH <<< "${LAST:-0.0.0}"
+            VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+          echo "Releasing $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Check release settings
         env:
@@ -54,13 +83,18 @@ jobs:
         run: |
           echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
           export MONETRA_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.version.outputs.version }}"
           flutter build apk --release \
             --build-name="$VERSION" --build-number="${{ github.run_number }}" \
             --dart-define=API_URL="$API_URL"
           cp build/app/outputs/flutter-apk/app-release.apk monetra.apk
 
+      # Creates the tag too when the run came from a push to main. A tag made with this
+      # workflow's token doesn't start the workflow again.
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          make_latest: "true"
           files: mobile/monetra.apk
           generate_release_notes: true

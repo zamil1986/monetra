@@ -38,7 +38,7 @@ export default async function DownloadPage() {
           <li>Open the downloaded file. Android asks to allow installs from your browser the first time: allow it for this install.</li>
           <li>Tap <strong>Install</strong>, then sign in with your Monetra account. The first sign-in needs a connection.</li>
         </ol>
-        <p className={cx("text-meta", muted)}>Updating: download the new version and install it over the old one. Your data stays. The app tells you when a new version is out.</p>
+        <p className={cx("text-meta", muted)}>Updating: the app tells you when a new version is out, downloads it and opens the installer. Your data stays.</p>
       </section>
 
       <ul className="flex flex-col gap-3">

@@ -5,7 +5,7 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 
 import 'app/providers.dart';
 import 'app/router.dart';
-import 'screens/settings.dart' show checkForUpdate;
+import 'app/update.dart';
 import 'ui/theme.dart';
 
 void main() {

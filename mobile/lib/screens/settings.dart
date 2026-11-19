@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../app/providers.dart';
+import '../app/update.dart';
 import '../data/api.dart';
 import '../data/sync.dart';
 import '../ui/format.dart';
@@ -151,43 +151,4 @@ class _ChangePasswordState extends State<_ChangePassword> {
           ),
         ],
       );
-}
-
-int _compare(String a, String b) {
-  final x = a.split('.').map((p) => int.tryParse(p) ?? 0).toList();
-  final y = b.split('.').map((p) => int.tryParse(p) ?? 0).toList();
-  for (var i = 0; i < 3; i++) {
-    final d = (i < x.length ? x[i] : 0) - (i < y.length ? y[i] : 0);
-    if (d != 0) return d;
-  }
-  return 0;
-}
-
-/// Asks the server for the newest APK and offers it. Quiet mode says nothing when up to date or offline.
-Future<void> checkForUpdate(BuildContext context, WidgetRef ref, String? current, {bool quiet = true}) async {
-  if (current == null) return;
-  try {
-    final latest = await ref.read(apiProvider).appVersion();
-    final version = latest['version'] as String?;
-    final url = latest['apkUrl'] as String?;
-    if (!context.mounted) return;
-    if (version == null || url == null || _compare(version, current) <= 0) {
-      if (!quiet) showMessage(context, "You're on the latest version.");
-      return;
-    }
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text('Monetra $version is available'),
-        content: Text('You have $current. The download opens in your browser; install it over this one and your data stays.'),
-        actions: [
-          TextButton(onPressed: () => c.pop(false), child: const Text('Later')),
-          FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: const Text('Download')),
-        ],
-      ),
-    );
-    if (go == true) await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  } catch (_) {
-    if (!quiet && context.mounted) showMessage(context, "Couldn't check for updates. Try again when online.");
-  }
 }
