@@ -10,7 +10,7 @@ export default function RegisterPage() {
   return (
     <>
       <h1 className={h1}>Create your account</h1>
-      <p className={`${muted} mt-1 mb-6`}>You start with a Tunai wallet and the usual categories.</p>
+      <p className={`${muted} mt-1 mb-6`}>You start with a cash wallet and the usual categories.</p>
       <AuthForm
         submitLabel="Create account"
         fields={[
