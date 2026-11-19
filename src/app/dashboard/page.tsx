@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowUpRight, Equal } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Equal, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Glyph, categoryIcon, hue } from "@/components/icons";
@@ -45,17 +45,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { income, expense } = inPeriod.summary;
   const net = income - expense;
 
+  const flowMax = Math.max(income, expense);
+  const customOpen = period.kind === "custom";
+  const activeChip = "aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-white";
+
   return (
     <>
-      <PageHead><h1 className={h1}>Dashboard</h1><span className={spacer} /></PageHead>
+      {/* The phone already names the app in the cobalt band; the title stays for screen readers. */}
+      <div className="max-md:sr-only"><PageHead><h1 className={h1}>Dashboard</h1><span className={spacer} /></PageHead></div>
       <Page>
-        <div className="flex flex-col gap-10">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 wide:grid-cols-2 wide:gap-x-12">
           <section aria-labelledby="bal">
-            <div className="flex flex-wrap items-baseline gap-x-3">
-              <h2 id="bal" className={h2}>Total balance</h2>
-              <span className={cx("text-meta", muted)}>Current position. The period doesn&apos;t change it.</span>
-            </div>
-            <p className={cx("fig mt-1 text-[44px] leading-none md:text-[56px]", totalBalance < 0 && "text-red")}>{formatRupiah(totalBalance)}</p>
+            <h2 id="bal" className={h2}>Total balance</h2>
+            <span className={cx("block text-meta", muted)}>Current position. The period doesn&apos;t change it.</span>
+            <p className={cx("fig mt-2 text-[44px] leading-none md:text-[56px]", totalBalance < 0 && "text-red")}>{formatRupiah(totalBalance)}</p>
             <div className={cx(rowsClass, "mt-4")}>
               {active.map((w) => (
                 <Link key={w.id} href="/wallets" className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
@@ -68,35 +71,50 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </section>
 
           <section aria-labelledby="flow">
-            <div className="flex flex-wrap items-baseline gap-x-3">
-              <h2 id="flow" className={h2}>{LABELS[period.kind]}</h2>
-              <span className={cx("text-meta", muted)}>{rangeLabel(from, to)} · transfers not counted</span>
+            <h2 id="flow" className={h2}>{LABELS[period.kind]}</h2>
+            <span className={cx("block text-meta", muted)}>{rangeLabel(from, to)} · transfers not counted</span>
+            <div className="mt-3 flex flex-wrap items-start gap-2">
+              <nav aria-label="Period" className="contents">
+                {PERIODS.filter((p) => p !== "custom").map((p) => (
+                  <Link key={p} href={`/dashboard?period=${p}`} aria-current={period.kind === p ? "page" : undefined} className={chipClass(cx("no-underline", activeChip))}>
+                    {LABELS[p]}
+                  </Link>
+                ))}
+              </nav>
+              {/* Custom range folds away until asked for, so the figures stay near the top on a phone. */}
+              <details className="open:basis-full" open={customOpen}>
+                <summary
+                  className={chipClass(cx("w-fit list-none [&::-webkit-details-marker]:hidden", activeChip))}
+                  aria-current={customOpen ? "page" : undefined}
+                >
+                  Custom
+                </summary>
+                <form className="mt-2 flex flex-wrap items-end gap-2" action="/dashboard">
+                  <input type="hidden" name="period" value="custom" />
+                  <label className="flex flex-col gap-1 text-meta font-semibold">From<input className={inputClass(false, "w-auto")} type="date" name="from" defaultValue={from} required /></label>
+                  <label className="flex flex-col gap-1 text-meta font-semibold">To<input className={inputClass(false, "w-auto")} type="date" name="to" defaultValue={to} required /></label>
+                  <button className={buttonClass("secondary")} type="submit">Show range</button>
+                </form>
+              </details>
             </div>
-            <nav aria-label="Period" className="mt-3 flex flex-wrap gap-2">
-              {PERIODS.filter((p) => p !== "custom").map((p) => (
-                <Link key={p} href={`/dashboard?period=${p}`} aria-current={period.kind === p ? "page" : undefined}
-                  className={chipClass("no-underline aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-white")}>
-                  {LABELS[p]}
-                </Link>
-              ))}
-            </nav>
-            <form className="mt-3 flex flex-wrap items-end gap-2" action="/dashboard">
-              <input type="hidden" name="period" value="custom" />
-              <label className="flex flex-col gap-1 text-meta font-semibold">From<input className={inputClass(false, "w-auto")} type="date" name="from" defaultValue={from} required /></label>
-              <label className="flex flex-col gap-1 text-meta font-semibold">To<input className={inputClass(false, "w-auto")} type="date" name="to" defaultValue={to} required /></label>
-              <button className={buttonClass("secondary")} type="submit">Show range</button>
-            </form>
-            <div className={cx(rowsClass, "mt-4")}>
-              <div className={rowClass}><ArrowDownLeft className="text-green" aria-hidden /><span className="flex-1 font-semibold">Income</span><span className={rowFig}>{formatRupiah(income)}</span></div>
-              <div className={rowClass}><ArrowUpRight aria-hidden /><span className="flex-1 font-semibold">Expense</span><span className={rowFig}>{formatRupiah(expense)}</span></div>
-              <div className={rowClass}>
+
+            <div className={cx(rowsClass, "mt-4 pt-3")}>
+              {flowMax === 0 ? (
+                <p className={cx("pb-3 text-sm", muted)}>Nothing recorded in this period.</p>
+              ) : (
+                <div className="flex flex-col gap-3 pb-3">
+                  <FlowBar Icon={ArrowDownLeft} label="Income" amount={income} max={flowMax} bar="bg-green" icon="text-green" />
+                  <FlowBar Icon={ArrowUpRight} label="Expense" amount={expense} max={flowMax} bar="bg-red" />
+                </div>
+              )}
+              <div className={cx(rowClass, "border-t")}>
                 <Equal aria-hidden /><span className="flex-1 font-semibold">Net cash flow</span>
                 <span className={cx(rowFig, net > 0 && "text-green", net < 0 && "text-red")}>{net > 0 ? "+" : ""}{formatRupiah(net)}</span>
               </div>
             </div>
           </section>
 
-          <section aria-labelledby="recent">
+          <section aria-labelledby="recent" className="wide:col-span-2">
             <div className="flex items-baseline gap-3">
               <h2 id="recent" className={h2}>Recent transactions</h2>
               <span className={spacer} />
@@ -126,5 +144,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </Page>
     </>
+  );
+}
+
+/** One side of the period's cash flow: label and amount as text, the bar only shows proportion. */
+function FlowBar({ Icon, label, amount, max, bar, icon }: { Icon: LucideIcon; label: string; amount: number; max: number; bar: string; icon?: string }) {
+  return (
+    <div>
+      <div className="flex items-center gap-3">
+        <Icon className={icon} aria-hidden />
+        <span className="flex-1 font-semibold">{label}</span>
+        <span className={rowFig}>{formatRupiah(amount)}</span>
+      </div>
+      <div className="mt-1.5 h-2 rounded-sm bg-panel" aria-hidden>
+        <div className={cx("h-full rounded-sm", bar)} style={{ width: `${amount === 0 ? 0 : Math.max(1, (amount / max) * 100)}%` }} />
+      </div>
+    </div>
   );
 }
