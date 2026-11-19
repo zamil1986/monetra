@@ -29,6 +29,10 @@ flutter run                             # emulator: reaches the Mac's dev server
 flutter run --dart-define=API_URL=http://192.168.1.20:3000   # a real phone on the same Wi-Fi (npm run dev:phone)
 ```
 
+## Deploy the web app
+
+Vercel project `monetra` deploys `main` on every push. Its `vercel-build` script applies Prisma migrations to Neon (through `DATABASE_URL_UNPOOLED`) before `next build`. Production needs `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and optionally `RESEND_API_KEY`.
+
 ## Release an APK
 
 Pushing a `v*` tag runs `.github/workflows/android-release.yml`: tests, a signed release build, and a GitHub Release with `monetra.apk`. `/download` and the in-app update check read the newest release. It needs:
