@@ -16,7 +16,6 @@ const type = z.enum(["INCOME", "EXPENSE", "TRANSFER"]);
 const occurredAt = z.iso.datetime({ offset: true }).transform((s) => new Date(s));
 
 export const transactionCreateSchema = z.object({
-  id,
   type,
   amount: rupiah,
   walletId: id,
@@ -49,3 +48,12 @@ export const transactionQuerySchema = z.object({
   page: z.coerce.number().int().positive().optional(),
   pageSize: z.coerce.number().int().positive().optional(),
 });
+
+export const categoryCreateSchema = z.object({
+  type: z.enum(["INCOME", "EXPENSE"]),
+  name: z.string(),
+  icon: z.string(),
+  color: z.string(),
+});
+/** No `type`: a Kategori never changes type (PRD 3.6). */
+export const categoryPatchSchema = categoryCreateSchema.omit({ type: true }).partial().strict();

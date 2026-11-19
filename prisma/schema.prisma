@@ -22,71 +22,91 @@ model User {
   id            String    @id @default(uuid()) @db.Uuid
   name          String
   email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  image         String?
   timezone      String    @default("Asia/Jakarta")
   isDemo        Boolean   @default(false) @map("is_demo")
   demoExpiresAt DateTime? @map("demo_expires_at")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  wallets      Wallet[]
-  categories   Category[]
-  transactions Transaction[]
+  wallets         Wallet[]
+  categories      Category[]
+  transactions    Transaction[]
+  sessions        Session[]
+  accounts        Account[]
+  categoryAliases CategoryAlias[]
 
   @@map("users")
 }
 
 model Wallet {
-  id             String    @id @default(uuid()) @db.Uuid
-  userId         String    @map("user_id") @db.Uuid
-  name           String
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  name            String
   // Whole rupiah (ADR 0002). BigInt so large balances never overflow.
-  openingBalance BigInt    @default(0) @map("opening_balance")
-  icon           String
-  color          String
-  archivedAt     DateTime? @map("archived_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  openingBalance  BigInt    @default(0) @map("opening_balance")
+  icon            String
+  color           String
+  archivedAt      DateTime? @map("archived_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  // Sinkronisasi (ADR 0005): tanda terhapus, jam Perangkat untuk edit-terakhir-menang,
+  // dan versi server yang naik di setiap tulis (trigger) sebagai cursor pull.
+  deletedAt       DateTime? @map("deleted_at")
+  clientUpdatedAt DateTime  @default(now()) @map("client_updated_at")
+  version         BigInt    @default(0) @map("version")
 
   user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions     Transaction[] @relation("TransactionWallet")
   transfersInbound Transaction[] @relation("TransactionToWallet")
 
   @@index([userId])
+  @@index([userId, version])
   @@map("wallets")
 }
 
 model Category {
-  id         String       @id @default(uuid()) @db.Uuid
-  userId     String       @map("user_id") @db.Uuid
-  name       String
-  type       CategoryType
-  icon       String
-  color      String
-  archivedAt DateTime?    @map("archived_at")
-  createdAt  DateTime     @default(now()) @map("created_at")
-  updatedAt  DateTime     @updatedAt @map("updated_at")
+  id              String       @id @default(uuid()) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  name            String
+  type            CategoryType
+  icon            String
+  color           String
+  archivedAt      DateTime?    @map("archived_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+  // Sinkronisasi (ADR 0005): tanda terhapus, jam Perangkat untuk edit-terakhir-menang,
+  // dan versi server yang naik di setiap tulis (trigger) sebagai cursor pull.
+  deletedAt       DateTime?    @map("deleted_at")
+  clientUpdatedAt DateTime     @default(now()) @map("client_updated_at")
+  version         BigInt       @default(0) @map("version")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
 
   @@index([userId])
+  @@index([userId, version])
   @@map("categories")
 }
 
 model Transaction {
-  // Generated on the device before the request is sent (ADR 0003).
-  id          String          @id @db.Uuid
-  userId      String          @map("user_id") @db.Uuid
-  type        TransactionType
-  amount      BigInt
-  walletId    String          @map("wallet_id") @db.Uuid
-  toWalletId  String?         @map("to_wallet_id") @db.Uuid
-  categoryId  String?         @map("category_id") @db.Uuid
-  description String?
-  occurredAt  DateTime        @map("occurred_at")
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
-  deletedAt   DateTime?       @map("deleted_at")
+  id              String          @id @default(uuid()) @db.Uuid
+  userId          String          @map("user_id") @db.Uuid
+  type            TransactionType
+  amount          BigInt
+  walletId        String          @map("wallet_id") @db.Uuid
+  toWalletId      String?         @map("to_wallet_id") @db.Uuid
+  categoryId      String?         @map("category_id") @db.Uuid
+  description     String?
+  occurredAt      DateTime        @map("occurred_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  // Sinkronisasi (ADR 0005): tanda terhapus, jam Perangkat untuk edit-terakhir-menang,
+  // dan versi server yang naik di setiap tulis (trigger) sebagai cursor pull.
+  deletedAt       DateTime?       @map("deleted_at")
+  clientUpdatedAt DateTime        @default(now()) @map("client_updated_at")
+  version         BigInt          @default(0) @map("version")
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   wallet   Wallet    @relation("TransactionWallet", fields: [walletId], references: [id], onDelete: Restrict)
@@ -96,5 +116,71 @@ model Transaction {
   @@index([userId, occurredAt])
   @@index([walletId])
   @@index([toWalletId])
+  @@index([userId, version])
   @@map("transactions")
+}
+
+/// A Kategori ID a Perangkat made offline that turned out to clash by name with one the
+/// server already had; it now stands for that one (ADR 0005, "Kategori kembar digabung").
+model CategoryAlias {
+  aliasId   String   @id @map("alias_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  targetId  String   @map("target_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("category_aliases")
+}
+
+// Tabel milik Better Auth (PRD 6: kredensial dan sesi disimpan di tabel library auth).
+
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(uuid()) @db.Uuid
+  userId                String    @map("user_id") @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  password              String?
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(uuid()) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
 }

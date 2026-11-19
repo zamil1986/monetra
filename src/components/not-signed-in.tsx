@@ -1,12 +1,6 @@
-import { Notice, Page } from "./ui";
+import { redirect } from "next/navigation";
 
-export function NotSignedIn() {
-  return (
-    <Page>
-      <Notice tone="warn" role="alert" className="max-w-[60ch]">
-        <strong>No account to show.</strong> Sign-in isn&apos;t built yet. Set <code>DEV_USER_EMAIL</code> in <code>.env</code> and run{" "}
-        <code>npm run db:seed</code>.
-      </Notice>
-    </Page>
-  );
+/** Pages render this when the session is missing or has ended; the sign-in page takes over. */
+export function NotSignedIn(): never {
+  redirect("/login");
 }

@@ -24,13 +24,13 @@ export type WalletView = {
   icon: WalletIcon;
   archived: boolean;
   archivedAt: Date | null;
-  /** Live Transaksi on this Dompet, as either side. */
+  /** Transaksi on this Dompet, as either side. */
   transactionCount: number;
-  /** Never used, not even by a deleted Transaksi (PRD 3.3 rule 6, ADR 0003). */
+  /** No Transaksi uses it (PRD 3.3 rule 6). */
   deletable: boolean;
 };
 
-/** Live (not deleted) Transaksi touching these wallets, summed per type and direction. */
+/** Transaksi touching these wallets, summed per type and direction. */
 async function movementsFor(client: Tx | typeof db, userId: string, walletIds?: string[]): Promise<Movement[]> {
   const touching = walletIds ? { OR: [{ walletId: { in: walletIds } }, { toWalletId: { in: walletIds } }] } : {};
   const groups = await client.transaction.groupBy({
@@ -48,15 +48,12 @@ async function movementsFor(client: Tx | typeof db, userId: string, walletIds?: 
 
 /** Every Dompet of the Pengguna with its Saldo, plus the Total Balance of the active ones. */
 export async function listWallets(userId: string): Promise<{ wallets: WalletView[]; totalBalance: number }> {
-  const [rows, movements, usedFrom, usedTo, everFrom, everTo] = await Promise.all([
-    db.wallet.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
+  const [rows, movements, usedFrom, usedTo] = await Promise.all([
+    db.wallet.findMany({ where: { userId, deletedAt: null }, orderBy: { createdAt: "asc" } }),
     movementsFor(db, userId),
     db.transaction.groupBy({ by: ["walletId"], where: { userId, deletedAt: null }, _count: true }),
     db.transaction.groupBy({ by: ["toWalletId"], where: { userId, deletedAt: null, toWalletId: { not: null } }, _count: true }),
-    db.transaction.findMany({ where: { userId }, distinct: ["walletId"], select: { walletId: true } }),
-    db.transaction.findMany({ where: { userId, toWalletId: { not: null } }, distinct: ["toWalletId"], select: { toWalletId: true } }),
   ]);
-  const everUsed = new Set([...everFrom.map((t) => t.walletId), ...everTo.map((t) => t.toWalletId)]);
   const states = rows.map((w) => ({ id: w.id, openingBalance: Number(w.openingBalance), archived: w.archivedAt !== null }));
   const balances = balancesByWallet(states, movements);
   const counts = new Map<string, number>();
@@ -73,7 +70,7 @@ export async function listWallets(userId: string): Promise<{ wallets: WalletView
     archived: w.archivedAt !== null,
     archivedAt: w.archivedAt,
     transactionCount: counts.get(w.id) ?? 0,
-    deletable: !everUsed.has(w.id),
+    deletable: !counts.get(w.id),
   }));
   return { wallets, totalBalance: sumActive(states, movements) };
 }
@@ -86,12 +83,12 @@ export async function lockWallets(tx: Tx, userId: string, ids: string[]) {
   if (ids.length === 0) return [];
   return tx.$queryRaw<{ id: string; name: string; opening_balance: bigint; archived_at: Date | null }[]>`
     SELECT id, name, opening_balance, archived_at FROM wallets
-    WHERE user_id = ${userId}::uuid AND id = ANY(${ids}::uuid[])
+    WHERE user_id = ${userId}::uuid AND id = ANY(${ids}::uuid[]) AND deleted_at IS NULL
     ORDER BY id FOR UPDATE`;
 }
 
 async function findOwned(client: Tx | typeof db, userId: string, id: string) {
-  const wallet = await client.wallet.findFirst({ where: { id, userId } });
+  const wallet = await client.wallet.findFirst({ where: { id, userId, deletedAt: null } });
   if (!wallet) throw ServiceError.notFound("Wallet");
   return wallet;
 }
@@ -121,7 +118,7 @@ export async function updateWallet(userId: string, id: string, patch: Partial<Wa
       color: patch.color ?? current.color,
       icon: patch.icon ?? current.icon,
     });
-    return tx.wallet.update({ where: { id }, data: { ...valid, openingBalance: BigInt(valid.openingBalance) } });
+    return tx.wallet.update({ where: { id }, data: { ...valid, openingBalance: BigInt(valid.openingBalance), clientUpdatedAt: new Date() } });
   });
 }
 
@@ -134,23 +131,23 @@ export async function archiveWallet(userId: string, id: string) {
     const balance = balancesByWallet([state], await movementsFor(tx, userId, [id])).get(id) ?? 0;
     const check = checkArchive({ name: locked.name, balance });
     if (!check.ok) throw ServiceError.fromDomain(check.error);
-    await tx.wallet.update({ where: { id }, data: { archivedAt: new Date() } });
+    await tx.wallet.update({ where: { id }, data: { archivedAt: new Date(), clientUpdatedAt: new Date() } });
   });
 }
 
 export async function unarchiveWallet(userId: string, id: string) {
   await findOwned(db, userId, id);
-  await db.wallet.update({ where: { id }, data: { archivedAt: null } });
+  await db.wallet.update({ where: { id }, data: { archivedAt: null, clientUpdatedAt: new Date() } });
 }
 
 export async function deleteWallet(userId: string, id: string) {
   return db.$transaction(async (tx) => {
     const [locked] = await lockWallets(tx, userId, [id]);
     if (!locked) throw ServiceError.notFound("Wallet");
-    // Deleted Transaksi still reference the Dompet (ADR 0003), so they count as use too.
-    const transactionCount = await tx.transaction.count({ where: { OR: [{ walletId: id }, { toWalletId: id }] } });
+    const transactionCount = await tx.transaction.count({ where: { deletedAt: null, OR: [{ walletId: id }, { toWalletId: id }] } });
     const check = checkDelete({ transactionCount });
     if (!check.ok) throw ServiceError.fromDomain(check.error);
-    await tx.wallet.delete({ where: { id } });
+    // A mark, not a removal, so other Perangkat learn of it (ADR 0005).
+    await tx.wallet.update({ where: { id }, data: { deletedAt: new Date(), clientUpdatedAt: new Date() } });
   });
 }

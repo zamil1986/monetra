@@ -7,7 +7,7 @@ import {
   type TransactionDraft,
   type TransactionPatch,
 } from "@/domain/transaction-rules";
-import type { TransactionType } from "@/domain/types";
+import type { CategoryType, TransactionType } from "@/domain/types";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "./db";
 import { ServiceError } from "./errors";
@@ -68,67 +68,43 @@ async function ruleContext(tx: Tx, userId: string, ...drafts: Partial<Transactio
   const categoryIds = [...new Set(drafts.map((d) => d.categoryId).filter(present))];
   // One connection per database transaction: queries run one after another, not in parallel.
   const wallets = await lockWallets(tx, userId, walletIds);
-  const categories = categoryIds.length ? await tx.category.findMany({ where: { userId, id: { in: categoryIds } } }) : [];
+  // Shared lock: an archive of the same Kategori waits for this save, and the other way round.
+  const categories = categoryIds.length
+    ? await tx.$queryRaw<{ id: string; type: CategoryType; archived_at: Date | null }[]>`
+        SELECT id, type, archived_at FROM categories
+        WHERE user_id = ${userId}::uuid AND id = ANY(${categoryIds}::uuid[]) AND deleted_at IS NULL
+        ORDER BY id FOR SHARE`
+    : [];
   return {
     now: new Date(),
     wallets: wallets.map((w) => ({ id: w.id, archived: w.archived_at !== null })),
-    categories: categories.map((c) => ({ id: c.id, type: c.type, archived: c.archivedAt !== null })),
+    categories: categories.map((c) => ({ id: c.id, type: c.type, archived: c.archived_at !== null })),
   };
-}
-
-async function existing(client: Tx | typeof db, userId: string, id: string) {
-  const row = await client.transaction.findUnique({ where: { id }, include: withNames });
-  if (!row) return null;
-  if (row.userId !== userId) throw new ServiceError(409, "ID_CONFLICT", "That transaction ID is already taken.");
-  // A retry of a save that was deleted since must not hand the deleted Transaksi back (ADR 0003).
-  if (row.deletedAt) throw new ServiceError(409, "TRANSACTION_DELETED", "This transaction was deleted.");
-  return row;
 }
 
 const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-/**
- * Records a Transaksi under the ID the device generated (ADR 0003). Sending the same ID again
- * returns the stored Transaksi instead of making a second one.
- */
-export async function createTransaction(
-  userId: string,
-  input: TransactionDraft & { id: string },
-): Promise<{ transaction: TransactionView; created: boolean }> {
-  const { id, ...draft } = input;
-  if (!isUuid(id)) throw new ServiceError(400, "INVALID_ID", "The transaction ID must be a UUID.");
-  try {
-    return await db.$transaction(async (tx) => {
-      const already = await existing(tx, userId, id);
-      if (already) return { transaction: toView(already), created: false };
-
-      const result = validateNewTransaction(draft, await ruleContext(tx, userId, draft));
-      if (!result.ok) throw ServiceError.fromDomain(result.error);
-      const v = result.value;
-      const row = await tx.transaction.create({
-        data: {
-          id,
-          userId,
-          type: v.type,
-          amount: BigInt(v.amount),
-          walletId: v.walletId,
-          toWalletId: v.toWalletId,
-          categoryId: v.categoryId,
-          description: v.description,
-          occurredAt: v.occurredAt,
-        },
-        include: withNames,
-      });
-      return { transaction: toView(row), created: true };
+/** Records a Transaksi from the web; the server makes its ID, a Perangkat makes its own (ADR 0005). */
+export async function createTransaction(userId: string, draft: TransactionDraft): Promise<TransactionView> {
+  return db.$transaction(async (tx) => {
+    const result = validateNewTransaction(draft, await ruleContext(tx, userId, draft));
+    if (!result.ok) throw ServiceError.fromDomain(result.error);
+    const v = result.value;
+    const row = await tx.transaction.create({
+      data: {
+        userId,
+        type: v.type,
+        amount: BigInt(v.amount),
+        walletId: v.walletId,
+        toWalletId: v.toWalletId,
+        categoryId: v.categoryId,
+        description: v.description,
+        occurredAt: v.occurredAt,
+      },
+      include: withNames,
     });
-  } catch (e) {
-    // Two copies of the same request raced; the other one won, so this one is the retry.
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-      const winner = await existing(db, userId, id);
-      if (winner) return { transaction: toView(winner), created: false };
-    }
-    throw e;
-  }
+    return toView(row);
+  });
 }
 
 async function findLive(client: Tx | typeof db, userId: string, id: string) {
@@ -169,6 +145,7 @@ export async function updateTransaction(userId: string, id: string, patch: Trans
         categoryId: v.categoryId,
         description: v.description,
         occurredAt: v.occurredAt,
+        clientUpdatedAt: new Date(),
       },
       include: withNames,
     });
@@ -176,12 +153,12 @@ export async function updateTransaction(userId: string, id: string, patch: Trans
   });
 }
 
-/** Marks the Transaksi deleted (ADR 0003). Deleting it again is a no-op, so retries are safe. */
+/** Marks the Transaksi deleted, for good: no later edit brings it back (ADR 0005). */
 export async function deleteTransaction(userId: string, id: string): Promise<void> {
-  const row = isUuid(id) ? await db.transaction.findFirst({ where: { id, userId }, select: { deletedAt: true } }) : null;
-  if (!row) throw ServiceError.notFound("Transaction");
-  if (row.deletedAt) return;
-  await db.transaction.update({ where: { id }, data: { deletedAt: new Date() } });
+  const { count } = isUuid(id)
+    ? await db.transaction.updateMany({ where: { id, userId, deletedAt: null }, data: { deletedAt: new Date(), clientUpdatedAt: new Date() } })
+    : { count: 0 };
+  if (count === 0) throw ServiceError.notFound("Transaction");
 }
 
 export type TransactionSort = "newest" | "oldest" | "amount_desc" | "amount_asc";

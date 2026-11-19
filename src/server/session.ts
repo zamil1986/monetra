@@ -1,14 +1,14 @@
-import { db } from "./db";
+import { headers } from "next/headers";
+import { auth } from "./auth";
 import { ServiceError } from "./errors";
 
-/**
- * The signed-in Pengguna. Auth (PRD 3.1) is not built yet, so development uses the account
- * named by DEV_USER_EMAIL, created by `npm run db:seed`. Production refuses until auth lands.
- */
+/** The signed-in Pengguna, from the session cookie (web) or bearer token (Android). */
 export async function currentUserId(): Promise<string> {
-  const email = process.env.NODE_ENV === "production" ? undefined : process.env.DEV_USER_EMAIL;
-  if (!email) throw new ServiceError(404, "NOT_SIGNED_IN", "Sign-in is not available yet.");
-  const user = await db.user.findUnique({ where: { email }, select: { id: true } });
-  if (!user) throw new ServiceError(404, "NOT_SIGNED_IN", `No account for ${email}. Run npm run db:seed.`);
-  return user.id;
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new ServiceError(401, "NOT_SIGNED_IN", "Sign in to continue.");
+  const { isDemo, demoExpiresAt } = session.user;
+  if (isDemo && demoExpiresAt && new Date(demoExpiresAt) < new Date()) {
+    throw new ServiceError(401, "DEMO_EXPIRED", "This demo has ended. Start a new one from the sign-in page.");
+  }
+  return session.user.id;
 }

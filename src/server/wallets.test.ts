@@ -4,7 +4,6 @@ import { createUser } from "./users";
 import { archiveWallet, createWallet, deleteWallet, listWallets, unarchiveWallet, updateWallet } from "./wallets";
 import { createTransaction } from "./transactions";
 import { listCategories } from "./categories";
-import { randomUUID } from "node:crypto";
 
 beforeEach(resetDatabase);
 
@@ -44,9 +43,9 @@ describe("wallets", () => {
     const gopay = await createWallet(user.id, { name: "GoPay", openingBalance: 50_000, color: "teal", icon: "ewallet" });
     await expect(archiveWallet(user.id, gopay.id)).rejects.toMatchObject({ status: 422, code: "WALLET_NOT_EMPTY" });
 
-    const [food] = (await listCategories(user.id)).filter((c) => c.name === "Food");
+    const [food] = (await listCategories(user.id)).filter((c) => c.name === "Makanan");
     await createTransaction(user.id, {
-      id: randomUUID(), type: "EXPENSE", amount: 50_000, walletId: gopay.id, toWalletId: null,
+      type: "EXPENSE", amount: 50_000, walletId: gopay.id, toWalletId: null,
       categoryId: food!.id, description: null, occurredAt: new Date(),
     });
     await archiveWallet(user.id, gopay.id);
@@ -77,9 +76,9 @@ describe("wallets", () => {
     expect((await listWallets(user.id)).wallets.map((w) => w.name)).toEqual(["Tunai"]);
 
     const [tunai] = (await listWallets(user.id)).wallets;
-    const [salary] = (await listCategories(user.id)).filter((c) => c.name === "Salary");
+    const [salary] = (await listCategories(user.id)).filter((c) => c.name === "Gaji");
     await createTransaction(user.id, {
-      id: randomUUID(), type: "INCOME", amount: 10_000, walletId: tunai!.id, toWalletId: null,
+      type: "INCOME", amount: 10_000, walletId: tunai!.id, toWalletId: null,
       categoryId: salary!.id, description: null, occurredAt: new Date(),
     });
     await expect(deleteWallet(user.id, tunai!.id)).rejects.toMatchObject({ status: 422, code: "WALLET_IN_USE" });
