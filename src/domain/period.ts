@@ -1,8 +1,11 @@
 import { TZDate } from "@date-fns/tz";
+import type { DomainError } from "./errors";
 import { instantToLocal, localDayRange } from "./local-time";
+import { err, ok, type Result } from "./result";
 import type { Movement } from "./types";
 
 export const PERIODS = ["today", "week", "month", "year", "custom"] as const;
+export const PERIOD_KINDS = PERIODS;
 export type PeriodKind = (typeof PERIODS)[number];
 
 export type Period = { kind: Exclude<PeriodKind, "custom"> } | { kind: "custom"; from: string; to: string };
@@ -47,4 +50,28 @@ export function cashFlow(movements: Pick<Movement, "type" | "amount">[]) {
     else if (m.type === "EXPENSE") expense += m.amount;
   }
   return { income, expense, net: income - expense };
+}
+
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
+const isDate = (iso: string | undefined): iso is string =>
+  !!iso && DATE.test(iso) && new Date(`${iso}T00:00:00Z`).toISOString().slice(0, 10) === iso;
+
+/**
+ * A Periode as whole local days, given today's local date: the shape the dashboard API
+ * returns. Refuses a custom range with a missing, impossible, or reversed date.
+ */
+export function resolvePeriod(
+  input: { kind: PeriodKind; from?: string; to?: string },
+  today: string,
+): Result<{ kind: PeriodKind; from: string; to: string }, DomainError> {
+  const invalid = (field: "from" | "to", message: string) => err({ code: "INVALID_PERIOD", message, field });
+  if (input.kind === "custom") {
+    if (!isDate(input.from)) return invalid("from", "Pick a start date.");
+    if (!isDate(input.to)) return invalid("to", "Pick an end date.");
+    if (input.to < input.from) return invalid("to", "The end date can't be before the start date.");
+    return ok({ kind: "custom", from: input.from, to: input.to });
+  }
+  // `today` is already a local date, so read it as a plain calendar day in UTC.
+  const { from, to } = periodDates({ kind: input.kind }, new Date(`${today}T12:00:00Z`), "UTC");
+  return ok({ kind: input.kind, from, to });
 }

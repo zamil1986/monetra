@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PERIOD_KINDS } from "@/domain/period";
 
 /** Whole rupiah in JSON: an integer, never a string or a fraction (ADR 0002). */
 const rupiah = z.number("Enter a whole rupiah amount.").int("Enter a whole rupiah amount, with no fractions.").refine(Number.isSafeInteger, "That amount is too large.");
@@ -57,3 +58,9 @@ export const categoryCreateSchema = z.object({
 });
 /** No `type`: a Kategori never changes type (PRD 3.6). */
 export const categoryPatchSchema = categoryCreateSchema.omit({ type: true }).partial().strict();
+
+export const dashboardQuerySchema = z.object({
+  period: z.enum(PERIOD_KINDS).default("month"),
+  from: z.string().optional(),
+  to: z.string().optional(),
+});
