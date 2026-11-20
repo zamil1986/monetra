@@ -3,17 +3,20 @@ import Link from "next/link";
 import { Glyph, categoryIcon, hue } from "@/components/icons";
 import { NotSignedIn } from "@/components/not-signed-in";
 import { Rich } from "@/components/rich";
+import { SpendingCalendar } from "@/components/spending-calendar";
 import { TYPE_META, signedAmount } from "@/components/transaction-type";
 import { Notice, Page, PageHead, chipClass, cx, h1, h2, inputClass, buttonClass, muted, rowClass, rowFig, rowSub, rowTitle, rowsClass, spacer } from "@/components/ui";
+import { readDay, readMonth } from "@/domain/calendar";
 import type { Lang, MessageKey } from "@/domain/i18n";
 import { instantToLocal } from "@/domain/local-time";
 import { formatRupiah } from "@/domain/money";
 import { transactionTitle } from "@/domain/presentation";
 import { PERIODS, periodDates, type Period, type PeriodKind } from "@/domain/period";
 import { dayMonth, weekday } from "@/lib/dates";
+import { getSpendingMonth } from "@/server/calendar";
 import { getT, titled } from "@/server/i18n";
 import { currentUser } from "@/server/page-session";
-import { listTransactions } from "@/server/transactions";
+import { MAX_PAGE_SIZE, listTransactions } from "@/server/transactions";
 import { listWallets } from "@/server/wallets";
 
 export const generateMetadata = titled("nav.dashboard");
@@ -39,12 +42,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const { t, lang } = await getT();
   const raw = Object.fromEntries(Object.entries(await searchParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
   const period = readPeriod(raw);
-  const { from, to } = periodDates(period, new Date(), user.timezone);
+  const now = new Date();
+  const { from, to } = periodDates(period, now, user.timezone);
+  // The spending calendar keeps its own month and day in the URL, next to the period.
+  const today = instantToLocal(now, user.timezone).date;
+  const calMonth = readMonth(raw.month, today);
+  const calDay = readDay(raw.day, calMonth, today);
+  const calHref = (month: string, day?: string) => {
+    const q = new URLSearchParams(Object.entries(raw).filter((e): e is [string, string] => e[0] !== "month" && e[0] !== "day" && !!e[1]));
+    q.set("month", month);
+    if (day) q.set("day", day);
+    return `/dashboard?${q}`;
+  };
 
-  const [{ wallets, totalBalance }, inPeriod, recent] = await Promise.all([
+  const [{ wallets, totalBalance }, inPeriod, recent, spending, onDay] = await Promise.all([
     listWallets(user.id),
     listTransactions(user.id, { from, to, pageSize: 1 }),
     listTransactions(user.id, { pageSize: 5 }),
+    getSpendingMonth(user.id, calMonth),
+    calDay ? listTransactions(user.id, { from: calDay, to: calDay, sort: "oldest", pageSize: MAX_PAGE_SIZE }) : null,
   ]);
   const active = wallets.filter((w) => !w.archived);
   const { income, expense } = inPeriod.summary;
@@ -118,6 +134,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               </div>
             </div>
           </section>
+
+          <SpendingCalendar
+            data={spending}
+            today={today}
+            day={calDay}
+            dayTx={onDay && { items: onDay.items, total: onDay.total, ...onDay.summary }}
+            href={calHref}
+            timeZone={user.timezone}
+            lang={lang}
+            t={t}
+          />
 
           <section aria-labelledby="recent" className="wide:col-span-2">
             <div className="flex items-baseline gap-3">
