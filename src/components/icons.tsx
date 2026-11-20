@@ -19,11 +19,12 @@ export const CATEGORY_ICON_COMPONENTS: Record<CategoryIcon, LucideIcon> = {
 };
 const CATEGORY_ICONS: Record<string, LucideIcon> = CATEGORY_ICON_COMPONENTS;
 
-export const WALLET_ICONS: Record<string, { Icon: LucideIcon; label: string }> = {
-  bank: { Icon: Landmark, label: "Bank" },
-  cash: { Icon: Banknote, label: "Cash" },
-  ewallet: { Icon: Smartphone, label: "E-wallet" },
-  savings: { Icon: PiggyBank, label: "Savings" },
+/** Labelled by `walletIcon.<key>` in the catalog. */
+export const WALLET_ICONS: Record<string, { Icon: LucideIcon }> = {
+  bank: { Icon: Landmark },
+  cash: { Icon: Banknote },
+  ewallet: { Icon: Smartphone },
+  savings: { Icon: PiggyBank },
 };
 
 export const walletIcon = (icon: string) => (WALLET_ICONS[icon] ?? WALLET_ICONS.bank!).Icon;

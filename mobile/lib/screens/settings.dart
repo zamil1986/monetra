@@ -8,9 +8,10 @@ import '../app/providers.dart';
 import '../data/api.dart';
 import '../data/sync.dart';
 import '../ui/format.dart';
+import '../ui/l10n.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
-import 'auth.dart' show authMessage;
+import 'auth.dart' show LanguagePicker, authMessage;
 
 const _timezones = {'Asia/Jakarta': 'WIB (Jakarta)', 'Asia/Makassar': 'WITA (Makassar)', 'Asia/Jayapura': 'WIT (Jayapura)'};
 
@@ -30,6 +31,7 @@ class SettingsScreen extends ConsumerWidget {
     final state = ref.watch(syncStateProvider).value ?? SyncState.idle;
     final lastAt = ref.watch(lastSyncProvider).value;
     final version = ref.watch(_versionProvider).value;
+    final t = context.t;
 
     Future<void> online(Future<void> Function() f, String done) async {
       try {
@@ -37,12 +39,12 @@ class SettingsScreen extends ConsumerWidget {
         await ref.read(syncSchedulerProvider).now();
         if (context.mounted) showMessage(context, done);
       } catch (e) {
-        if (context.mounted) showMessage(context, isOffline(e) ? 'This needs a connection. Try again when online.' : authMessage(e));
+        if (context.mounted) showMessage(context, isOffline(e) ? t('m.needsConnection') : authMessage(e, t));
       }
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+      appBar: AppBar(title: Text(t('m.nav.more'))),
       body: ListView(children: [
         const SyncBanner(),
         ListTile(
@@ -52,49 +54,63 @@ class SettingsScreen extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.category_outlined),
-          title: const Text('Categories'),
+          title: Text(t('nav.categories')),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/categories'),
         ),
         ListTile(
           leading: const Icon(Icons.schedule),
-          title: const Text('Time zone'),
-          subtitle: const Text('Days, weeks and months start by this clock'),
+          title: Text(t('settings.timezone')),
+          subtitle: Text(t('m.settings.timezoneSub')),
           trailing: DropdownButton<String>(
             value: _timezones.containsKey(l?.timezone) ? l!.timezone : null,
             hint: Text(l?.timezone ?? ''),
             underline: const SizedBox.shrink(),
             items: [for (final MapEntry(key: k, value: v) in _timezones.entries) DropdownMenuItem(value: k, child: Text(v))],
-            onChanged: (tz) => tz == null ? null : online(() => ref.read(apiProvider).updateProfile(timezone: tz), 'Time zone saved.'),
+            onChanged: (tz) => tz == null ? null : online(() => ref.read(apiProvider).updateProfile(timezone: tz), t('m.settings.timezoneSaved')),
           ),
         ),
+        // Shows at once, even offline; the Akun and the web follow at the next sync (ADR 0006).
+        ListTile(
+          leading: const Icon(Icons.translate),
+          title: Text(t('lang.label')),
+          subtitle: Text(t('settings.languageSub')),
+        ),
+        const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: LanguagePicker(forAccount: true)),
         ListTile(
           leading: const Icon(Icons.lock_outline),
-          title: const Text('Change password'),
-          onTap: () => showDialog(context: context, builder: (_) => _ChangePassword(onSubmit: (current, next) => online(() => ref.read(apiProvider).changePassword(current, next), 'Password changed.'))),
+          title: Text(t('m.settings.changePassword')),
+          onTap: () => showDialog(
+              context: context,
+              builder: (_) => _ChangePassword(
+                  onSubmit: (current, next) => online(() => ref.read(apiProvider).changePassword(current, next), t('m.settings.passwordChanged')))),
         ),
         const Divider(),
         ListTile(
           leading: Icon(state == SyncState.syncing ? Icons.sync : pending > 0 ? Icons.cloud_upload_outlined : Icons.cloud_done_outlined),
-          title: Text(state == SyncState.syncing ? 'Syncing…' : pending > 0 ? '$pending ${pending == 1 ? 'change' : 'changes'} not synced yet' : 'Everything is synced'),
-          subtitle: Text(lastAt == null ? 'Not synced yet' : 'Last synced ${whenShort(DateTime.parse(lastAt), l?.timezone ?? 'Asia/Jakarta')}'),
-          trailing: TextButton(onPressed: () => ref.read(syncSchedulerProvider).now(), child: const Text('Sync now')),
+          title: Text(state == SyncState.syncing
+              ? t('m.sync.syncing')
+              : pending > 0
+                  ? t('m.sync.pending', {'count': pending})
+                  : t('m.sync.allSynced')),
+          subtitle: Text(lastAt == null ? t('m.sync.never') : t('m.sync.last', {'when': whenShort(DateTime.parse(lastAt), l?.timezone ?? 'Asia/Jakarta', t)})),
+          trailing: TextButton(onPressed: () => ref.read(syncSchedulerProvider).now(), child: Text(t('m.sync.now'))),
         ),
         if (failures.isNotEmpty) ...[
-          Notice("The server refused ${failures.length} ${failures.length == 1 ? 'change' : 'changes'}. Fix the record on this phone and it will sync again.", tone: NoticeTone.warn,
-              action: TextButton(onPressed: () => ref.read(repositoryProvider).dismissFailures(), child: const Text('Dismiss'))),
+          Notice(t('m.sync.refused', {'count': failures.length}), tone: NoticeTone.warn,
+              action: TextButton(onPressed: () => ref.read(repositoryProvider).dismissFailures(), child: Text(t('m.dismiss')))),
           for (final f in failures) ListTile(dense: true, title: Text(f.message), subtitle: Text('${f.entity} · ${f.code}')),
         ],
         const Divider(),
         ListTile(
           leading: const Icon(Icons.system_update_outlined),
-          title: const Text('App version'),
+          title: Text(t('m.settings.version')),
           subtitle: Text(version ?? ''),
-          trailing: TextButton(onPressed: () => checkForUpdate(context, ref, version, quiet: false), child: const Text('Check')),
+          trailing: TextButton(onPressed: () => checkForUpdate(context, ref, version, quiet: false), child: Text(t('m.settings.check'))),
         ),
         ListTile(
           leading: const Icon(Icons.logout, color: C.red),
-          title: const Text('Sign out', style: TextStyle(color: C.red)),
+          title: Text(t('shell.signOut'), style: const TextStyle(color: C.red)),
           onTap: () => _signOut(context, ref),
         ),
       ]),
@@ -105,14 +121,15 @@ class SettingsScreen extends ConsumerWidget {
     final session = ref.read(sessionProvider.notifier);
     if (await session.signOut()) return;
     if (!context.mounted) return;
+    final t = context.t;
     final discard = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Some changes aren\'t synced'),
-        content: const Text("Signing out now removes them from this phone, and they never reach your other devices. Sync first when you're online."),
+        title: Text(t('m.signOut.title')),
+        content: Text(t('m.signOut.body')),
         actions: [
-          TextButton(onPressed: () => c.pop(false), child: const Text('Stay signed in')),
-          TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: C.red), child: const Text('Sign out anyway')),
+          TextButton(onPressed: () => c.pop(false), child: Text(t('m.signOut.stay'))),
+          TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: C.red), child: Text(t('m.signOut.anyway'))),
         ],
       ),
     );
@@ -132,25 +149,28 @@ class _ChangePasswordState extends State<_ChangePassword> {
   final next = TextEditingController();
 
   @override
-  Widget build(BuildContext context) => AlertDialog(
-        title: const Text('Change password'),
+  Widget build(BuildContext context) {
+    final t = context.t;
+    return AlertDialog(
+        title: Text(t('m.settings.changePassword')),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: current, obscureText: true, decoration: const InputDecoration(labelText: 'Current password')),
+          TextField(controller: current, obscureText: true, decoration: InputDecoration(labelText: t('m.settings.currentPassword'))),
           const SizedBox(height: 12),
-          TextField(controller: next, obscureText: true, decoration: const InputDecoration(labelText: 'New password', helperText: 'At least 8 characters.')),
+          TextField(controller: next, obscureText: true, decoration: InputDecoration(labelText: t('auth.newPassword'), helperText: t('auth.passwordHint'))),
         ]),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(t('common.cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
             onPressed: () {
               Navigator.pop(context);
               widget.onSubmit(current.text, next.text);
             },
-            child: const Text('Save'),
+            child: Text(t('m.save')),
           ),
         ],
       );
+  }
 }
 
 int _compare(String a, String b) {
@@ -171,23 +191,24 @@ Future<void> checkForUpdate(BuildContext context, WidgetRef ref, String? current
     final version = latest['version'] as String?;
     final url = latest['apkUrl'] as String?;
     if (!context.mounted) return;
+    final t = context.t;
     if (version == null || url == null || _compare(version, current) <= 0) {
-      if (!quiet) showMessage(context, "You're on the latest version.");
+      if (!quiet) showMessage(context, t('m.update.latest'));
       return;
     }
     final go = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: Text('Monetra $version is available'),
-        content: Text('You have $current. The download opens in your browser; install it over this one and your data stays.'),
+        title: Text(t('m.update.title', {'version': version})),
+        content: Text(t('m.update.body', {'current': current})),
         actions: [
-          TextButton(onPressed: () => c.pop(false), child: const Text('Later')),
-          FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: const Text('Download')),
+          TextButton(onPressed: () => c.pop(false), child: Text(t('m.update.later'))),
+          FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: Text(t('m.update.download'))),
         ],
       ),
     );
     if (go == true) await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   } catch (_) {
-    if (!quiet && context.mounted) showMessage(context, "Couldn't check for updates. Try again when online.");
+    if (!quiet && context.mounted) showMessage(context, context.t('m.update.failed'));
   }
 }

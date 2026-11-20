@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Glyph, WALLET_ICONS, hue, walletIcon } from "@/components/icons";
+import { Rich } from "@/components/rich";
 import {
   Button, Field, FieldError, Notice, Page, PageHead, buttonClass, chipClass, cx, h1, h2, iconButtonClass, inputClass,
   noticeActions, onlyDesktop, onlyMobile, rowClass, rowFig, rowSub, rowTitle, rowsClass, sidePanel, spacer, splitClass,
@@ -13,6 +14,7 @@ import { COLORS } from "@/domain/palette";
 import type { WalletColor, WalletIcon } from "@/domain/wallet-rules";
 import { api, ApiError } from "@/lib/api";
 import { longDate } from "@/lib/dates";
+import { useT } from "@/lib/i18n-client";
 import { useOnline } from "@/lib/use-online";
 
 export type WalletRow = {
@@ -31,6 +33,7 @@ export type WalletRow = {
 export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]; totalBalance: number }) {
   const router = useRouter();
   const online = useOnline();
+  const { t, lang } = useT();
   const [editing, setEditing] = useState<WalletRow | null>(null);
   const [refusal, setRefusal] = useState<{ id: string; message: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -47,7 +50,7 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
       if (editing?.id === wallet.id) setEditing(null);
       router.refresh();
     } catch (e) {
-      setRefusal({ id: wallet.id, message: e instanceof ApiError ? e.message : "Something went wrong. Try again." });
+      setRefusal({ id: wallet.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong") });
     } finally {
       setBusy(null);
     }
@@ -56,17 +59,17 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
   return (
     <>
       <PageHead>
-        <h1 className={h1}>Wallets</h1>
+        <h1 className={h1}>{t("nav.wallets")}</h1>
         <span className={spacer} />
-        <a className={buttonClass("primary", "md", onlyMobile)} href="#wallet-form" onClick={() => setEditing(null)}><Plus />New wallet</a>
+        <a className={buttonClass("primary", "md", onlyMobile)} href="#wallet-form" onClick={() => setEditing(null)}><Plus />{t("wallets.new")}</a>
       </PageHead>
       <Page>
         <div className={splitClass}>
           <div className="flex flex-col gap-8 md:gap-9">
             <section aria-labelledby="act-h">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                <h2 id="act-h" className={h2}>Total balance</h2>
-                <span className="text-meta text-ink-2">{active.length} active {active.length === 1 ? "wallet" : "wallets"}</span>
+                <h2 id="act-h" className={h2}>{t("dash.totalBalance")}</h2>
+                <span className="text-meta text-ink-2">{t("wallets.activeCount", { count: active.length })}</span>
               </div>
               <p className={cx("fig mt-1 mb-[18px] text-[52px] leading-none md:text-[72px]", totalBalance < 0 && "text-red")}>
                 <span className="mr-[0.18em] text-[0.5em] font-bold">{totalBalance < 0 ? "−Rp" : "Rp"}</span>
@@ -83,10 +86,10 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                           <span className={rowTitle}>{w.name}</span>
                           {/* Below zero from a non-negative start usually means an unrecorded transfer in. */}
                           {w.balance < 0 && w.openingBalance >= 0 ? (
-                            <span className={rowSub}><span className="text-red">Below zero.</span> A transfer in may be missing.</span>
+                            <span className={rowSub}><Rich text={t("wallets.belowZero")} tags={{ red: (c) => <span className="text-red">{c}</span> }} /></span>
                           ) : (
                             <span className={rowSub}>
-                              Opening balance {formatRupiah(w.openingBalance)}<span className={onlyDesktop}> · {share}% of total</span>
+                              {t("wallets.opening", { amount: formatRupiah(w.openingBalance) })}<span className={onlyDesktop}>{t("wallets.share", { share })}</span>
                             </span>
                           )}
                           {w.balance > 0 && (
@@ -98,11 +101,11 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                         </span>
                         <span className={cx(rowFig, w.balance < 0 && "text-red")}>{formatRupiah(w.balance)}</span>
                         <span className="inline-flex flex-none items-center justify-end gap-0.5 md:min-w-[76px]">
-                          <button className={iconButtonClass()} type="button" aria-label={`Edit ${w.name}`} onClick={() => setEditing(w)}><Pencil /></button>
+                          <button className={iconButtonClass()} type="button" aria-label={t("common.edit", { name: w.name })} onClick={() => setEditing(w)}><Pencil /></button>
                           {w.deletable ? (
-                            <button className={iconButtonClass(true)} type="button" aria-label={`Delete ${w.name}`} disabled={locked(w.id)} onClick={() => act(w, "delete")}><Trash2 /></button>
+                            <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: w.name })} disabled={locked(w.id)} onClick={() => act(w, "delete")}><Trash2 /></button>
                           ) : (
-                            <button className={iconButtonClass()} type="button" aria-label={`Archive ${w.name}`} disabled={locked(w.id)} onClick={() => act(w, "archive")}><Archive /></button>
+                            <button className={iconButtonClass()} type="button" aria-label={t("common.archive", { name: w.name })} disabled={locked(w.id)} onClick={() => act(w, "archive")}><Archive /></button>
                           )}
                         </span>
                       </div>
@@ -110,8 +113,8 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                         <Notice tone="warn" role="alert" className="my-2">
                           <strong>{refusal.message}</strong>
                           <div className={noticeActions}>
-                            <Link href="/transactions/new?type=transfer">Transfer the balance out</Link>
-                            <Link href="/transactions/new">Record it as an expense</Link>
+                            <Link href="/transactions/new?type=transfer">{t("wallets.transferOut")}</Link>
+                            <Link href="/transactions/new">{t("wallets.recordExpense")}</Link>
                           </div>
                         </Notice>
                       )}
@@ -124,8 +127,8 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
             {archived.length > 0 && (
               <section aria-labelledby="arch-h">
                 <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-t-2 border-ink pt-3.5">
-                  <h2 id="arch-h" className={h2}>Archived</h2>
-                  <span className="text-meta text-ink-2">Hidden from new transactions, kept in history. Unarchive to edit.</span>
+                  <h2 id="arch-h" className={h2}>{t("common.archived")}</h2>
+                  <span className="text-meta text-ink-2">{t("wallets.archivedNote")}</span>
                 </div>
                 {archived.map((w) => (
                   <div className={rowClass} key={w.id}>
@@ -133,11 +136,11 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                     <span className="min-w-0 flex-1">
                       <span className={rowTitle}>{w.name}</span>
                       <span className={rowSub}>
-                        Archived {w.archivedOn ? longDate(w.archivedOn) : ""} · {w.transactionCount} {w.transactionCount === 1 ? "transaction" : "transactions"}
+                        {t("wallets.archivedOn", { date: w.archivedOn ? longDate(w.archivedOn, lang) : "" })} · {t("tx.count", { count: w.transactionCount })}
                       </span>
                     </span>
                     <span className={cx(rowFig, "text-ink-2")}>{formatRupiah(w.balance)}</span>
-                    <Button variant="quiet" disabled={locked(w.id)} onClick={() => act(w, "unarchive")}><ArchiveRestore />Unarchive</Button>
+                    <Button variant="quiet" disabled={locked(w.id)} onClick={() => act(w, "unarchive")}><ArchiveRestore />{t("common.unarchive")}</Button>
                   </div>
                 ))}
               </section>
@@ -158,6 +161,7 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
 
 function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; onDone: () => void; onCancel: () => void }) {
   const online = useOnline();
+  const { t } = useT();
   const [name, setName] = useState(wallet?.name ?? "");
   const [opening, setOpening] = useState(wallet ? formatRupiah(wallet.openingBalance).replace("Rp ", "") : "0");
   const [color, setColor] = useState<WalletColor>(wallet?.color ?? "blue");
@@ -168,7 +172,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
   async function submit(e: FormEvent) {
     e.preventDefault();
     const amount = parseRupiah(opening);
-    if (!amount.ok) return setError({ field: "openingBalance", message: amount.error });
+    if (!amount.ok) return setError({ field: "openingBalance", message: t(amount.error) });
     setSaving(true);
     setError(null);
     try {
@@ -178,7 +182,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
       if (!wallet) { setName(""); setOpening("0"); }
       onDone();
     } catch (err) {
-      setError(err instanceof ApiError ? { field: err.field, message: err.message } : { message: "Something went wrong. Try again." });
+      setError(err instanceof ApiError ? { field: err.field, message: err.message } : { message: t("common.somethingWrong") });
     } finally {
       setSaving(false);
     }
@@ -188,20 +192,20 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
 
   return (
     <aside className={sidePanel} id="wallet-form" aria-labelledby="nw-h">
-      <h2 id="nw-h" className={cx(h2, "mb-4")}>{wallet ? `Edit ${wallet.name}` : "New wallet"}</h2>
+      <h2 id="nw-h" className={cx(h2, "mb-4")}>{wallet ? t("common.edit", { name: wallet.name }) : t("wallets.new")}</h2>
       <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
-        <Field label="Name" htmlFor="w-name" error={errorFor("name")}>
+        <Field label={t("common.name")} htmlFor="w-name" error={errorFor("name")}>
           <input
-            className={inputClass(!!errorFor("name"))} id="w-name" placeholder="e.g. BCA, Cash, GoPay" maxLength={40}
+            className={inputClass(!!errorFor("name"))} id="w-name" placeholder={t("wallets.namePlaceholder")} maxLength={40}
             value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!errorFor("name")}
           />
         </Field>
         <Field
-          label="Opening balance"
+          label={t("wallets.openingLabel")}
           htmlFor="w-open"
           error={errorFor("openingBalance")}
           hintId="w-open-h"
-          hint="What the wallet held before its first recorded transaction. Start with a minus if you owed money, e.g. −250.000. You can change it later and the balance follows."
+          hint={t("wallets.openingHint")}
         >
           <div className="relative">
             <input
@@ -211,33 +215,33 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
             <span className="absolute top-[11px] left-3 font-bold text-ink-2">Rp</span>
           </div>
         </Field>
-        <Field label="Color" legendId="w-col">
+        <Field label={t("common.color")} legendId="w-col">
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="w-col">
             {COLORS.map((c) => (
               <button
-                key={c} type="button" role="radio" aria-checked={color === c} aria-label={c[0]!.toUpperCase() + c.slice(1)}
+                key={c} type="button" role="radio" aria-checked={color === c} aria-label={t(`color.${c}`)}
                 className="size-8 cursor-pointer rounded border-2 border-white bg-(--c) outline-1 outline-line aria-checked:outline-2 aria-checked:outline-ink"
                 style={{ ["--c" as string]: hue(c) }} onClick={() => setColor(c)}
               />
             ))}
           </div>
         </Field>
-        <Field label="Icon" legendId="w-ico">
+        <Field label={t("common.icon")} legendId="w-ico">
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="w-ico">
             {(Object.keys(WALLET_ICONS) as WalletIcon[]).map((key) => {
-              const { Icon, label } = WALLET_ICONS[key]!;
-              return <button key={key} type="button" className={chipClass()} role="radio" aria-checked={icon === key} onClick={() => setIcon(key)}><Icon />{label}</button>;
+              const { Icon } = WALLET_ICONS[key]!;
+              return <button key={key} type="button" className={chipClass()} role="radio" aria-checked={icon === key} onClick={() => setIcon(key)}><Icon />{t(`walletIcon.${key}`)}</button>;
             })}
           </div>
         </Field>
         {error && !error.field && <FieldError message={error.message} />}
         <Button type="submit" size="lg" disabled={saving || !online}>
-          {!online ? "Saving needs a connection" : wallet ? "Save changes" : "Create wallet"}
+          {!online ? t("common.savingNeedsConnection") : wallet ? t("common.saveChanges") : t("wallets.create")}
         </Button>
         {wallet ? (
-          <Button variant="quiet" onClick={onCancel}>Cancel</Button>
+          <Button variant="quiet" onClick={onCancel}>{t("common.cancel")}</Button>
         ) : (
-          <p className="text-meta text-ink-2">A wallet with no transactions can be deleted. Once it has transactions it can only be archived.</p>
+          <p className="text-meta text-ink-2">{t("wallets.deleteNote")}</p>
         )}
       </form>
     </aside>

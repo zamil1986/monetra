@@ -1,6 +1,7 @@
 "use client";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Button, Field, Notice, inputClass } from "@/components/ui";
+import { useT } from "@/lib/i18n-client";
 
 export type AuthField = {
   name: string;
@@ -26,6 +27,7 @@ export function AuthForm({
   onSubmit: (values: Record<string, string>) => Promise<string | null>;
   after?: ReactNode;
 }) {
+  const { t } = useT();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -38,7 +40,7 @@ export function AuthForm({
     try {
       setError(await onSubmit(values));
     } catch {
-      setError("Couldn't reach Monetra. Check your connection and try again.");
+      setError(t("auth.unreachable"));
     } finally {
       setBusy(false);
     }
@@ -52,7 +54,7 @@ export function AuthForm({
         </Field>
       ))}
       {error && <Notice tone="warn" role="alert">{error}</Notice>}
-      <Button type="submit" size="lg" className="w-full" disabled={busy}>{busy ? "Please wait…" : submitLabel}</Button>
+      <Button type="submit" size="lg" className="w-full" disabled={busy}>{busy ? t("auth.wait") : submitLabel}</Button>
       {after}
     </form>
   );

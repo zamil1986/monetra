@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../domain/i18n.dart';
 import 'api.dart';
 import 'database.dart';
 
@@ -36,6 +37,7 @@ class SyncEngine {
     }
     _emit(SyncState.syncing);
     try {
+      await pushLanguage();
       await pushAll();
       await pullAll();
       await db.putSetting('sync.lastAt', DateTime.now().toUtc().toIso8601String());
@@ -64,13 +66,30 @@ class SyncEngine {
           if (r['status'] == 'rejected') {
             await db.into(db.syncFailures).insert(SyncFailuresCompanion.insert(
                 entity: batch[i].entity, entityId: batch[i].entityId, code: r['code'] as String? ?? 'REJECTED',
-                message: r['message'] as String? ?? 'The server refused this change.', at: DateTime.now().toUtc()));
+                message: r['message'] as String? ?? translate(await db.setting('profile.language') ?? defaultLang, 'm.sync.refusedDefault'),
+                at: DateTime.now().toUtc()));
           }
           await (db.delete(db.outbox)..where((o) => o.seq.equals(batch[i].seq))).go();
         }
         await applyRemap(remap);
       });
     }
+  }
+
+  /// A Bahasa picked on this Perangkat, sent to the Akun. The server keeps whichever choice was made
+  /// last, so an older one from a phone that was offline never undoes a newer one (ADR 0006).
+  Future<void> pushLanguage() async {
+    if (await db.setting('profile.languagePending') != '1') return;
+    final language = await db.setting('profile.language');
+    final changedAt = await db.setting('profile.languageChangedAt');
+    if (!isLang(language)) return db.putSetting('profile.languagePending', '0');
+    final kept = await api.setLanguage(language!, changedAt);
+    await db.transaction(() async {
+      // Picked again while this was on its way: that newer choice still waits to be sent.
+      if (await db.setting('profile.languageChangedAt') != changedAt) return;
+      await db.putSetting('profile.language', kept);
+      await db.putSetting('profile.languagePending', '0');
+    });
   }
 
   /// Kategori kembar: the server kept another Kategori for ours. Point everything at it.
@@ -119,6 +138,10 @@ class SyncEngine {
         await db.putSetting('profile.name', profile['name'] as String);
         await db.putSetting('profile.email', profile['email'] as String);
         await db.putSetting('profile.timezone', profile['timezone'] as String);
+        // The Akun's Bahasa, unless this Perangkat holds a newer choice not sent yet.
+        if (isLang(profile['language']) && await db.setting('profile.languagePending') != '1') {
+          await db.putSetting('profile.language', profile['language'] as String);
+        }
         await db.putSetting('sync.cursor', page['cursor'] as String);
       });
       more = page['more'] == true;

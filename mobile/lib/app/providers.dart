@@ -9,6 +9,7 @@ import '../data/database.dart';
 import '../data/ledger.dart';
 import '../data/repository.dart';
 import '../data/sync.dart';
+import '../domain/i18n.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -16,7 +17,16 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
-final apiProvider = Provider<Api>((ref) => Api(TokenStore()));
+final apiProvider = Provider<Api>((ref) => Api(TokenStore(), language: () => ref.read(languageProvider).value ?? deviceLanguage()));
+
+/// The phone's own language, used until a Bahasa is picked or the Akun's arrives.
+String deviceLanguage() => langFromLocale(WidgetsBinding.instance.platformDispatcher.locale.toLanguageTag());
+
+/// The Bahasa this phone shows: the Akun's (or the one just picked), else the phone's own (ADR 0006).
+final languageProvider = StreamProvider<String>((ref) => ref
+    .watch(databaseProvider)
+    .watchSetting('profile.language')
+    .map((v) => isLang(v) ? v! : deviceLanguage()));
 
 final syncEngineProvider = Provider<SyncEngine>((ref) {
   final engine = SyncEngine(ref.watch(databaseProvider), ref.watch(apiProvider));
@@ -115,9 +125,10 @@ class SessionController extends Notifier<Session> {
     await ref.read(syncSchedulerProvider).now();
   }
 
-  Future<void> signUp(String name, String email, String password, String timezone) async {
+  /// The Akun starts in [language], the Bahasa the sign-up screen was shown in.
+  Future<void> signUp(String name, String email, String password, String timezone, String language) async {
     await _db.wipe();
-    await _api.signUp(name.trim(), email.trim(), password, timezone);
+    await _api.signUp(name.trim(), email.trim(), password, timezone, language);
     state = Session.signedIn;
     await ref.read(syncSchedulerProvider).now();
   }

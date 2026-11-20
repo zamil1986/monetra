@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Button, FieldError, cx, iconButtonClass } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { haptic } from "@/lib/haptics";
+import { useT } from "@/lib/i18n-client";
 import { useOnline } from "@/lib/use-online";
 
 type Props = { id: string; title: string; meta: string; amount: string; variant?: "icon" | "button"; after?: string };
@@ -14,6 +15,7 @@ type Props = { id: string; title: string; meta: string; amount: string; variant?
 export function DeleteTransactionButton({ id, title, meta, amount, variant = "icon", after }: Props) {
   const router = useRouter();
   const online = useOnline();
+  const { t } = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,7 +35,7 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
       if (after) router.push(after);
       router.refresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Couldn't delete. Try again.");
+      setError(e instanceof ApiError ? e.message : t("del.failed"));
     } finally {
       setBusy(false);
     }
@@ -43,11 +45,11 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
     <>
       {variant === "icon" ? (
         <>
-          <Link className={iconButtonClass()} href={`/transactions/${id}`} aria-label={`Edit ${title}`}><Pencil /></Link>
-          <button className={iconButtonClass(true)} type="button" aria-label={`Delete ${title}`} onClick={() => dialog.current?.showModal()}><Trash2 /></button>
+          <Link className={iconButtonClass()} href={`/transactions/${id}`} aria-label={t("common.edit", { name: title })}><Pencil /></Link>
+          <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: title })} onClick={() => dialog.current?.showModal()}><Trash2 /></button>
         </>
       ) : (
-        <Button variant="danger" onClick={() => dialog.current?.showModal()}><Trash2 />Delete</Button>
+        <Button variant="danger" onClick={() => dialog.current?.showModal()}><Trash2 />{t("del.button")}</Button>
       )}
       <dialog
         ref={dialog}
@@ -57,16 +59,16 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
           "m-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-t-[10px] max-md:rounded-b-none max-md:px-4 max-md:pt-[22px] max-md:pb-[calc(18px+env(safe-area-inset-bottom))]",
         )}
       >
-        <h2 id={`del-h-${id}`} className="mb-2 text-xl font-bold">Delete this transaction?</h2>
-        <p className="text-ink-2">It disappears from every list, balance and report. This can&apos;t be undone.</p>
+        <h2 id={`del-h-${id}`} className="mb-2 text-xl font-bold">{t("del.title")}</h2>
+        <p className="text-ink-2">{t("del.body")}</p>
         <div className="mt-3.5 flex items-center justify-between gap-3 rounded bg-panel px-3 py-2.5 text-sm">
           <span><strong>{title}</strong><br /><span className="text-meta text-ink-2">{meta}</span></span>
           <span className="fig text-xl">{amount}</span>
         </div>
         {error && <div className="mt-3"><FieldError message={error} /></div>}
         <div className="mt-[22px] flex justify-end gap-2.5 max-md:flex-col-reverse max-md:[&_button]:min-h-12">
-          <Button variant="secondary" onClick={() => dialog.current?.close()}>Keep it</Button>
-          <Button variant="dangerSolid" disabled={busy || !online} onClick={confirm}>{online ? "Delete transaction" : "Deleting needs a connection"}</Button>
+          <Button variant="secondary" onClick={() => dialog.current?.close()}>{t("del.keep")}</Button>
+          <Button variant="dangerSolid" disabled={busy || !online} onClick={confirm}>{online ? t("del.confirm") : t("del.needsConnection")}</Button>
         </div>
       </dialog>
     </>

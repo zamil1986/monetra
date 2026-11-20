@@ -89,7 +89,7 @@ export async function lockWallets(tx: Tx, userId: string, ids: string[]) {
 
 async function findOwned(client: Tx | typeof db, userId: string, id: string) {
   const wallet = await client.wallet.findFirst({ where: { id, userId, deletedAt: null } });
-  if (!wallet) throw ServiceError.notFound("Wallet");
+  if (!wallet) throw ServiceError.notFound("wallet");
   return wallet;
 }
 
@@ -108,7 +108,7 @@ export async function updateWallet(userId: string, id: string, patch: Partial<Wa
   return db.$transaction(async (tx) => {
     // Locked so an archive can't land between this check and the update.
     const [locked] = await lockWallets(tx, userId, [id]);
-    if (!locked) throw ServiceError.notFound("Wallet");
+    if (!locked) throw ServiceError.notFound("wallet");
     const editable = checkEdit({ name: locked.name, archived: locked.archived_at !== null });
     if (!editable.ok) throw ServiceError.fromDomain(editable.error);
     const current = await findOwned(tx, userId, id);
@@ -125,7 +125,7 @@ export async function updateWallet(userId: string, id: string, patch: Partial<Wa
 export async function archiveWallet(userId: string, id: string) {
   return db.$transaction(async (tx) => {
     const [locked] = await lockWallets(tx, userId, [id]);
-    if (!locked) throw ServiceError.notFound("Wallet");
+    if (!locked) throw ServiceError.notFound("wallet");
     if (locked.archived_at) return;
     const state = { id, openingBalance: Number(locked.opening_balance), archived: false };
     const balance = balancesByWallet([state], await movementsFor(tx, userId, [id])).get(id) ?? 0;
@@ -143,7 +143,7 @@ export async function unarchiveWallet(userId: string, id: string) {
 export async function deleteWallet(userId: string, id: string) {
   return db.$transaction(async (tx) => {
     const [locked] = await lockWallets(tx, userId, [id]);
-    if (!locked) throw ServiceError.notFound("Wallet");
+    if (!locked) throw ServiceError.notFound("wallet");
     const transactionCount = await tx.transaction.count({ where: { deletedAt: null, OR: [{ walletId: id }, { toWalletId: id }] } });
     const check = checkDelete({ transactionCount });
     if (!check.ok) throw ServiceError.fromDomain(check.error);

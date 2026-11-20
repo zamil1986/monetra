@@ -1,22 +1,25 @@
 import { ArrowDownLeft, ArrowUpRight, Equal, type LucideIcon } from "lucide-react";
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Glyph, categoryIcon, hue } from "@/components/icons";
 import { NotSignedIn } from "@/components/not-signed-in";
+import { Rich } from "@/components/rich";
 import { TYPE_META, signedAmount } from "@/components/transaction-type";
 import { Notice, Page, PageHead, chipClass, cx, h1, h2, inputClass, buttonClass, muted, rowClass, rowFig, rowSub, rowTitle, rowsClass, spacer } from "@/components/ui";
+import type { Lang, MessageKey } from "@/domain/i18n";
 import { instantToLocal } from "@/domain/local-time";
 import { formatRupiah } from "@/domain/money";
+import { transactionTitle } from "@/domain/presentation";
 import { PERIODS, periodDates, type Period, type PeriodKind } from "@/domain/period";
 import { dayMonth, weekday } from "@/lib/dates";
+import { getT, titled } from "@/server/i18n";
 import { currentUser } from "@/server/page-session";
 import { listTransactions } from "@/server/transactions";
 import { listWallets } from "@/server/wallets";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const generateMetadata = titled("nav.dashboard");
 export const dynamic = "force-dynamic";
 
-const LABELS: Record<PeriodKind, string> = { today: "Today", week: "This week", month: "This month", year: "This year", custom: "Custom" };
+const LABELS: Record<PeriodKind, MessageKey> = { today: "period.today", week: "period.week", month: "period.month", year: "period.year", custom: "period.custom" };
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function readPeriod(params: Record<string, string | undefined>): Period {
@@ -26,12 +29,14 @@ function readPeriod(params: Record<string, string | undefined>): Period {
   return from && to && DATE.test(from) && DATE.test(to) && from <= to ? { kind, from, to } : { kind: "month" };
 }
 
-const rangeLabel = (from: string, to: string) => (from === to ? `${weekday(from)} ${dayMonth(from)}` : `${dayMonth(from)} – ${dayMonth(to)}`);
+const rangeLabel = (from: string, to: string, lang: Lang) =>
+  from === to ? `${weekday(from, lang)} ${dayMonth(from, lang)}` : `${dayMonth(from, lang)} – ${dayMonth(to, lang)}`;
 
 /** PRD 3.2, Phase 1: Total Balance, Saldo per Dompet, the Periode's cash flow, and the latest five. */
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[]>> }) {
   const user = await currentUser();
   if (!user) return <NotSignedIn />;
+  const { t, lang } = await getT();
   const raw = Object.fromEntries(Object.entries(await searchParams).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
   const period = readPeriod(raw);
   const { from, to } = periodDates(period, new Date(), user.timezone);
@@ -52,12 +57,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <>
       {/* The phone already names the app in the cobalt band; the title stays for screen readers. */}
-      <div className="max-md:sr-only"><PageHead><h1 className={h1}>Dashboard</h1><span className={spacer} /></PageHead></div>
+      <div className="max-md:sr-only"><PageHead><h1 className={h1}>{t("nav.dashboard")}</h1><span className={spacer} /></PageHead></div>
       <Page>
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 wide:grid-cols-2 wide:gap-x-12">
           <section aria-labelledby="bal">
-            <h2 id="bal" className={h2}>Total balance</h2>
-            <span className={cx("block text-meta", muted)}>Current position. The period doesn&apos;t change it.</span>
+            <h2 id="bal" className={h2}>{t("dash.totalBalance")}</h2>
+            <span className={cx("block text-meta", muted)}>{t("dash.totalBalanceSub")}</span>
             <p className={cx("fig mt-2 text-[44px] leading-none md:text-[56px]", totalBalance < 0 && "text-red")}>{formatRupiah(totalBalance)}</p>
             <div className={cx(rowsClass, "mt-4")}>
               {active.map((w) => (
@@ -71,13 +76,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </section>
 
           <section aria-labelledby="flow">
-            <h2 id="flow" className={h2}>{LABELS[period.kind]}</h2>
-            <span className={cx("block text-meta", muted)}>{rangeLabel(from, to)} · transfers not counted</span>
+            <h2 id="flow" className={h2}>{t(LABELS[period.kind])}</h2>
+            <span className={cx("block text-meta", muted)}>{t("dash.flowSub", { range: rangeLabel(from, to, lang) })}</span>
             <div className="mt-3 flex flex-wrap items-start gap-2">
-              <nav aria-label="Period" className="contents">
+              <nav aria-label={t("period.label")} className="contents">
                 {PERIODS.filter((p) => p !== "custom").map((p) => (
                   <Link key={p} href={`/dashboard?period=${p}`} aria-current={period.kind === p ? "page" : undefined} className={chipClass(cx("no-underline", activeChip))}>
-                    {LABELS[p]}
+                    {t(LABELS[p])}
                   </Link>
                 ))}
               </nav>
@@ -87,28 +92,28 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   className={chipClass(cx("w-fit list-none [&::-webkit-details-marker]:hidden", activeChip))}
                   aria-current={customOpen ? "page" : undefined}
                 >
-                  Custom
+                  {t("period.custom")}
                 </summary>
                 <form className="mt-2 flex flex-wrap items-end gap-2" action="/dashboard">
                   <input type="hidden" name="period" value="custom" />
-                  <label className="flex flex-col gap-1 text-meta font-semibold">From<input className={inputClass(false, "w-auto")} type="date" name="from" defaultValue={from} required /></label>
-                  <label className="flex flex-col gap-1 text-meta font-semibold">To<input className={inputClass(false, "w-auto")} type="date" name="to" defaultValue={to} required /></label>
-                  <button className={buttonClass("secondary")} type="submit">Show range</button>
+                  <label className="flex flex-col gap-1 text-meta font-semibold">{t("common.from")}<input className={inputClass(false, "w-auto")} type="date" name="from" defaultValue={from} required /></label>
+                  <label className="flex flex-col gap-1 text-meta font-semibold">{t("common.to")}<input className={inputClass(false, "w-auto")} type="date" name="to" defaultValue={to} required /></label>
+                  <button className={buttonClass("secondary")} type="submit">{t("dash.showRange")}</button>
                 </form>
               </details>
             </div>
 
             <div className={cx(rowsClass, "mt-4 pt-3")}>
               {flowMax === 0 ? (
-                <p className={cx("pb-3 text-sm", muted)}>Nothing recorded in this period.</p>
+                <p className={cx("pb-3 text-sm", muted)}>{t("dash.nothingInPeriod")}</p>
               ) : (
                 <div className="flex flex-col gap-3 pb-3">
-                  <FlowBar Icon={ArrowDownLeft} label="Income" amount={income} max={flowMax} bar="bg-green" icon="text-green" />
-                  <FlowBar Icon={ArrowUpRight} label="Expense" amount={expense} max={flowMax} bar="bg-red" />
+                  <FlowBar Icon={ArrowDownLeft} label={t("type.INCOME")} amount={income} max={flowMax} bar="bg-green" icon="text-green" />
+                  <FlowBar Icon={ArrowUpRight} label={t("type.EXPENSE")} amount={expense} max={flowMax} bar="bg-red" />
                 </div>
               )}
               <div className={cx(rowClass, "border-t")}>
-                <Equal aria-hidden /><span className="flex-1 font-semibold">Net cash flow</span>
+                <Equal aria-hidden /><span className="flex-1 font-semibold">{t("dash.netCashFlow")}</span>
                 <span className={cx(rowFig, net > 0 && "text-green", net < 0 && "text-red")}>{net > 0 ? "+" : ""}{formatRupiah(net)}</span>
               </div>
             </div>
@@ -116,25 +121,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
           <section aria-labelledby="recent" className="wide:col-span-2">
             <div className="flex items-baseline gap-3">
-              <h2 id="recent" className={h2}>Recent transactions</h2>
+              <h2 id="recent" className={h2}>{t("dash.recent")}</h2>
               <span className={spacer} />
-              <Link className="text-meta" href="/transactions">View all</Link>
+              <Link className="text-meta" href="/transactions">{t("dash.viewAll")}</Link>
             </div>
             {recent.items.length === 0 ? (
-              <Notice tone="info" role="status" className="mt-3"><strong>Nothing recorded yet.</strong> <Link href="/transactions/new">Record your first transaction</Link></Notice>
+              <Notice tone="info" role="status" className="mt-3"><Rich text={t("empty.nothingYet")} tags={{ link: (c) => <Link href="/transactions/new">{c}</Link> }} /></Notice>
             ) : (
               <div className={cx(rowsClass, "mt-3")}>
-                {recent.items.map((t) => {
-                  const local = instantToLocal(t.occurredAt, user.timezone);
-                  const where = t.type === "TRANSFER" ? `${t.walletName} → ${t.toWalletName}` : t.walletName;
+                {recent.items.map((tx) => {
+                  const local = instantToLocal(tx.occurredAt, user.timezone);
+                  const where = tx.type === "TRANSFER" ? `${tx.walletName} → ${tx.toWalletName}` : tx.walletName;
                   return (
-                    <Link key={t.id} href={`/transactions/${t.id}`} className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
-                      <Glyph Icon={categoryIcon(t.categoryIcon)} color={t.categoryColor} />
+                    <Link key={tx.id} href={`/transactions/${tx.id}`} className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
+                      <Glyph Icon={categoryIcon(tx.categoryIcon)} color={tx.categoryColor} />
                       <span className="min-w-0 flex-1">
-                        <span className={rowTitle}>{t.title}</span>
-                        <span className={rowSub}>{t.categoryName ?? "Transfer"} · {where} · {weekday(local.date)} {dayMonth(local.date)} {local.time}</span>
+                        <span className={rowTitle}>{transactionTitle(tx, t)}</span>
+                        <span className={rowSub}>{tx.categoryName ?? t("type.TRANSFER")} · {where} · {weekday(local.date, lang)} {dayMonth(local.date, lang)} {local.time}</span>
                       </span>
-                      <span className={cx(rowFig, TYPE_META[t.type].amount)}>{signedAmount(t.type, t.amount)}</span>
+                      <span className={cx(rowFig, TYPE_META[tx.type].amount)}>{signedAmount(tx.type, tx.amount)}</span>
                     </Link>
                   );
                 })}

@@ -1,3 +1,4 @@
+import 'i18n.dart';
 import 'result.dart';
 import 'types.dart';
 
@@ -43,8 +44,8 @@ class RuleContext {
 const _clockSkew = Duration(seconds: 60);
 const maxDescription = 120;
 
-Err<TransactionDraft> _refuse(String field, String message, [String code = 'INVALID_TRANSACTION']) =>
-    Err(DomainError(code, message, field: field));
+Err<TransactionDraft> _refuse(String field, String key, {Map<String, Object?>? params, String code = 'INVALID_TRANSACTION'}) =>
+    Err(DomainError(code, key, params: params, field: field));
 
 Result<TransactionDraft> validateNewTransaction(TransactionDraft draft, RuleContext ctx) => _validate(draft, ctx, null);
 
@@ -54,49 +55,47 @@ Result<TransactionDraft> validateTransactionEdit(TransactionDraft current, Trans
   if (wasTransfer != (next.type == TransactionType.transfer)) {
     return _refuse(
         'type',
-        wasTransfer
-            ? "A transfer can't become income or expense. Delete it and record the right type instead."
-            : "An income or expense can't become a transfer. Delete it and record a transfer instead.",
-        'TYPE_CHANGE_NOT_ALLOWED');
+        wasTransfer ? 'error.type.transferToOther' : 'error.type.otherToTransfer',
+        code: 'TYPE_CHANGE_NOT_ALLOWED');
   }
   return _validate(next, ctx, current);
 }
 
 Result<TransactionDraft> _validate(TransactionDraft d, RuleContext ctx, TransactionDraft? current) {
-  if (d.amount <= 0) return _refuse('amount', 'Enter a whole rupiah amount above 0.');
+  if (d.amount <= 0) return _refuse('amount', 'error.amount.positive');
   bool keptWallet(String id) => current != null && (current.walletId == id || current.toWalletId == id);
 
   final wallet = ctx.wallets.where((w) => w.id == d.walletId).firstOrNull;
-  if (wallet == null) return _refuse('walletId', 'Choose one of your wallets.');
+  if (wallet == null) return _refuse('walletId', 'error.wallet.choose');
   if (wallet.archived && !keptWallet(wallet.id)) {
-    return _refuse('walletId', 'That wallet is archived. Unarchive it or choose another one.');
+    return _refuse('walletId', 'error.wallet.archived');
   }
 
   if (d.type == TransactionType.transfer) {
-    if (d.categoryId != null) return _refuse('categoryId', 'A transfer has no category.');
-    if (d.toWalletId == null) return _refuse('toWalletId', 'Choose the wallet the money goes to.');
-    if (d.toWalletId == d.walletId) return _refuse('toWalletId', 'Pick two different wallets.');
+    if (d.categoryId != null) return _refuse('categoryId', 'error.transfer.noCategory');
+    if (d.toWalletId == null) return _refuse('toWalletId', 'error.transfer.chooseTo');
+    if (d.toWalletId == d.walletId) return _refuse('toWalletId', 'error.transfer.sameWallet');
     final to = ctx.wallets.where((w) => w.id == d.toWalletId).firstOrNull;
-    if (to == null) return _refuse('toWalletId', 'Choose one of your wallets.');
+    if (to == null) return _refuse('toWalletId', 'error.wallet.choose');
     if (to.archived && !keptWallet(to.id)) {
-      return _refuse('toWalletId', 'That wallet is archived. Unarchive it or choose another one.');
+      return _refuse('toWalletId', 'error.wallet.archived');
     }
   } else {
-    if (d.toWalletId != null) return _refuse('toWalletId', 'Only a transfer has a destination wallet.');
-    final label = d.type == TransactionType.income ? 'an income' : 'an expense';
+    if (d.toWalletId != null) return _refuse('toWalletId', 'error.transfer.onlyTransferHasTo');
+    final choose = d.type == TransactionType.income ? 'error.category.chooseIncome' : 'error.category.chooseExpense';
     final category = ctx.categories.where((c) => c.id == d.categoryId).firstOrNull;
     final wanted = d.type == TransactionType.income ? CategoryType.income : CategoryType.expense;
-    if (category == null || category.type != wanted) return _refuse('categoryId', 'Choose $label category.');
+    if (category == null || category.type != wanted) return _refuse('categoryId', choose);
     if (category.archived && current?.categoryId != category.id) {
-      return _refuse('categoryId', 'That category is archived. Choose another one.');
+      return _refuse('categoryId', 'error.category.archived');
     }
   }
 
-  if (d.occurredAt.isAfter(ctx.now.add(_clockSkew))) return _refuse('occurredAt', "The time can't be in the future.");
+  if (d.occurredAt.isAfter(ctx.now.add(_clockSkew))) return _refuse('occurredAt', 'error.occurredAt.future');
 
   final description = (d.description?.trim().isEmpty ?? true) ? null : d.description!.trim();
   if (description != null && description.length > maxDescription) {
-    return _refuse('description', 'Keep the description to $maxDescription characters or fewer.');
+    return _refuse('description', 'error.description.tooLong', params: {'max': maxDescription});
   }
   return Ok(TransactionDraft(
       type: d.type,
@@ -110,8 +109,8 @@ Result<TransactionDraft> _validate(TransactionDraft d, RuleContext ctx, Transact
 
 /// PRD 3.5: description, else category name, else "Transfer to (wallet)". Mirrors presentation.ts.
 String transactionTitle(
-    {required TransactionType type, String? description, String? categoryName, String? toWalletName}) {
+    {required TransactionType type, String? description, String? categoryName, String? toWalletName, Strings t = const Strings('en')}) {
   if (description != null && description.isNotEmpty) return description;
-  if (type == TransactionType.transfer) return 'Transfer to ${toWalletName ?? 'another wallet'}';
-  return categoryName ?? 'Untitled';
+  if (type == TransactionType.transfer) return t('tx.transferTo', {'wallet': toWalletName ?? t('tx.anotherWallet')});
+  return categoryName ?? t('tx.untitled');
 }

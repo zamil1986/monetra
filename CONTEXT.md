@@ -22,6 +22,10 @@ _Avoid_: device, klien, client
 Penyamaan catatan antara semua Perangkat milik satu Pengguna, sehingga Saldo dan ringkasan yang tampil sama di mana pun. Catatan yang dibuat tanpa koneksi ikut disamakan begitu Perangkat kembali online.
 _Avoid_: sync sebagai istilah domain, backup, upload
 
+**Bahasa**:
+Bahasa antarmuka yang dipilih Pengguna: Indonesia atau English. Milik Akun, jadi sama di semua Perangkat; sebelum masuk mengikuti bahasa browser atau HP. Bahasa hanya mengubah teks antarmuka dan nama hari serta bulan; nama Dompet dan Kategori tidak pernah ikut berubah, dan format Rupiah tetap sama.
+_Avoid_: locale, language setting, terjemahan (untuk pilihannya)
+
 **Akun demo**:
 Akun sementara berisi data contoh yang dibuat untuk satu pengunjung dan kedaluwarsa setelah 24 jam.
 _Avoid_: guest, akun tamu
@@ -40,7 +44,7 @@ _Avoid_: modal, initial deposit
 Posisi uang terkini di satu Dompet: Saldo awal ditambah semua yang masuk, dikurangi semua yang keluar.
 _Avoid_: saldo per periode, saldo akhir bulan
 
-**Total Balance**:
+**Total Balance** (UI Indonesia: Total Saldo):
 Jumlah Saldo semua Dompet aktif. Selalu posisi terkini, tidak bergantung pada Periode.
 _Avoid_: net total, kekayaan bersih
 
@@ -50,11 +54,11 @@ _Avoid_: net total, kekayaan bersih
 Satu catatan pergerakan uang. Selalu salah satu dari tiga tipe: Income, Expense, atau Transfer.
 _Avoid_: entry, mutasi
 
-**Income**:
+**Income** (UI Indonesia: Pemasukan):
 Uang yang masuk ke satu Dompet dari luar milik Pengguna.
 _Avoid_: menyebut uang masuk dari Transfer sebagai income
 
-**Expense**:
+**Expense** (UI Indonesia: Pengeluaran):
 Uang yang keluar dari satu Dompet ke luar milik Pengguna.
 _Avoid_: menyebut top-up atau tarik tunai sebagai expense
 
@@ -71,7 +75,7 @@ Label jenis sebuah Income atau Expense. Setiap Kategori hanya berlaku untuk sala
 _Avoid_: tag, label
 
 **Kategori default**:
-Kategori yang disalin ke setiap Akun baru. Sesudah disalin, ia milik Pengguna dan sama persis dengan Kategori buatan Pengguna sendiri. Namanya sengaja berbahasa Indonesia (Makanan, Gaji), begitu juga Dompet pertama (Tunai): nama adalah data milik Pengguna, sedangkan teks antarmuka berbahasa Inggris.
+Kategori yang disalin ke setiap Akun baru. Sesudah disalin, ia milik Pengguna dan sama persis dengan Kategori buatan Pengguna sendiri. Namanya sengaja berbahasa Indonesia (Makanan, Gaji), begitu juga Dompet pertama (Tunai): nama adalah data milik Pengguna, sedangkan teks antarmuka mengikuti Bahasa Pengguna. Mengganti Bahasa tidak mengganti nama Kategori atau Dompet.
 _Avoid_: kategori sistem, kategori bawaan yang terkunci
 
 ### Ringkasan dan batas
@@ -80,11 +84,11 @@ _Avoid_: kategori sistem, kategori bawaan yang terkunci
 Rentang waktu yang dipakai untuk meringkas Transaksi, dengan batas hari menurut zona waktu di profil Pengguna.
 _Avoid_: range, filter tanggal
 
-**Net Cash Flow**:
+**Net Cash Flow** (UI Indonesia: Arus Kas Bersih):
 Total Income dikurangi total Expense dalam satu Periode. Transfer tidak ikut dihitung.
 _Avoid_: profit, selisih saldo
 
-**Budget**:
+**Budget** (UI Indonesia: Anggaran):
 Batas Expense untuk satu bulan kalender, bagi satu Kategori atau bagi seluruh Expense, yang berulang tiap bulan sampai diubah.
 _Avoid_: anggaran sekali pakai, target
 

@@ -1,6 +1,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { auth } from "./auth";
 import { db } from "./db";
+import { requestLang } from "./i18n";
 import { addSampleData } from "./sample-data";
 
 const DEMO_LIFETIME_MS = 24 * 60 * 60 * 1000;
@@ -19,7 +20,8 @@ export async function startDemo(): Promise<Response> {
   await removeExpiredDemos();
   const email = `demo-${randomUUID()}@demo.monetra.invalid`;
   const response = await auth.api.signUpEmail({
-    body: { name: "Demo Pengguna", email, password: randomBytes(24).toString("base64url"), timezone: "Asia/Jakarta" },
+    // The demo opens in the Bahasa of the sign-in page it was started from.
+    body: { name: "Demo Pengguna", email, password: randomBytes(24).toString("base64url"), timezone: "Asia/Jakarta", language: await requestLang() },
     asResponse: true,
   });
   if (!response.ok) return response;

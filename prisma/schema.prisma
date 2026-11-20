@@ -25,6 +25,10 @@ model User {
   emailVerified Boolean   @default(false) @map("email_verified")
   image         String?
   timezone      String    @default("Asia/Jakarta")
+  // Bahasa of the interface, "en" or "id" (ADR 0006). Changed-at is the Perangkat clock of the last
+  // explicit choice, so an older choice made offline never overwrites a newer one (ADR 0005).
+  language          String    @default("en")
+  languageChangedAt DateTime? @map("language_changed_at")
   isDemo        Boolean   @default(false) @map("is_demo")
   demoExpiresAt DateTime? @map("demo_expires_at")
   createdAt     DateTime  @default(now()) @map("created_at")

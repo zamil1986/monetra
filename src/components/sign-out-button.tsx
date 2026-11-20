@@ -2,10 +2,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n-client";
 
 export function SignOutButton({ className }: { className?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const { t } = useT();
   return (
     <button
       type="button"
@@ -18,7 +20,7 @@ export function SignOutButton({ className }: { className?: string }) {
         router.refresh();
       }}
     >
-      Sign out
+      {t("shell.signOut")}
     </button>
   );
 }

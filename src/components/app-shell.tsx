@@ -15,19 +15,21 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useT } from "@/lib/i18n-client";
 import { useOnline } from "@/lib/use-online";
+import { Rich } from "./rich";
 import { SignOutButton } from "./sign-out-button";
 import { Tabbar } from "./tabbar";
 import { buttonClass, cx } from "./ui";
 
 /** Only screens that exist are linked; Reports and Budgets arrive with their features. */
 const NAV = [
-  { href: "/dashboard", label: "Dashboard", Icon: House },
-  { href: "/transactions", label: "Transactions", Icon: ReceiptText },
-  { href: "/wallets", label: "Wallets", Icon: Wallet },
-  { href: "/categories", label: "Categories", Icon: Tags },
-  { href: "/settings", label: "Settings", Icon: Settings },
-];
+  { href: "/dashboard", label: "nav.dashboard", Icon: House },
+  { href: "/transactions", label: "nav.transactions", Icon: ReceiptText },
+  { href: "/wallets", label: "nav.wallets", Icon: Wallet },
+  { href: "/categories", label: "nav.categories", Icon: Tags },
+  { href: "/settings", label: "nav.settings", Icon: Settings },
+] as const;
 
 /** Sign-in screens draw their own full-page layout, without the rail and tab bar. */
 export const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/download"];
@@ -52,6 +54,7 @@ export function AppShell({
 }) {
   const path = usePathname();
   const online = useOnline();
+  const { t } = useT();
   const current = (href: string) =>
     path === href || (href === "/transactions" && path.startsWith("/transactions/") && path !== "/transactions/new") ? "page" : undefined;
   const initials = user?.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join("") ?? "?";
@@ -64,7 +67,7 @@ export function AppShell({
         {/* Desktop: cobalt rail on the left (the phone uses the top band and bottom tab bar instead) */}
         <Sidebar collapsible="icon" className="border-r-0 [&_:focus-visible]:outline-yellow">
           <SidebarHeader className="px-3.5 pt-[22px] pb-[22px] group-data-[collapsible=icon]:px-2">
-            <Link className={cx(wordmark, "px-2.5 text-[28px] group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:text-center")} href="/dashboard" aria-label="Monetra home">
+            <Link className={cx(wordmark, "px-2.5 text-[28px] group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:text-center")} href="/dashboard" aria-label={t("nav.homeLink")}>
               <span className={hideInRail}>MONETRA</span>
               <span className="hidden group-data-[collapsible=icon]:inline">M</span>
               <b>.</b>
@@ -72,14 +75,14 @@ export function AppShell({
           </SidebarHeader>
 
           <SidebarContent className="px-3.5 group-data-[collapsible=icon]:px-2">
-            <nav aria-label="Main">
+            <nav aria-label={t("nav.main")}>
               <SidebarMenu className="gap-0.5">
                 {NAV.map(({ href, label, Icon }) => (
                   <SidebarMenuItem key={href}>
                     <SidebarMenuButton
                       asChild
                       isActive={current(href) === "page"}
-                      tooltip={label}
+                      tooltip={t(label)}
                       className={cx(
                         "h-auto gap-3 rounded px-2.5 py-[9px] text-base font-medium text-on-cobalt no-underline duration-150 ease-out-expo [&_svg]:size-[18px]",
                         "hover:bg-cobalt-deep hover:text-white active:bg-cobalt-deep active:text-white",
@@ -89,7 +92,7 @@ export function AppShell({
                     >
                       <Link href={href} aria-current={current(href)}>
                         <Icon />
-                        <span className={hideInRail}>{label}</span>
+                        <span className={hideInRail}>{t(label)}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -105,10 +108,10 @@ export function AppShell({
               )}
               href="/transactions/new"
               aria-current={adding ? "page" : undefined}
-              aria-label="Add transaction"
+              aria-label={t("nav.addTransaction")}
             >
               <Plus />
-              <span className={hideInRail}>Add transaction</span>
+              <span className={hideInRail}>{t("nav.addTransaction")}</span>
             </Link>
           </SidebarContent>
 
@@ -118,7 +121,7 @@ export function AppShell({
                 <strong className="block truncate text-sm font-semibold text-white">{user.name}</strong>
                 {user.demo ? (
                   <>
-                    <span className="block">Demo account</span>
+                    <span className="block">{t("shell.demoAccount")}</span>
                     <span className="block first-letter:uppercase">{user.demo}</span>
                   </>
                 ) : (
@@ -135,11 +138,11 @@ export function AppShell({
           {/* Phone: cobalt band on top */}
           {/* Installed on iPhone the status bar is translucent, so the band grows under it by the notch height. */}
           <header className="sticky top-0 z-20 flex h-[calc(52px+env(safe-area-inset-top))] items-center justify-between bg-cobalt px-4 pt-[env(safe-area-inset-top)] text-white md:hidden [&_:focus-visible]:outline-yellow">
-            <Link className={cx(wordmark, "text-2xl")} href="/dashboard" aria-label="Monetra home">MONETRA<b>.</b></Link>
+            <Link className={cx(wordmark, "text-2xl")} href="/dashboard" aria-label={t("nav.homeLink")}>MONETRA<b>.</b></Link>
             <Link
               className="inline-grid size-10 place-items-center rounded-full no-underline"
               href="/settings"
-              aria-label="Settings"
+              aria-label={t("nav.settings")}
               aria-current={current("/settings")}
             >
               <span className="inline-grid size-8 place-items-center rounded-full bg-white text-meta font-bold text-cobalt" aria-hidden>{initials}</span>
@@ -147,7 +150,7 @@ export function AppShell({
           </header>
           {!online && (
             <div className="flex items-center gap-2.5 bg-ink px-4 py-2 text-sm text-white md:px-8" role="status">
-              <WifiOff /><span><strong>You&apos;re offline.</strong> Monetra needs a connection to load and save.</span>
+              <WifiOff /><span><Rich text={t("shell.offline")} /></span>
             </div>
           )}
           {children}
@@ -156,13 +159,15 @@ export function AppShell({
 
         {/* Phone: tab bar at the bottom */}
         <Tabbar
+          aria-label={t("nav.main")}
+          badgeSuffix={t("nav.badgeNew")}
           items={[
-            { href: "/dashboard", label: "Home", Icon: House, active: !!current("/dashboard") },
-            { href: "/transactions", label: "Transactions", Icon: ReceiptText, active: !!current("/transactions") },
-            { href: "/transactions/new", label: "Add", Icon: Plus, primary: true, ariaLabel: "Add transaction" },
+            { href: "/dashboard", label: t("nav.home"), Icon: House, active: !!current("/dashboard") },
+            { href: "/transactions", label: t("nav.transactions"), Icon: ReceiptText, active: !!current("/transactions") },
+            { href: "/transactions/new", label: t("nav.add"), Icon: Plus, primary: true, ariaLabel: t("nav.addTransaction") },
             // Wallets holds this slot until Reports exists; then it moves into Settings (PRD 4.3).
-            { href: "/wallets", label: "Wallets", Icon: Wallet, active: !!current("/wallets") },
-            { href: "/settings", label: "Settings", Icon: Settings, active: !!current("/settings") },
+            { href: "/wallets", label: t("nav.wallets"), Icon: Wallet, active: !!current("/wallets") },
+            { href: "/settings", label: t("nav.settings"), Icon: Settings, active: !!current("/settings") },
           ]}
         />
       </SidebarProvider>

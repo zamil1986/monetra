@@ -7,6 +7,7 @@ import '../app/providers.dart';
 import '../data/sync.dart';
 import '../domain/money.dart';
 import '../domain/types.dart';
+import 'l10n.dart';
 import 'theme.dart';
 
 /// A rupiah figure. Money state never relies on colour alone: the sign is always written.
@@ -124,19 +125,16 @@ class SyncBanner extends ConsumerWidget {
     final session = ref.watch(sessionProvider);
     final state = ref.watch(syncStateProvider).value ?? SyncState.idle;
     final pending = ref.watch(pendingCountProvider).value ?? 0;
+    final t = context.t;
     if (session == Session.needsSignIn) {
-      return Notice('Sign in again to sync. Everything you record stays on this phone meanwhile.',
-          tone: NoticeTone.warn, action: TextButton(onPressed: () => context.push('/login'), child: const Text('Sign in')));
+      return Notice(t('m.sync.signInAgain'),
+          tone: NoticeTone.warn, action: TextButton(onPressed: () => context.push('/login'), child: Text(t('login.submit'))));
     }
     if (state == SyncState.offline) {
-      return Notice(
-          pending > 0
-              ? "You're offline. $pending ${pending == 1 ? 'change waits' : 'changes wait'} on this phone and will sync when you're back online."
-              : "You're offline. You can keep recording; it syncs when you're back online.",
-          tone: NoticeTone.info);
+      return Notice(pending > 0 ? t('m.sync.offlinePending', {'count': pending}) : t('m.sync.offline'), tone: NoticeTone.info);
     }
     if (state == SyncState.failed && pending > 0) {
-      return Notice("Couldn't sync $pending ${pending == 1 ? 'change' : 'changes'}. It will try again.", tone: NoticeTone.warn);
+      return Notice(t('m.sync.failed', {'count': pending}), tone: NoticeTone.warn);
     }
     return const SizedBox.shrink();
   }

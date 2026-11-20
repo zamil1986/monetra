@@ -23,7 +23,18 @@ export type TabbarItem = {
  * optional numeric badges, and a raised primary action. Hidden from the md breakpoint up,
  * where the sidebar takes over.
  */
-export function Tabbar({ items, className, "aria-label": ariaLabel = "Main" }: { items: TabbarItem[]; className?: string; "aria-label"?: string }) {
+export function Tabbar({
+  items,
+  className,
+  "aria-label": ariaLabel = "Main",
+  badgeSuffix = " new",
+}: {
+  items: TabbarItem[];
+  className?: string;
+  "aria-label"?: string;
+  /** Read after a badge's count by screen readers, in the page's Bahasa. */
+  badgeSuffix?: string;
+}) {
   const activeIndex = items.findIndex((item) => item.active && !item.primary);
 
   return (
@@ -68,7 +79,7 @@ export function Tabbar({ items, className, "aria-label": ariaLabel = "Main" }: {
             {!!badge && badge > 0 && (
               <span className="fig absolute -top-1.5 left-[calc(100%-8px)] min-w-[18px] rounded-full border-2 border-paper bg-red px-1 text-center text-[11px] leading-[14px] text-white">
                 {badge > 99 ? "99+" : badge}
-                <span className="sr-only"> new</span>
+                <span className="sr-only">{badgeSuffix}</span>
               </span>
             )}
           </span>

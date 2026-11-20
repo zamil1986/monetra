@@ -8,6 +8,7 @@ import '../domain/money.dart';
 import '../domain/palette.dart';
 import '../domain/result.dart';
 import '../ui/icons.dart';
+import '../ui/l10n.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 
@@ -18,25 +19,26 @@ class WalletsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ledger = ref.watch(ledgerProvider);
+    final t = context.t;
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallets')),
+      appBar: AppBar(title: Text(t('nav.wallets'))),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'wallet',
         onPressed: () => showWalletSheet(context, ref, null),
         icon: const Icon(Icons.add),
-        label: const Text('Add wallet'),
+        label: Text(t('m.wallets.add')),
       ),
       body: ledger.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Notice('$e', tone: NoticeTone.danger),
         data: (l) => ListView(padding: const EdgeInsets.only(bottom: 96), children: [
           const SyncBanner(),
-          const SectionTitle('Total balance', note: 'Active wallets only'),
+          SectionTitle(t('dash.totalBalance'), note: t('m.wallets.activeOnly')),
           Padding(padding: pad, child: Money(l.total, size: 32, weight: FontWeight.w700)),
-          const SectionTitle('Active'),
+          SectionTitle(t('categories.active')),
           for (final w in l.activeWallets) _WalletTile(w, l),
           if (l.wallets.any((w) => w.archivedAt != null)) ...[
-            const SectionTitle('Archived', note: 'Kept in history and reports; not offered for new transactions'),
+            SectionTitle(t('common.archived'), note: t('m.wallets.archivedNote')),
             for (final w in l.wallets.where((w) => w.archivedAt != null)) _WalletTile(w, l),
           ],
         ]),
@@ -54,15 +56,16 @@ class _WalletTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final archived = w.archivedAt != null;
     final uses = l.usesOfWallet(w.id);
+    final t = context.t;
     Future<void> act(Future<Result<void>> Function() f) async {
       final r = await f();
-      if (r is Err<void> && context.mounted) showMessage(context, r.error.message);
+      if (r is Err<void> && context.mounted) showMessage(context, r.error.text(context.t));
     }
 
     return ListTile(
       leading: Glyph(walletIcon(w.icon), color: w.color),
       title: Text(w.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? C.ink3 : C.ink)),
-      subtitle: Text('${walletIconData[w.icon]?.$2 ?? ''} · $uses ${uses == 1 ? 'transaction' : 'transactions'}', style: const TextStyle(fontSize: 13, color: C.ink2)),
+      subtitle: Text('${t('walletIcon.${w.icon}')} · ${t('tx.count', {'count': uses})}', style: const TextStyle(fontSize: 13, color: C.ink2)),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         Money(l.balances[w.id] ?? 0),
         PopupMenuButton<String>(
@@ -74,9 +77,9 @@ class _WalletTile extends ConsumerWidget {
             _ => null,
           },
           itemBuilder: (_) => [
-            if (!archived) const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            PopupMenuItem(value: archived ? 'unarchive' : 'archive', child: Text(archived ? 'Unarchive' : 'Archive')),
-            if (uses == 0) const PopupMenuItem(value: 'delete', child: Text('Delete')),
+            if (!archived) PopupMenuItem(value: 'edit', child: Text(t('m.edit'))),
+            PopupMenuItem(value: archived ? 'unarchive' : 'archive', child: Text(archived ? t('common.unarchive') : t('m.archive'))),
+            if (uses == 0) PopupMenuItem(value: 'delete', child: Text(t('del.button'))),
           ],
         ),
       ]),
@@ -103,34 +106,40 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
 
   Future<void> save() async {
     final amount = parseRupiah(opening.text);
-    if (amount is Err<int>) return setState(() => error = amount.error.message);
+    if (amount is Err<int>) return setState(() => error = amount.error.text(context.t));
     final r = await ref.read(repositoryProvider).saveWallet(
         (name: name.text, openingBalance: (amount as Ok<int>).value, color: color, icon: icon), id: widget.w?.id);
     if (!mounted) return;
-    if (r is Err<String>) return setState(() => error = r.error.message);
+    if (r is Err<String>) return setState(() => error = r.error.text(context.t));
     Navigator.pop(context);
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final t = context.t;
+    return Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(widget.w == null ? 'Add wallet' : 'Edit wallet', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          Text(widget.w == null ? t('m.wallets.add') : t('m.wallets.edit'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
-          TextField(controller: name, decoration: const InputDecoration(labelText: 'Name'), maxLength: 40, textCapitalization: TextCapitalization.words),
-          TextField(controller: opening, decoration: const InputDecoration(labelText: 'Opening balance (Rp)', helperText: 'May be negative, for example a credit card.'), keyboardType: const TextInputType.numberWithOptions(signed: true)),
+          TextField(controller: name, decoration: InputDecoration(labelText: t('common.name')), maxLength: 40, textCapitalization: TextCapitalization.words),
+          TextField(
+              controller: opening,
+              decoration: InputDecoration(labelText: t('m.wallets.openingRp'), helperText: t('m.wallets.openingHelp')),
+              keyboardType: const TextInputType.numberWithOptions(signed: true)),
           const SizedBox(height: 12),
           Wrap(spacing: 8, children: [
             for (final MapEntry(key: k, value: v) in walletIconData.entries)
-              ChoiceChip(avatar: Icon(v.$1, size: 18), label: Text(v.$2), selected: icon == k, onSelected: (_) => setState(() => icon = k)),
+              ChoiceChip(avatar: Icon(v, size: 18), label: Text(t('walletIcon.$k')), selected: icon == k, onSelected: (_) => setState(() => icon = k)),
           ]),
           const SizedBox(height: 12),
           ColorPicker(value: color, onChanged: (c) => setState(() => color = c)),
           if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: C.red))),
           const SizedBox(height: 16),
-          FilledButton(onPressed: save, child: const Text('Save')),
+          FilledButton(onPressed: save, child: Text(t('m.save'))),
         ]),
       );
+  }
 }
 
 class ColorPicker extends StatelessWidget {
@@ -142,7 +151,7 @@ class ColorPicker extends StatelessWidget {
   Widget build(BuildContext context) => Wrap(spacing: 10, runSpacing: 10, children: [
         for (final c in colors)
           Semantics(
-            label: c,
+            label: context.t('color.$c'),
             selected: c == value,
             button: true,
             child: InkWell(

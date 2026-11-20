@@ -3,10 +3,12 @@ import { Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, hintClass } from "@/components/ui";
+import { useT } from "@/lib/i18n-client";
 
 /** "Coba demo" (PRD 3.1): a fresh Akun demo full of sample data, signed in straight away. */
 export function DemoButton() {
   const router = useRouter();
+  const { t } = useT();
   const [state, setState] = useState<"idle" | "busy" | "failed">("idle");
   return (
     <div className="mt-6 flex flex-col gap-2 border-t border-line pt-6">
@@ -23,12 +25,10 @@ export function DemoButton() {
           router.refresh();
         }}
       >
-        <Play />{state === "busy" ? "Preparing the demo…" : "Try demo"}
+        <Play />{state === "busy" ? t("demo.preparing") : t("demo.try")}
       </Button>
       <p className={hintClass}>
-        {state === "failed"
-          ? "The demo couldn't start. Try again in a moment."
-          : "Opens a sample account already filled with wallets and transactions. No sign-up. It expires after 24 hours."}
+        {state === "failed" ? t("demo.failed") : t("demo.hint")}
       </p>
     </div>
   );

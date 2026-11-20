@@ -47,7 +47,7 @@ void main() {
 
   test('a Transaksi recorded offline on the phone reaches the other Perangkat with the same Saldo', () async {
     final phone = Perangkat(server!);
-    await phone.api.signUp('E2E', email, password, 'Asia/Jakarta');
+    await phone.api.signUp('E2E', email, password, 'Asia/Jakarta', 'en');
     expect(await phone.sync.run(), SyncState.idle);
     var l = await phone.repo.ledger();
     final tunai = l.wallets.single;
@@ -95,6 +95,30 @@ void main() {
     // The pull skipped it while the edit was queued; it is gone after the next one.
     await phone.sync.run();
     expect((await phone.repo.ledger()).transactions, isEmpty);
+  }, skip: server == null ? 'set MONETRA_E2E to the server URL' : false);
+
+  test('a Bahasa picked offline on the phone reaches the Akun, and an older choice never wins (ADR 0006)', () async {
+    final phone = Perangkat(server!);
+    await phone.api.signIn(email, password);
+    await phone.sync.run();
+    final mac = Perangkat(server);
+    await mac.api.signIn(email, password);
+    await mac.sync.run();
+
+    // Picked offline on the phone: shows at once, waits for the next sync.
+    await phone.repo.setLanguage('id', forAccount: true);
+    expect(await phone.db.setting('profile.language'), 'id');
+    await phone.sync.run();
+    expect(await phone.db.setting('profile.languagePending'), '0');
+    await mac.sync.run();
+    expect(await mac.db.setting('profile.language'), 'id');
+
+    // An older choice arriving late is dropped by the server, and the phone takes the Akun's.
+    expect(await phone.api.setLanguage('en', DateTime.now().toUtc().subtract(const Duration(days: 1)).toIso8601String()), 'id');
+    await phone.repo.setLanguage('en', forAccount: true);
+    await phone.sync.run();
+    await mac.sync.run();
+    expect(await mac.db.setting('profile.language'), 'en');
   }, skip: server == null ? 'set MONETRA_E2E to the server URL' : false);
 
   test('two Perangkat creating the same Kategori offline end with one', () async {

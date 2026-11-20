@@ -1,3 +1,4 @@
+import '../domain/i18n.dart';
 import '../domain/balance.dart';
 import '../domain/period.dart';
 import '../domain/transaction_rules.dart';
@@ -41,11 +42,12 @@ class Ledger {
   int usesOfWallet(String id) => transactions.where((t) => t.walletId == id || t.toWalletId == id).length;
   int usesOfCategory(String id) => transactions.where((t) => t.categoryId == id).length;
 
-  String titleOf(TransactionRow t) => transactionTitle(
+  String titleOf(TransactionRow t, [Strings s = const Strings('en')]) => transactionTitle(
       type: transactionTypeFrom(t.type),
       description: t.description,
       categoryName: category(t.categoryId)?.name,
-      toWalletName: wallet(t.toWalletId)?.name);
+      toWalletName: wallet(t.toWalletId)?.name,
+      t: s);
 
   /// The Periode's Income, Expense and Net Cash Flow, plus its dates.
   ({String from, String to, int income, int expense, int net}) flow(Period period, DateTime now) {

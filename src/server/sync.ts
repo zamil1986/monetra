@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { findNameClash, validateCategoryInput } from "@/domain/category-rules";
 import type { DomainError } from "@/domain/errors";
+import { tEn, translate, type Lang, type MessageKey, type Params } from "@/domain/i18n";
 import type { Result } from "@/domain/result";
 import { validateNewTransaction, validateTransactionEdit, type TransactionDraft } from "@/domain/transaction-rules";
 import type { CategoryType } from "@/domain/types";
@@ -70,7 +71,10 @@ export type MutationResult = {
   /** applied: the change is now on the server. ignored: nothing to do (already there, older, or deleted). rejected: it breaks a rule. */
   status: "applied" | "ignored" | "rejected";
   code?: string;
+  /** English; the route renders it in the Pengguna's Bahasa from `key` and `params` before sending. */
   message?: string;
+  key?: MessageKey;
+  params?: Params;
 };
 
 export type PushResult = {
@@ -81,14 +85,23 @@ export type PushResult = {
 
 const applied = (m: Mutation, code?: string): MutationResult => ({ entity: m.entity, id: m.id, status: "applied", code });
 const ignored = (m: Mutation, code: string): MutationResult => ({ entity: m.entity, id: m.id, status: "ignored", code });
-const rejected = (m: Mutation, code: string, message: string): MutationResult => ({ entity: m.entity, id: m.id, status: "rejected", code, message });
-const refusedBy = (m: Mutation, r: Result<unknown, DomainError> & { ok: false }) => rejected(m, r.error.code, r.error.message);
+const rejected = (m: Mutation, code: string, key: MessageKey, params?: Params): MutationResult =>
+  ({ entity: m.entity, id: m.id, status: "rejected", code, message: tEn(key, params), key, params });
+const refusedBy = (m: Mutation, r: Result<unknown, DomainError> & { ok: false }) => rejected(m, r.error.code, r.error.key, r.error.params);
+
+/** The push response in the Pengguna's Bahasa, without the catalog details. */
+export function localizePush(result: PushResult, lang: Lang): PushResult {
+  return {
+    ...result,
+    results: result.results.map(({ key, params, ...r }) => (key ? { ...r, message: translate(lang, key, params) } : r)),
+  };
+}
 
 type Existing = { userId: string; deletedAt: Date | null; clientUpdatedAt: Date } | null;
 
 /** The checks every upsert shares, or null when the change should go ahead. */
 function gate(m: Mutation, userId: string, existing: Existing): MutationResult | null {
-  if (existing && existing.userId !== userId) return rejected(m, "ID_TAKEN", "That ID belongs to another record.");
+  if (existing && existing.userId !== userId) return rejected(m, "ID_TAKEN", "error.idTaken");
   if (existing?.deletedAt) return ignored(m, "DELETED");
   if (existing && existing.clientUpdatedAt.getTime() >= m.clientUpdatedAt.getTime()) return ignored(m, "STALE");
   return null;
@@ -135,7 +148,7 @@ async function upsertCategory(tx: Tx, userId: string, m: Mutation & { entity: "c
   const stop = gate(m, userId, existing);
   if (stop) return stop;
   const type: CategoryType = m.fields.type;
-  if (existing && existing.type !== type) return rejected(m, "TYPE_CHANGE_NOT_ALLOWED", "A category never changes type.");
+  if (existing && existing.type !== type) return rejected(m, "TYPE_CHANGE_NOT_ALLOWED", "error.type.categoryNeverChanges");
   const valid = validateCategoryInput(m.fields, type, [], m.id);
   if (!valid.ok) return refusedBy(m, valid);
 
@@ -239,7 +252,7 @@ async function remove(tx: Tx, userId: string, m: Mutation & { op: "delete" }, re
     : m.entity === "category" ? await tx.category.findUnique(find)
     : await tx.transaction.findUnique(find);
   if (!existing) return ignored(m, "UNKNOWN");
-  if (existing.userId !== userId) return rejected(m, "ID_TAKEN", "That ID belongs to another record.");
+  if (existing.userId !== userId) return rejected(m, "ID_TAKEN", "error.idTaken");
   if (existing.deletedAt) return ignored(m, "DELETED");
 
   const tombstone = { deletedAt: new Date(), clientUpdatedAt: m.clientUpdatedAt };
@@ -309,7 +322,7 @@ export async function pull(userId: string, since: bigint, limit = PULL_LIMIT) {
     const wallets = await tx.wallet.findMany({ where, ...page });
     const categories = await tx.category.findMany({ where, ...page });
     const transactions = await tx.transaction.findMany({ where, ...page });
-    const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, email: true, timezone: true } });
+    const user = await tx.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true, email: true, timezone: true, language: true, languageChangedAt: true } });
     // A full page may have more behind it: stop the cursor at the lowest of the full pages' last versions.
     const full = [wallets, categories, transactions].filter((rows) => rows.length === limit);
     const all = [...wallets, ...categories, ...transactions];

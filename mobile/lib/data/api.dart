@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../domain/i18n.dart';
+
 /// The Monetra server. Set at build time: flutter build apk --dart-define=API_URL=https://...
 /// The default reaches `npm run dev` on the Mac from the Android emulator.
 const apiUrl = String.fromEnvironment('API_URL', defaultValue: 'http://10.0.2.2:3000');
@@ -42,7 +44,10 @@ class TokenStore {
 }
 
 class Api {
-  Api(this.tokens, {Dio? dio}) : _dio = dio ?? Dio(BaseOptions(baseUrl: apiUrl)) {
+  /// [language] is the Bahasa the server should answer refusals in before an Akun is known.
+  Api(this.tokens, {Dio? dio, String Function()? language})
+      : _language = language ?? (() => defaultLang),
+        _dio = dio ?? Dio(BaseOptions(baseUrl: apiUrl)) {
     _dio.options
       ..connectTimeout = const Duration(seconds: 10)
       ..receiveTimeout = const Duration(seconds: 30)
@@ -51,6 +56,7 @@ class Api {
       onRequest: (options, handler) async {
         final token = await tokens.read();
         if (token != null) options.headers['Authorization'] = 'Bearer $token';
+        options.headers['Accept-Language'] = _language();
         handler.next(options);
       },
       onResponse: (response, handler) async {
@@ -64,6 +70,7 @@ class Api {
 
   final TokenStore tokens;
   final Dio _dio;
+  final String Function() _language;
 
   Map<String, dynamic> _ok(Response<dynamic> r) {
     final data = r.data is Map<String, dynamic> ? r.data as Map<String, dynamic> : <String, dynamic>{};
@@ -71,15 +78,23 @@ class Api {
     // Monetra's routes answer { error: { code, message } }; Better Auth answers { code, message }.
     final err = (data['error'] as Map<String, dynamic>?) ?? data;
     throw ApiError(r.statusCode ?? 0, (err['code'] ?? 'HTTP_${r.statusCode}') as String,
-        (err['message'] ?? 'Something went wrong. Try again.') as String);
+        (err['message'] ?? translate(_language(), 'error.internal')) as String);
   }
 
   Future<void> signIn(String email, String password) async {
     _ok(await _dio.post('/api/auth/sign-in/email', data: {'email': email, 'password': password}));
   }
 
-  Future<void> signUp(String name, String email, String password, String timezone) async {
-    _ok(await _dio.post('/api/auth/sign-up/email', data: {'name': name, 'email': email, 'password': password, 'timezone': timezone}));
+  Future<void> signUp(String name, String email, String password, String timezone, String language) async {
+    _ok(await _dio.post('/api/auth/sign-up/email',
+        data: {'name': name, 'email': email, 'password': password, 'timezone': timezone, 'language': language}));
+  }
+
+  /// Saves the Bahasa to the Akun. The server keeps the newest choice by [changedAt] and answers
+  /// with the Bahasa the Akun ends up with.
+  Future<String> setLanguage(String language, String? changedAt) async {
+    final answer = _ok(await _dio.post('/api/profile/language', data: {'language': language, 'changedAt': ?changedAt}));
+    return answer['language'] as String? ?? language;
   }
 
   Future<void> requestPasswordReset(String email) async {

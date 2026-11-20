@@ -1,4 +1,5 @@
-import type { DomainError } from "./errors";
+import { domainError, type DomainError } from "./errors";
+import type { MessageKey, Params } from "./i18n";
 import { err, ok, type Result } from "./result";
 import type { CategoryType, TransactionType } from "./types";
 
@@ -25,8 +26,8 @@ export type RuleContext = {
 const CLOCK_SKEW_MS = 60_000;
 const MAX_DESCRIPTION = 120;
 
-const refuse = (field: keyof TransactionDraft, message: string, code = "INVALID_TRANSACTION") =>
-  err<DomainError>({ code, field, message });
+const refuse = (field: keyof TransactionDraft, key: MessageKey, params?: Params, code = "INVALID_TRANSACTION") =>
+  err<DomainError>(domainError(code, key, params, field));
 
 /** PRD 3.4 business rules for a Transaksi being recorded for the first time. */
 export function validateNewTransaction(draft: TransactionDraft, ctx: RuleContext): Result<TransactionDraft, DomainError> {
@@ -46,9 +47,8 @@ export function validateTransactionEdit(
   if ((current.type === "TRANSFER") !== (nextType === "TRANSFER")) {
     return refuse(
       "type",
-      current.type === "TRANSFER"
-        ? "A transfer can't become income or expense. Delete it and record the right type instead."
-        : "An income or expense can't become a transfer. Delete it and record a transfer instead.",
+      current.type === "TRANSFER" ? "error.type.transferToOther" : "error.type.otherToTransfer",
+      undefined,
       "TYPE_CHANGE_NOT_ALLOWED",
     );
   }
@@ -65,7 +65,7 @@ function validate(
   current: TransactionDraft | null,
 ): Result<TransactionDraft, DomainError> {
   if (!Number.isSafeInteger(draft.amount) || draft.amount <= 0) {
-    return refuse("amount", "Enter a whole rupiah amount above 0.");
+    return refuse("amount", "error.amount.positive");
   }
 
   // An archived Dompet or Kategori can stay on a Transaksi that already had it, but can't be newly chosen.
@@ -74,39 +74,39 @@ function validate(
   const keptCategory = (id: string) => current?.categoryId === id;
 
   const wallet = ctx.wallets.find((w) => w.id === draft.walletId);
-  if (!wallet) return refuse("walletId", "Choose one of your wallets.");
+  if (!wallet) return refuse("walletId", "error.wallet.choose");
   if (wallet.archived && !keptWallet(wallet.id)) {
-    return refuse("walletId", "That wallet is archived. Unarchive it or choose another one.");
+    return refuse("walletId", "error.wallet.archived");
   }
 
   if (draft.type === "TRANSFER") {
-    if (draft.categoryId !== null) return refuse("categoryId", "A transfer has no category.");
-    if (!draft.toWalletId) return refuse("toWalletId", "Choose the wallet the money goes to.");
-    if (draft.toWalletId === draft.walletId) return refuse("toWalletId", "Pick two different wallets.");
+    if (draft.categoryId !== null) return refuse("categoryId", "error.transfer.noCategory");
+    if (!draft.toWalletId) return refuse("toWalletId", "error.transfer.chooseTo");
+    if (draft.toWalletId === draft.walletId) return refuse("toWalletId", "error.transfer.sameWallet");
     const to = ctx.wallets.find((w) => w.id === draft.toWalletId);
-    if (!to) return refuse("toWalletId", "Choose one of your wallets.");
+    if (!to) return refuse("toWalletId", "error.wallet.choose");
     if (to.archived && !keptWallet(to.id)) {
-      return refuse("toWalletId", "That wallet is archived. Unarchive it or choose another one.");
+      return refuse("toWalletId", "error.wallet.archived");
     }
   } else {
-    if (draft.toWalletId !== null) return refuse("toWalletId", "Only a transfer has a destination wallet.");
-    const label = draft.type === "INCOME" ? "an income" : "an expense";
-    if (!draft.categoryId) return refuse("categoryId", `Choose ${label} category.`);
+    if (draft.toWalletId !== null) return refuse("toWalletId", "error.transfer.onlyTransferHasTo");
+    const choose = draft.type === "INCOME" ? "error.category.chooseIncome" : "error.category.chooseExpense";
+    if (!draft.categoryId) return refuse("categoryId", choose);
     const category = ctx.categories.find((c) => c.id === draft.categoryId);
-    if (!category || category.type !== draft.type) return refuse("categoryId", `Choose ${label} category.`);
+    if (!category || category.type !== draft.type) return refuse("categoryId", choose);
     if (category.archived && !keptCategory(category.id)) {
-      return refuse("categoryId", "That category is archived. Choose another one.");
+      return refuse("categoryId", "error.category.archived");
     }
   }
 
-  if (Number.isNaN(draft.occurredAt.getTime())) return refuse("occurredAt", "Enter a date and time.");
+  if (Number.isNaN(draft.occurredAt.getTime())) return refuse("occurredAt", "error.occurredAt.missing");
   if (draft.occurredAt.getTime() > ctx.now.getTime() + CLOCK_SKEW_MS) {
-    return refuse("occurredAt", "The time can't be in the future.");
+    return refuse("occurredAt", "error.occurredAt.future");
   }
 
   const description = draft.description?.trim() || null;
   if (description && description.length > MAX_DESCRIPTION) {
-    return refuse("description", `Keep the description to ${MAX_DESCRIPTION} characters or fewer.`);
+    return refuse("description", "error.description.tooLong", { max: MAX_DESCRIPTION });
   }
 
   return ok({ ...draft, description });

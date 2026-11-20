@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -26,8 +27,13 @@ class _MonetraAppState extends ConsumerState<MonetraApp> {
   Widget build(BuildContext context) {
     ref.watch(syncSchedulerProvider); // starts the sync triggers
     final router = ref.watch(routerProvider);
+    // Every screen reads its Bahasa from this locale (ui/l10n.dart); Material's own texts follow too.
+    final language = ref.watch(languageProvider).value ?? deviceLanguage();
     return MaterialApp.router(
       title: 'Monetra',
+      locale: Locale(language),
+      supportedLocales: const [Locale('en'), Locale('id')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: monetraTheme(),
       routerConfig: router,
       debugShowCheckedModeBanner: false,

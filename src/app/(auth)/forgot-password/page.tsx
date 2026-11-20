@@ -1,33 +1,37 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { Rich } from "@/components/rich";
 import { Notice, h1, muted } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
+import { useT } from "@/lib/i18n-client";
+import { authErrorMessage } from "../auth-error";
 import { AuthForm } from "../auth-form";
 
 export default function ForgotPasswordPage() {
+  const { t } = useT();
   const [sentTo, setSentTo] = useState<string | null>(null);
   return (
     <>
-      <h1 className={h1}>Reset your password</h1>
-      <p className={`${muted} mt-1 mb-6`}>We&apos;ll email you a link to choose a new one.</p>
+      <h1 className={h1}>{t("forgot.title")}</h1>
+      <p className={`${muted} mt-1 mb-6`}>{t("forgot.sub")}</p>
       {sentTo ? (
         <Notice tone="info" role="status">
-          If <strong>{sentTo}</strong> has an account, a reset link is on its way. It expires in one hour.
+          <Rich text={t("forgot.sent", { email: sentTo })} />
         </Notice>
       ) : (
         <AuthForm
-          submitLabel="Send reset link"
-          fields={[{ name: "email", label: "Email", type: "email", autoComplete: "email" }]}
+          submitLabel={t("forgot.submit")}
+          fields={[{ name: "email", label: t("common.email"), type: "email", autoComplete: "email" }]}
           onSubmit={async ({ email }) => {
             const { error } = await authClient.requestPasswordReset({ email: email!, redirectTo: "/reset-password" });
-            if (error) return error.message ?? "Couldn't send the link.";
+            if (error) return authErrorMessage(t, error, "forgot.failed");
             setSentTo(email!);
             return null;
           }}
         />
       )}
-      <p className="mt-8 text-center"><Link href="/login">Back to sign in</Link></p>
+      <p className="mt-8 text-center"><Link href="/login">{t("forgot.back")}</Link></p>
     </>
   );
 }

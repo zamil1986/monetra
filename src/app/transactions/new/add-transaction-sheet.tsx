@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { Page, PageHead, buttonClass, h1, iconButtonClass, spacer } from "@/components/ui";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useT } from "@/lib/i18n-client";
 import { TransactionForm, type FormCategory, type FormInitial, type FormWallet } from "../transaction-form";
 
 type Data = { timezone: string; now: { date: string; time: string }; wallets: FormWallet[]; categories: FormCategory[] };
@@ -30,6 +31,7 @@ const CLOSE_MS = 200;
 export function AddTransactionSheet({ data, initial, empty }: { data: Data; initial: FormInitial | null; empty: ReactNode }) {
   const router = useRouter();
   const phone = usePhone();
+  const { t } = useT();
   const [open, setOpen] = useState(true);
 
   function close(thenRefresh = false) {
@@ -55,10 +57,10 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
         <div className="sticky top-0 z-10 bg-paper">
           <span aria-hidden className="mx-auto mt-2 block h-1 w-10 rounded-full bg-line" />
           <div className="flex items-center gap-3 border-b border-line px-4 pt-1.5 pb-2.5">
-            <SheetTitle className="text-xl font-bold text-ink">Add transaction</SheetTitle>
-            <SheetDescription className="sr-only">Record income, an expense or a transfer.</SheetDescription>
+            <SheetTitle className="text-xl font-bold text-ink">{t("nav.addTransaction")}</SheetTitle>
+            <SheetDescription className="sr-only">{t("sheet.description")}</SheetDescription>
             <span className={spacer} />
-            <button type="button" className={iconButtonClass()} aria-label="Close" onClick={() => close()}><X /></button>
+            <button type="button" className={iconButtonClass()} aria-label={t("common.close")} onClick={() => close()}><X /></button>
           </div>
         </div>
         <div className="px-4 pt-5">{form}</div>
@@ -69,6 +71,7 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
 
 function DesktopPanel({ onClose, children }: { onClose: () => void; children: ReactNode }) {
   const { state } = useSidebar();
+  const { t } = useT();
   const heading = useRef<HTMLHeadingElement>(null);
   const closeRef = useRef(onClose);
   useEffect(() => {
@@ -97,9 +100,9 @@ function DesktopPanel({ onClose, children }: { onClose: () => void; children: Re
       style={{ left: state === "expanded" ? "var(--sidebar-width)" : "var(--sidebar-width-icon)" }}
     >
       <PageHead>
-        <h1 id="add-h" ref={heading} tabIndex={-1} className={h1}>Add transaction</h1>
+        <h1 id="add-h" ref={heading} tabIndex={-1} className={h1}>{t("nav.addTransaction")}</h1>
         <span className={spacer} />
-        <button type="button" className={buttonClass("quiet")} onClick={onClose}>Cancel</button>
+        <button type="button" className={buttonClass("quiet")} onClick={onClose}>{t("common.cancel")}</button>
       </PageHead>
       <Page>{children}</Page>
     </div>
