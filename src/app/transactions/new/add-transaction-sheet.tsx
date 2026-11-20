@@ -1,10 +1,10 @@
 "use client";
 import { X } from "lucide-react";
+import { Dialog } from "radix-ui";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Page, PageHead, buttonClass, h1, iconButtonClass, spacer } from "@/components/ui";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { iconButtonClass, spacer } from "@/components/ui";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { useSidebar } from "@/components/ui/sidebar";
 import { useT } from "@/lib/i18n-client";
 import { TransactionForm, type FormCategory, type FormInitial, type FormWallet } from "../transaction-form";
 
@@ -20,12 +20,12 @@ const subscribe = (onChange: () => void) => {
 /** Only ever rendered after a client navigation (a reload gets the full page), so the server value is never shown. */
 const usePhone = () => useSyncExternalStore(subscribe, () => window.matchMedia(PHONE).matches, () => true);
 
-/** Matches the sheet's slide-out, so it finishes before the route goes back. */
+/** Matches the slide-out and fade-out below, so they finish before the route goes back. */
 const CLOSE_MS = 200;
 
 /**
- * Add transaction opened over the current screen. Phone: a bottom sheet over whatever was open.
- * Desktop: the same full-screen form as /transactions/new, laid over the main column so the sidebar stays usable.
+ * Add transaction opened over the current screen. Phone: a bottom sheet. Desktop: a centered dialog.
+ * Both are modal, so the screen underneath is inert while one is open; Escape, the close button and Cancel close it.
  * Closing goes back in history, so the Android back button and the browser back both close it.
  */
 export function AddTransactionSheet({ data, initial, empty }: { data: Data; initial: FormInitial | null; empty: ReactNode }) {
@@ -40,12 +40,47 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
       // Refresh the screen we return to (its Saldo just changed), not the sheet's route.
       if (thenRefresh) window.addEventListener("popstate", () => router.refresh(), { once: true });
       router.back();
-    }, phone ? CLOSE_MS : 0);
+    }, CLOSE_MS);
   }
 
-  const form = initial ? <TransactionForm mode="new" {...data} initial={initial} inSheet={phone} onSaved={() => close(true)} /> : empty;
+  const closeButton = <button type="button" className={iconButtonClass()} aria-label={t("common.close")} onClick={() => close()}><X /></button>;
 
-  if (!phone) return <DesktopPanel onClose={() => close()}>{form}</DesktopPanel>;
+  if (!phone) {
+    const form = initial ? (
+      <TransactionForm mode="new" {...data} initial={initial} inDialog onSaved={() => close(true)} onCancel={() => close()} />
+    ) : empty;
+
+    return (
+      <Dialog.Root open={open} onOpenChange={(next) => !next && close()}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/45 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+          <Dialog.Content
+            className="fixed top-1/2 left-1/2 z-50 flex max-h-[min(92dvh,900px)] w-[min(960px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 flex-col border-t-2 border-ink bg-paper text-base text-ink shadow-[0_24px_64px_-16px_rgba(20,22,26,0.45)] outline-0 duration-200 ease-out-expo data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]"
+            // Typed figures must survive a stray click: only Escape, the close button and Cancel dismiss it.
+            onInteractOutside={(e) => e.preventDefault()}
+            // Recording starts with the amount, so that is where the caret goes.
+            onOpenAutoFocus={(e) => {
+              const amount = document.getElementById("amt");
+              if (amount) {
+                e.preventDefault();
+                amount.focus();
+              }
+            }}
+          >
+            <div className="flex shrink-0 items-center gap-3 border-b border-line px-8 py-3.5">
+              <Dialog.Title className="text-2xl leading-tight font-bold text-ink">{t("nav.addTransaction")}</Dialog.Title>
+              <Dialog.Description className="sr-only">{t("sheet.description")}</Dialog.Description>
+              <span className={spacer} />
+              {closeButton}
+            </div>
+            <div className="overflow-y-auto overscroll-contain px-8 pt-6">{form}</div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    );
+  }
+
+  const form = initial ? <TransactionForm mode="new" {...data} initial={initial} inSheet onSaved={() => close(true)} /> : empty;
 
   return (
     <Sheet open={open} onOpenChange={(next) => !next && close()}>
@@ -60,51 +95,11 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
             <SheetTitle className="text-xl font-bold text-ink">{t("nav.addTransaction")}</SheetTitle>
             <SheetDescription className="sr-only">{t("sheet.description")}</SheetDescription>
             <span className={spacer} />
-            <button type="button" className={iconButtonClass()} aria-label={t("common.close")} onClick={() => close()}><X /></button>
+            {closeButton}
           </div>
         </div>
         <div className="px-4 pt-5">{form}</div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function DesktopPanel({ onClose, children }: { onClose: () => void; children: ReactNode }) {
-  const { state } = useSidebar();
-  const { t } = useT();
-  const heading = useRef<HTMLHeadingElement>(null);
-  const closeRef = useRef(onClose);
-  useEffect(() => {
-    closeRef.current = onClose;
-  });
-
-  // Runs once on open: moving focus again on every render would pull it out of the field being typed in.
-  useEffect(() => {
-    heading.current?.focus();
-    // The screen underneath must not scroll while this one covers it.
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeRef.current();
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = overflow;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, []);
-
-  return (
-    <div
-      role="dialog"
-      aria-labelledby="add-h"
-      className="fixed inset-y-0 right-0 z-30 overflow-y-auto overscroll-contain bg-background transition-[left] duration-200 ease-linear"
-      style={{ left: state === "expanded" ? "var(--sidebar-width)" : "var(--sidebar-width-icon)" }}
-    >
-      <PageHead>
-        <h1 id="add-h" ref={heading} tabIndex={-1} className={h1}>{t("nav.addTransaction")}</h1>
-        <span className={spacer} />
-        <button type="button" className={buttonClass("quiet")} onClick={onClose}>{t("common.cancel")}</button>
-      </PageHead>
-      <Page>{children}</Page>
-    </div>
   );
 }

@@ -41,8 +41,12 @@ type Props = {
   initial: FormInitial;
   /** Opened as the phone sheet over another screen: no tab bar under the Save bar, and saving closes the sheet. */
   inSheet?: boolean;
+  /** Opened as the desktop dialog: the Save bar sticks to the dialog's bottom edge and the after-save panel sits beside the form. */
+  inDialog?: boolean;
   /** Replaces "go to Transactions" after a save, e.g. closing the sheet back to where it was opened. */
   onSaved?: () => void;
+  /** Adds a Cancel button next to Save (new transactions only). Edit keeps its own link back to Transactions. */
+  onCancel?: () => void;
 };
 
 const TYPES = [
@@ -51,7 +55,7 @@ const TYPES = [
   { value: "TRANSFER", Icon: ArrowLeftRight },
 ] as const;
 
-export function TransactionForm({ mode, timezone, now, wallets, categories, initial, inSheet = false, onSaved }: Props) {
+export function TransactionForm({ mode, timezone, now, wallets, categories, initial, inSheet = false, inDialog = false, onSaved, onCancel }: Props) {
   const router = useRouter();
   const online = useOnline();
   const { t } = useT();
@@ -108,6 +112,8 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         setDescription("");
         setSavedNote(t("form.saved", { type: t(`typeWord.${type}`), amount: formatRupiah(parsed.value) }));
         router.refresh();
+        // The button that was pressed keeps focus otherwise; the next thing to type is the amount.
+        document.getElementById("amt")?.focus();
       } else if (onSaved) {
         onSaved();
       } else {
@@ -132,7 +138,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
   );
 
   return (
-    <div className={splitClass}>
+    <div className={inDialog ? "grid grid-cols-[minmax(0,1fr)] items-start gap-8 wide:grid-cols-[minmax(0,1fr)_300px]" : splitClass}>
       <form className={cx("flex flex-col gap-5", mode === "edit" && "max-w-[560px]")} onSubmit={(e) => submit(e)} noValidate>
         <Field
           label={t("common.type")}
@@ -236,11 +242,16 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
             inSheet
               ? "max-md:bottom-0 max-md:pb-[calc(12px+env(safe-area-inset-bottom))]"
               : "max-md:bottom-[calc(62px+env(safe-area-inset-bottom))] max-md:pb-5",
+            // In the dialog the bar stays in reach however far the form scrolls.
+            inDialog && "md:sticky md:bottom-0 md:z-[5] md:border-t md:border-line md:bg-paper md:pt-4 md:pb-6",
           )}
         >
           <Button type="submit" size="lg" disabled={saving || !online}>{saveLabel}</Button>
           {mode === "new" ? (
-            <Button variant="secondary" size="lg" className={onlyDesktop} disabled={saving || !online} onClick={(e) => submit(e, true)}>{t("form.saveAndAdd")}</Button>
+            <>
+              <Button variant="secondary" size="lg" className={onlyDesktop} disabled={saving || !online} onClick={(e) => submit(e, true)}>{t("form.saveAndAdd")}</Button>
+              {onCancel && <Button type="button" variant="quiet" size="lg" className={onlyDesktop} onClick={onCancel}>{t("common.cancel")}</Button>}
+            </>
           ) : (
             <Link className={buttonClass("quiet", "lg", onlyDesktop)} href="/transactions">{t("common.cancel")}</Link>
           )}
