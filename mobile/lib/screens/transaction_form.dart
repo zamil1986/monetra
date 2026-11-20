@@ -10,6 +10,7 @@ import '../domain/money.dart';
 import '../domain/result.dart';
 import '../domain/transaction_rules.dart';
 import '../domain/types.dart';
+import '../ui/amount_input.dart';
 import '../ui/icons.dart';
 import '../ui/l10n.dart';
 import '../ui/theme.dart';
@@ -196,6 +197,7 @@ class _FormState extends ConsumerState<_Form> {
         TextField(
           controller: amount,
           keyboardType: TextInputType.number,
+          inputFormatters: const [AmountInputFormatter()],
           autofocus: !editing,
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, fontFeatures: figures),
           decoration: const InputDecoration(hintText: '0'),

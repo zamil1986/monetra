@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { balancesByWallet, totalBalance } from "./balance";
 import { findNameClash, type ExistingCategory } from "./category-rules";
-import { formatRupiah, parseRupiah } from "./money";
+import { formatRupiah, keepAmountTyping, parseRupiah } from "./money";
 import { cashFlow, periodRange, type Period } from "./period";
 import type { CategoryType, Movement, WalletState } from "./types";
 
@@ -15,7 +15,7 @@ type Fixture = {
   balances: { name: string; wallets: WalletState[]; movements: Movement[]; expected: { byWallet: Record<string, number>; total: number } }[];
   cashFlow: { name: string; movements: Movement[]; expected: { income: number; expense: number; net: number } }[];
   periods: { name: string; period: Period; now: string; timeZone: string; expected: { from: string; to: string; start: string; endExclusive: string } }[];
-  rupiah: { format: [number, string][]; parse: [string, number | null][] };
+  rupiah: { format: [number, string][]; parse: [string, number | null][]; keepTyped: [string, boolean, string][] };
   categoryNameClash: { existing: ExistingCategory[]; cases: { name: string; input: string; type: CategoryType; selfId: string | null; clashId: string | null }[] };
 };
 
@@ -46,6 +46,9 @@ describe("shared fixtures: Rupiah", () => {
   it.each(fixture.rupiah.parse)("reads %j as %j", (input, value) => {
     const r = parseRupiah(input);
     expect(r.ok ? r.value : null).toBe(value);
+  });
+  it.each(fixture.rupiah.keepTyped)("keeps %j (minus allowed: %s) as %j", (input, allowMinus, kept) => {
+    expect(keepAmountTyping(input, allowMinus)).toBe(kept);
   });
 });
 

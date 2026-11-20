@@ -73,6 +73,11 @@ void main() {
         expect(r is Ok<int> ? r.value : null, pair[1]);
       });
     }
+    for (final c in (rupiah['keepTyped'] as List).cast<List>()) {
+      test('keeps "${c[0]}" (minus allowed: ${c[1]}) as "${c[2]}"', () {
+        expect(keepAmountTyping(c[0] as String, allowMinus: c[1] as bool), c[2]);
+      });
+    }
   });
 
   group('Kategori names', () {

@@ -9,7 +9,7 @@ import {
   Button, Field, FieldError, Notice, Page, PageHead, buttonClass, chipClass, cx, h1, h2, iconButtonClass, inputClass,
   noticeActions, onlyDesktop, onlyMobile, rowClass, rowFig, rowSub, rowTitle, rowsClass, sidePanel, spacer, splitClass,
 } from "@/components/ui";
-import { formatRupiah, parseRupiah } from "@/domain/money";
+import { formatRupiah, keepAmountTyping, parseRupiah } from "@/domain/money";
 import { COLORS } from "@/domain/palette";
 import type { WalletColor, WalletIcon } from "@/domain/wallet-rules";
 import { api, ApiError } from "@/lib/api";
@@ -210,7 +210,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
           <div className="relative">
             <input
               className={inputClass(!!errorFor("openingBalance"), "fig pl-11 text-xl")} id="w-open" inputMode="text"
-              value={opening} onChange={(e) => setOpening(e.target.value)} aria-describedby="w-open-h" aria-invalid={!!errorFor("openingBalance")}
+              value={opening} onChange={(e) => setOpening(keepAmountTyping(e.target.value, true))} aria-describedby="w-open-h" aria-invalid={!!errorFor("openingBalance")}
             />
             <span className="absolute top-[11px] left-3 font-bold text-ink-2">Rp</span>
           </div>

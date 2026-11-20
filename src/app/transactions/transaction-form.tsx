@@ -10,7 +10,7 @@ import {
 } from "@/components/ui";
 import { balancesByWallet } from "@/domain/balance";
 import { localToInstant } from "@/domain/local-time";
-import { formatRupiah, parseRupiah } from "@/domain/money";
+import { formatRupiah, keepAmountTyping, parseRupiah } from "@/domain/money";
 import type { Translate } from "@/domain/i18n";
 import type { TransactionType } from "@/domain/types";
 import { api, ApiError } from "@/lib/api";
@@ -160,7 +160,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
             <span className="text-[22px] font-bold text-ink-2">Rp</span>
             <input
               className="fig min-w-0 flex-1 border-0 bg-transparent p-0 text-[44px] leading-[1.1] outline-0 md:text-[52px]"
-              id="amt" inputMode="numeric" enterKeyHint="done" autoComplete="off" value={amount} onChange={(e) => setAmount(e.target.value)}
+              id="amt" inputMode="numeric" enterKeyHint="done" autoComplete="off" value={amount} onChange={(e) => setAmount(keepAmountTyping(e.target.value))}
               aria-describedby="amt-h" aria-invalid={!!errorFor("amount")}
             />
           </div>

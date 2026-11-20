@@ -7,6 +7,7 @@ import '../data/ledger.dart';
 import '../domain/money.dart';
 import '../domain/palette.dart';
 import '../domain/result.dart';
+import '../ui/amount_input.dart';
 import '../ui/icons.dart';
 import '../ui/l10n.dart';
 import '../ui/theme.dart';
@@ -126,7 +127,8 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
           TextField(
               controller: opening,
               decoration: InputDecoration(labelText: t('m.wallets.openingRp'), helperText: t('m.wallets.openingHelp')),
-              keyboardType: const TextInputType.numberWithOptions(signed: true)),
+              keyboardType: const TextInputType.numberWithOptions(signed: true),
+              inputFormatters: const [AmountInputFormatter(allowMinus: true)]),
           const SizedBox(height: 12),
           Wrap(spacing: 8, children: [
             for (final MapEntry(key: k, value: v) in walletIconData.entries)

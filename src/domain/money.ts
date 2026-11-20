@@ -22,6 +22,15 @@ export function parseRupiah(input: string): Result<number, MessageKey> {
   return ok(negative && value !== 0 ? -value : value);
 }
 
+/**
+ * What an amount field keeps as it is typed or pasted: digits and the "." thousand separator,
+ * plus one leading minus when the field allows negatives. Everything else is dropped.
+ */
+export function keepAmountTyping(input: string, allowMinus = false): string {
+  const minus = allowMinus && /^\D*[-−]/.test(input) ? "-" : "";
+  return minus + input.replace(/[^\d.]/g, "");
+}
+
 /** "Rp 6.240.000", "−Rp 15.000" */
 export function formatRupiah(value: number): string {
   const digits = Math.abs(value).toLocaleString("id-ID");

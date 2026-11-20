@@ -45,5 +45,15 @@ String groupDigits(int value) {
   return out.toString();
 }
 
+final _leadingMinus = RegExp(r'^\D*[-−]');
+final _notAmountChar = RegExp(r'[^\d.]');
+
+/// What an amount field keeps as it is typed or pasted: digits and the "." thousand separator,
+/// plus one leading minus when the field allows negatives. Everything else is dropped.
+String keepAmountTyping(String input, {bool allowMinus = false}) {
+  final minus = allowMinus && _leadingMinus.hasMatch(input) ? '-' : '';
+  return minus + input.replaceAll(_notAmountChar, '');
+}
+
 /// "Rp 6.240.000", "−Rp 15.000"
 String formatRupiah(int value) => value < 0 ? '−Rp ${groupDigits(value)}' : 'Rp ${groupDigits(value)}';
