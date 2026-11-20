@@ -111,7 +111,7 @@ async function findLive(client: Tx | typeof db, userId: string, id: string) {
   const row = isUuid(id)
     ? await client.transaction.findFirst({ where: { id, userId, deletedAt: null }, include: withNames })
     : null;
-  if (!row) throw ServiceError.notFound("Transaction");
+  if (!row) throw ServiceError.notFound("transaction");
   return row;
 }
 
@@ -158,7 +158,7 @@ export async function deleteTransaction(userId: string, id: string): Promise<voi
   const { count } = isUuid(id)
     ? await db.transaction.updateMany({ where: { id, userId, deletedAt: null }, data: { deletedAt: new Date(), clientUpdatedAt: new Date() } })
     : { count: 0 };
-  if (count === 0) throw ServiceError.notFound("Transaction");
+  if (count === 0) throw ServiceError.notFound("transaction");
 }
 
 export type TransactionSort = "newest" | "oldest" | "amount_desc" | "amount_asc";
@@ -191,7 +191,7 @@ export async function listTransactions(
   filters: TransactionFilters,
 ): Promise<{ items: TransactionView[]; total: number; page: number; pageSize: number; summary: { income: number; expense: number } }> {
   const user = await db.user.findUnique({ where: { id: userId }, select: { timezone: true } });
-  if (!user) throw ServiceError.notFound("User");
+  if (!user) throw ServiceError.notFound("user");
 
   const where: Prisma.TransactionWhereInput = { userId, deletedAt: null };
   const and: Prisma.TransactionWhereInput[] = [];
@@ -208,7 +208,7 @@ export async function listTransactions(
     if (filters.from) occurredAt.gte = localDayRange(filters.from, filters.from, user.timezone).start;
     if (filters.to) occurredAt.lt = localDayRange(filters.to, filters.to, user.timezone).endExclusive;
     if (Object.values(occurredAt).some((d) => Number.isNaN((d as Date).getTime()))) {
-      throw new ServiceError(400, "INVALID_DATE", "Dates must look like 2026-11-14.");
+      throw new ServiceError(400, "INVALID_DATE", "error.invalidDate");
     }
     where.occurredAt = occurredAt;
   }

@@ -1,5 +1,6 @@
 import { TZDate } from "@date-fns/tz";
-import type { DomainError } from "./errors";
+import { domainError, type DomainError } from "./errors";
+import type { MessageKey } from "./i18n";
 import { instantToLocal, localDayRange } from "./local-time";
 import { err, ok, type Result } from "./result";
 import type { Movement } from "./types";
@@ -64,11 +65,11 @@ export function resolvePeriod(
   input: { kind: PeriodKind; from?: string; to?: string },
   today: string,
 ): Result<{ kind: PeriodKind; from: string; to: string }, DomainError> {
-  const invalid = (field: "from" | "to", message: string) => err({ code: "INVALID_PERIOD", message, field });
+  const invalid = (field: "from" | "to", key: MessageKey) => err(domainError("INVALID_PERIOD", key, undefined, field));
   if (input.kind === "custom") {
-    if (!isDate(input.from)) return invalid("from", "Pick a start date.");
-    if (!isDate(input.to)) return invalid("to", "Pick an end date.");
-    if (input.to < input.from) return invalid("to", "The end date can't be before the start date.");
+    if (!isDate(input.from)) return invalid("from", "error.period.from");
+    if (!isDate(input.to)) return invalid("to", "error.period.to");
+    if (input.to < input.from) return invalid("to", "error.period.reversed");
     return ok({ kind: "custom", from: input.from, to: input.to });
   }
   // `today` is already a local date, so read it as a plain calendar day in UTC.

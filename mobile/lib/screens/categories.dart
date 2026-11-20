@@ -8,6 +8,7 @@ import '../domain/category_rules.dart';
 import '../domain/result.dart';
 import '../domain/types.dart';
 import '../ui/icons.dart';
+import '../ui/l10n.dart';
 import '../ui/theme.dart';
 import '../ui/widgets.dart';
 import 'wallets.dart' show ColorPicker;
@@ -19,12 +20,17 @@ class CategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ledger = ref.watch(ledgerProvider);
+    final t = context.t;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Categories'),
-          bottom: const TabBar(labelColor: Colors.white, unselectedLabelColor: C.onCobalt, indicatorColor: C.yellow, tabs: [Tab(text: 'Expense'), Tab(text: 'Income')]),
+          title: Text(t('nav.categories')),
+          bottom: TabBar(
+              labelColor: Colors.white,
+              unselectedLabelColor: C.onCobalt,
+              indicatorColor: C.yellow,
+              tabs: [Tab(text: t('type.EXPENSE')), Tab(text: t('type.INCOME'))]),
         ),
         body: ledger.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -44,9 +50,10 @@ class _List extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = l.categoriesOf(type, includeArchived: true);
+    final t = context.t;
     Future<void> act(Future<Result<void>> Function() f) async {
       final r = await f();
-      if (r is Err<void> && context.mounted) showMessage(context, r.error.message);
+      if (r is Err<void> && context.mounted) showMessage(context, r.error.text(context.t));
     }
 
     Widget tile(CategoryRow c) {
@@ -55,7 +62,7 @@ class _List extends ConsumerWidget {
       return ListTile(
         leading: Glyph(categoryIcon(c.icon), color: c.color),
         title: Text(c.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? C.ink3 : C.ink)),
-        subtitle: Text('$uses ${uses == 1 ? 'transaction' : 'transactions'}', style: const TextStyle(fontSize: 13, color: C.ink2)),
+        subtitle: Text(t('tx.count', {'count': uses}), style: const TextStyle(fontSize: 13, color: C.ink2)),
         trailing: PopupMenuButton<String>(
           onSelected: (v) => switch (v) {
             'edit' => showCategorySheet(context, type, c),
@@ -65,9 +72,9 @@ class _List extends ConsumerWidget {
             _ => null,
           },
           itemBuilder: (_) => [
-            const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            PopupMenuItem(value: archived ? 'unarchive' : 'archive', child: Text(archived ? 'Unarchive' : 'Archive')),
-            if (uses == 0) const PopupMenuItem(value: 'delete', child: Text('Delete')),
+            PopupMenuItem(value: 'edit', child: Text(t('m.edit'))),
+            PopupMenuItem(value: archived ? 'unarchive' : 'archive', child: Text(archived ? t('common.unarchive') : t('m.archive'))),
+            if (uses == 0) PopupMenuItem(value: 'delete', child: Text(t('del.button'))),
           ],
         ),
       );
@@ -77,7 +84,7 @@ class _List extends ConsumerWidget {
       const SyncBanner(),
       for (final c in all.where((c) => c.archivedAt == null)) tile(c),
       if (all.any((c) => c.archivedAt != null)) ...[
-        const SectionTitle('Archived'),
+        SectionTitle(t('common.archived')),
         for (final c in all.where((c) => c.archivedAt != null)) tile(c),
       ],
       Padding(
@@ -85,7 +92,7 @@ class _List extends ConsumerWidget {
         child: OutlinedButton.icon(
           onPressed: () => showCategorySheet(context, type, null),
           icon: const Icon(Icons.add),
-          label: Text('Add ${type == CategoryType.income ? 'income' : 'expense'} category'),
+          label: Text(t(type == CategoryType.income ? 'm.categories.addINCOME' : 'm.categories.addEXPENSE')),
         ),
       ),
     ]);
@@ -112,18 +119,20 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
   Future<void> save() async {
     final r = await ref.read(repositoryProvider).saveCategory((name: name.text, icon: icon, color: color), widget.type, id: widget.c?.id);
     if (!mounted) return;
-    if (r is Err<String>) return setState(() => error = r.error.message);
+    if (r is Err<String>) return setState(() => error = r.error.text(context.t));
     Navigator.pop(context);
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final t = context.t;
+    return Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.viewInsetsOf(context).bottom),
         child: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Text(widget.c == null ? 'Add category' : 'Edit category', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+            Text(widget.c == null ? t('m.categories.add') : t('m.categories.edit'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
-            TextField(controller: name, decoration: const InputDecoration(labelText: 'Name'), maxLength: maxCategoryName, textCapitalization: TextCapitalization.sentences),
+            TextField(controller: name, decoration: InputDecoration(labelText: t('common.name')), maxLength: maxCategoryName, textCapitalization: TextCapitalization.sentences),
             const SizedBox(height: 8),
             Wrap(spacing: 4, runSpacing: 4, children: [
               for (final MapEntry(key: k, value: v) in categoryIconData.entries)
@@ -139,8 +148,9 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
             ColorPicker(value: color, onChanged: (c) => setState(() => color = c)),
             if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: C.red))),
             const SizedBox(height: 16),
-            FilledButton(onPressed: save, child: const Text('Save')),
+            FilledButton(onPressed: save, child: Text(t('m.save'))),
           ]),
         ),
       );
+  }
 }

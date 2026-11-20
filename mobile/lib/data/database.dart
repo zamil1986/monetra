@@ -81,7 +81,7 @@ class SyncFailures extends Table {
   DateTimeColumn get at => dateTime()();
 }
 
-/// Small facts: the pull cursor and the profile (name, email, time zone).
+/// Small facts: the pull cursor and the profile (name, email, time zone, Bahasa).
 @DataClassName('SettingRow')
 class Settings extends Table {
   TextColumn get key => text()();
@@ -107,10 +107,13 @@ class AppDatabase extends _$AppDatabase {
   Stream<String?> watchSetting(String key) =>
       (select(settings)..where((s) => s.key.equals(key))).watchSingleOrNull().map((r) => r?.value);
 
-  /// Everything goes on sign-out (after the outbox has been sent).
+  /// Everything goes on sign-out (after the outbox has been sent), except the Bahasa: the sign-in
+  /// screen stays in the language the phone was just using (ADR 0006).
   Future<void> wipe() => transaction(() async {
+        final language = await setting('profile.language');
         for (final table in allTables) {
           await delete(table).go();
         }
+        if (language != null) await putSetting('profile.language', language);
       });
 }

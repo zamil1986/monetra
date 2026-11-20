@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetra/app/providers.dart';
@@ -45,12 +46,13 @@ Future<AppDatabase> seeded() async {
   return db;
 }
 
-Future<(ProviderContainer, AppDatabase)> pumpApp(WidgetTester tester) async {
+Future<(ProviderContainer, AppDatabase)> pumpApp(WidgetTester tester, {String? language}) async {
   // A phone-width screen, tall enough that every section is built.
   tester.view.devicePixelRatio = 2.75;
   tester.view.physicalSize = const Size(393 * 2.75, 1800 * 2.75);
   addTearDown(tester.view.reset);
   final db = await seeded();
+  if (language != null) await db.putSetting('profile.language', language);
   final container = ProviderContainer(overrides: [
     databaseProvider.overrideWithValue(db),
     // Nothing listens on this port: every request fails as if there were no signal.
@@ -63,7 +65,15 @@ Future<(ProviderContainer, AppDatabase)> pumpApp(WidgetTester tester) async {
   ]);
   await tester.pumpWidget(UncontrolledProviderScope(
     container: container,
-    child: Consumer(builder: (context, ref, _) => MaterialApp.router(theme: monetraTheme(), routerConfig: ref.watch(routerProvider))),
+    // As in main.dart: the locale follows the Bahasa, and every screen reads it from there.
+    child: Consumer(
+        builder: (context, ref, _) => MaterialApp.router(
+              theme: monetraTheme(),
+              routerConfig: ref.watch(routerProvider),
+              locale: Locale(ref.watch(languageProvider).value ?? 'en'),
+              supportedLocales: const [Locale('en'), Locale('id')],
+              localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            )),
   ));
   await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
   await tester.pumpAndSettle();
@@ -111,6 +121,27 @@ void main() {
     final outbox = await tester.runAsync(() => db.select(db.outbox).get());
     expect(outbox, hasLength(1));
     expect(outbox!.single.body, contains('"amount":18000'));
+    await tester.runAsync(db.close);
+    container.dispose();
+  });
+
+  testWidgets('the app speaks the Akun\'s Bahasa, and switching it offline shows at once and queues it (ADR 0006)', (tester) async {
+    final (container, db) = await pumpApp(tester, language: 'id');
+    expect(find.text('Total Saldo'), findsOneWidget);
+    expect(find.text('Beranda'), findsOneWidget);
+    expect(find.text('Arus Kas Bersih'), findsOneWidget);
+
+    await tester.tap(find.text('Lainnya'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(find.text('English'));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('More'), findsWidgets);
+    expect(find.text('Lainnya'), findsNothing);
+    expect(await tester.runAsync(() => db.setting('profile.language')), 'en');
+    expect(await tester.runAsync(() => db.setting('profile.languagePending')), '1');
     await tester.runAsync(db.close);
     container.dispose();
   });

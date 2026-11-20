@@ -10,7 +10,12 @@ describe("archiving a Dompet", () => {
     const result = checkArchive({ name: "GoPay", balance: 50_000 });
     expect(result).toEqual({
       ok: false,
-      error: { code: "WALLET_NOT_EMPTY", message: "GoPay still holds Rp 50.000. A wallet can be archived only when its balance is exactly Rp 0." },
+      error: {
+        code: "WALLET_NOT_EMPTY",
+        message: "GoPay still holds Rp 50.000. A wallet can be archived only when its balance is exactly Rp 0.",
+        key: "error.wallet.notEmpty.holds",
+        params: { name: "GoPay", amount: "Rp 50.000" },
+      },
     });
   });
 

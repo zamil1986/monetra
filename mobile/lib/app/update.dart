@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/api.dart' show isOffline;
+import '../ui/l10n.dart';
 import '../ui/widgets.dart';
 import 'providers.dart';
 
@@ -36,22 +37,23 @@ Future<void> checkForUpdate(BuildContext context, WidgetRef ref, String? current
     version = latest['version'] as String;
     url = latest['apkUrl'] as String;
   } catch (_) {
-    if (!quiet && context.mounted) showMessage(context, "Couldn't check for updates. Try again when online.");
+    if (!quiet && context.mounted) showMessage(context, context.t('m.update.failed'));
     return;
   }
   if (!context.mounted) return;
   if (compareVersions(version, current) <= 0) {
-    if (!quiet) showMessage(context, "You're on the latest version.");
+    if (!quiet) showMessage(context, context.t('m.update.latest'));
     return;
   }
+  final t = context.t;
   final go = await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: Text('Monetra $version is available'),
-      content: Text('You have $current. It downloads here, then Android asks you to install it over this one. Your data stays.'),
+      title: Text(t('m.update.title', {'version': version})),
+      content: Text(t('m.update.body', {'current': current})),
       actions: [
-        TextButton(onPressed: () => c.pop(false), child: const Text('Later')),
-        FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: const Text('Update')),
+        TextButton(onPressed: () => c.pop(false), child: Text(t('m.update.later'))),
+        FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: Text(t('m.update.download'))),
       ],
     ),
   );
@@ -61,6 +63,7 @@ Future<void> checkForUpdate(BuildContext context, WidgetRef ref, String? current
 Future<void> _downloadAndInstall(BuildContext context, String version, String url) async {
   final progress = ValueNotifier<double?>(null);
   final cancel = CancelToken();
+  final t = context.t;
   final nav = Navigator.of(context, rootNavigator: true);
   var open = true;
   void close() {
@@ -73,16 +76,16 @@ Future<void> _downloadAndInstall(BuildContext context, String version, String ur
     builder: (c) => PopScope(
       canPop: false,
       child: AlertDialog(
-        title: Text('Downloading Monetra $version'),
+        title: Text(t('m.update.downloading', {'version': version})),
         content: ValueListenableBuilder(
           valueListenable: progress,
           builder: (_, p, _) => Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             LinearProgressIndicator(value: p),
             const SizedBox(height: 8),
-            Text(p == null ? 'Starting…' : '${(p * 100).round()}%'),
+            Text(p == null ? t('m.update.starting') : '${(p * 100).round()}%'),
           ]),
         ),
-        actions: [TextButton(onPressed: () => cancel.cancel(), child: const Text('Cancel'))],
+        actions: [TextButton(onPressed: () => cancel.cancel(), child: Text(t('m.update.cancel')))],
       ),
     ),
   );
@@ -104,11 +107,11 @@ Future<void> _downloadAndInstall(BuildContext context, String version, String ur
     final browser = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text("Couldn't install the update"),
-        content: Text(isOffline(e) ? 'The download stopped. Check your connection and try again.' : 'You can download it in your browser instead and open the file.'),
+        title: Text(t('m.update.installFailed')),
+        content: Text(t(isOffline(e) ? 'm.update.stopped' : 'm.update.useBrowser')),
         actions: [
-          TextButton(onPressed: () => c.pop(false), child: const Text('Close')),
-          FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: const Text('Open browser')),
+          TextButton(onPressed: () => c.pop(false), child: Text(t('m.update.close'))),
+          FilledButton(style: FilledButton.styleFrom(minimumSize: const Size(0, 40)), onPressed: () => c.pop(true), child: Text(t('m.update.openBrowser'))),
         ],
       ),
     );

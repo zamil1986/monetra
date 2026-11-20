@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { Rich } from "@/components/rich";
 import { Notice } from "@/components/ui";
+import { getT } from "@/server/i18n";
 
-export function NoActiveWallet() {
+export async function NoActiveWallet() {
+  const { t } = await getT();
   return (
-    <Notice tone="warn" role="alert"><strong>No active wallet.</strong> <Link href="/wallets">Create or unarchive a wallet</Link> first.</Notice>
+    <Notice tone="warn" role="alert"><Rich text={t("noWallet")} tags={{ link: (c) => <Link href="/wallets">{c}</Link> }} /></Notice>
   );
 }

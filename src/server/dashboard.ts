@@ -30,7 +30,7 @@ export async function getDashboard(
   now: Date = new Date(),
 ): Promise<Dashboard> {
   const user = await db.user.findUnique({ where: { id: userId }, select: { timezone: true } });
-  if (!user) throw ServiceError.notFound("User");
+  if (!user) throw ServiceError.notFound("user");
 
   const resolved = resolvePeriod(input, instantToLocal(now, user.timezone).date);
   if (!resolved.ok) throw ServiceError.fromDomain(resolved.error);

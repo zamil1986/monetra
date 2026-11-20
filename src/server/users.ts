@@ -1,4 +1,6 @@
+import { DEFAULT_LANG, isLang, type Lang } from "@/domain/i18n";
 import { db } from "./db";
+import { ServiceError } from "./errors";
 import { DEFAULT_CATEGORIES } from "./default-categories";
 
 /**
@@ -27,4 +29,20 @@ export async function createUser(input: { name: string; email: string; timezone:
 
 export async function getUser(userId: string) {
   return db.user.findUnique({ where: { id: userId } });
+}
+
+/**
+ * Records the Pengguna's Bahasa (ADR 0006). A choice made earlier, by the Perangkat clock, than
+ * the one already stored is dropped, so a phone coming back online never undoes a newer choice.
+ * Returns the Bahasa the Akun ends up with.
+ */
+export async function setLanguage(userId: string, language: Lang, changedAt: Date = new Date()): Promise<Lang> {
+  const { count } = await db.user.updateMany({
+    where: { id: userId, OR: [{ languageChangedAt: null }, { languageChangedAt: { lte: changedAt } }] },
+    data: { language, languageChangedAt: changedAt },
+  });
+  if (count > 0) return language;
+  const user = await db.user.findUnique({ where: { id: userId }, select: { language: true } });
+  if (!user) throw ServiceError.notFound("user");
+  return isLang(user.language) ? user.language : DEFAULT_LANG;
 }

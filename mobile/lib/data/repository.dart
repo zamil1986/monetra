@@ -56,6 +56,19 @@ class Repository {
     );
   }
 
+  /// Picks the Bahasa. It shows at once; signed in, it is also queued for the Akun so every
+  /// Perangkat follows, and the newest choice wins (ADR 0006). Signed out it stays on this phone.
+  Future<void> setLanguage(String language, {required bool forAccount}) async {
+    await db.transaction(() async {
+      await db.putSetting('profile.language', language);
+      if (forAccount) {
+        await db.putSetting('profile.languageChangedAt', _iso(_stamp(null)));
+        await db.putSetting('profile.languagePending', '1');
+      }
+    });
+    if (forAccount) onLocalChange?.call();
+  }
+
   Stream<int> watchPendingCount() => db.select(db.outbox).watch().map((rows) => rows.length);
   Stream<List<SyncFailureRow>> watchFailures() => db.select(db.syncFailures).watch();
   Future<void> dismissFailures() => db.delete(db.syncFailures).go();

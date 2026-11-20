@@ -23,12 +23,12 @@ Result<int> parseRupiah(String input) {
     text = text.replaceFirst(_rp, '');
   }
   if (!_plainDigits.hasMatch(text) && !_grouped.hasMatch(text)) {
-    return const Err(DomainError('INVALID_AMOUNT', 'Enter a whole rupiah amount, for example 18.000.'));
+    return const Err(DomainError('INVALID_AMOUNT', 'error.amount.example'));
   }
   final digits = text.replaceAll('.', '');
   final value = BigInt.parse(digits);
   if (value > BigInt.from(maxSafeInteger)) {
-    return const Err(DomainError('INVALID_AMOUNT', 'That amount is too large.'));
+    return const Err(DomainError('INVALID_AMOUNT', 'error.amount.tooLarge'));
   }
   final n = value.toInt();
   return Ok(negative && n != 0 ? -n : n);

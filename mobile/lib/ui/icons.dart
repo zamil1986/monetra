@@ -16,12 +16,13 @@ const categoryIconData = <String, IconData>{
   'dumbbell': LucideIcons.dumbbell, 'heart': LucideIcons.heart, 'wrench': LucideIcons.wrench, 'ellipsis': LucideIcons.ellipsis,
 };
 
-const walletIconData = <String, (IconData, String)>{
-  'bank': (LucideIcons.landmark, 'Bank'),
-  'cash': (LucideIcons.banknote, 'Cash'),
-  'ewallet': (LucideIcons.smartphone, 'E-wallet'),
-  'savings': (LucideIcons.piggyBank, 'Savings'),
+/// Labelled by `walletIcon.<key>` in the catalog.
+const walletIconData = <String, IconData>{
+  'bank': LucideIcons.landmark,
+  'cash': LucideIcons.banknote,
+  'ewallet': LucideIcons.smartphone,
+  'savings': LucideIcons.piggyBank,
 };
 
 IconData categoryIcon(String? name) => categoryIconData[name] ?? LucideIcons.arrowLeftRight;
-IconData walletIcon(String name) => (walletIconData[name] ?? walletIconData['bank']!).$1;
+IconData walletIcon(String name) => walletIconData[name] ?? walletIconData['bank']!;

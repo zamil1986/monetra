@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { resetDatabase } from "@/test/db";
 import { listCategories } from "./categories";
 import { createTransaction, deleteTransaction, getTransaction, listTransactions, updateTransaction } from "./transactions";
-import { pull, push, type Mutation } from "./sync";
+import { localizePush, pull, push, type Mutation } from "./sync";
 import { createUser } from "./users";
 import { deleteWallet, listWallets } from "./wallets";
 
@@ -138,8 +138,12 @@ describe("push", () => {
     const bad = expense(randomUUID(), 5, tunai.id, makanan.id);
     if (bad.op === "upsert" && bad.entity === "transaction") bad.fields.amount = 0;
     const good = expense(randomUUID(), 4, tunai.id, makanan.id);
-    const { results } = await push(user.id, [bad, good]);
-    expect(results.map((r) => r.status)).toEqual(["rejected", "applied"]);
+    const result = await push(user.id, [bad, good]);
+    expect(result.results.map((r) => r.status)).toEqual(["rejected", "applied"]);
+    // Sent in the Pengguna's Bahasa, without the catalog details.
+    const [refused] = localizePush(result, "id").results;
+    expect(refused).toMatchObject({ code: "INVALID_TRANSACTION", message: "Masukkan nominal rupiah bulat di atas 0." });
+    expect(refused).not.toHaveProperty("key");
   });
 
   it("never touches another Pengguna's records", async () => {

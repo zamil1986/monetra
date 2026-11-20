@@ -40,35 +40,30 @@ ExistingCategory? findNameClash(String name, CategoryType type, List<ExistingCat
 /// PRD 3.6: a name of 1–30 characters, unique within its type regardless of case, archived ones included.
 Result<CategoryInput> validateCategoryInput(CategoryInput input, CategoryType type, List<ExistingCategory> existing,
     [String? selfId]) {
-  DomainError invalid(String field, String message, [String code = 'INVALID_CATEGORY']) =>
-      DomainError(code, message, field: field);
+  DomainError invalid(String field, String key, {Map<String, Object?>? params, String code = 'INVALID_CATEGORY'}) =>
+      DomainError(code, key, params: params, field: field);
   final name = _clean(input.name);
-  if (name.isEmpty) return Err(invalid('name', 'Give the category a name.'));
-  if (name.length > maxCategoryName) return Err(invalid('name', 'Keep the name to $maxCategoryName characters or fewer.'));
+  if (name.isEmpty) return Err(invalid('name', 'error.category.nameMissing'));
+  if (name.length > maxCategoryName) return Err(invalid('name', 'error.name.tooLong', params: {'max': maxCategoryName}));
   final clash = findNameClash(name, type, existing, selfId);
   if (clash != null) {
-    final kind = type == CategoryType.income ? 'income' : 'expense';
-    return Err(invalid(
-        'name',
-        clash.archived
-            ? 'An archived $kind category is already called ${clash.name}. Unarchive it instead.'
-            : 'You already have an $kind category called ${clash.name}.',
-        'CATEGORY_NAME_TAKEN'));
+    final kind = type == CategoryType.income ? 'Income' : 'Expense';
+    return Err(invalid('name', clash.archived ? 'error.category.takenArchived$kind' : 'error.category.taken$kind',
+        params: {'name': clash.name}, code: 'CATEGORY_NAME_TAKEN'));
   }
-  if (!isColor(input.color)) return Err(invalid('color', 'Pick one of the colors.'));
-  if (!categoryIcons.contains(input.icon)) return Err(invalid('icon', 'Pick one of the icons.'));
+  if (!isColor(input.color)) return Err(invalid('color', 'error.color'));
+  if (!categoryIcons.contains(input.icon)) return Err(invalid('icon', 'error.icon'));
   return Ok((name: name, icon: input.icon, color: input.color));
 }
 
 /// PRD 3.6: the last active Kategori of a type can't be archived or deleted.
 Result<void> checkLeavesOneActive({required CategoryType type, required bool archived, required int activeOfSameType}) {
   if (archived || activeOfSameType > 1) return const Ok(null);
-  final kind = type == CategoryType.income ? 'income' : 'expense';
-  return Err(DomainError('LAST_ACTIVE_CATEGORY', 'This is your only active $kind category. Add or unarchive another one first.'));
+  return Err(DomainError('LAST_ACTIVE_CATEGORY',
+      type == CategoryType.income ? 'error.category.lastActiveIncome' : 'error.category.lastActiveExpense'));
 }
 
 /// PRD 3.6: a Kategori any Transaksi uses is archived instead.
 Result<void> checkCategoryDelete({required int transactionCount}) => transactionCount == 0
     ? const Ok(null)
-    : const Err(DomainError('CATEGORY_IN_USE',
-        "This category has been used in transactions, so it can't be deleted. Archive it instead."));
+    : const Err(DomainError('CATEGORY_IN_USE', 'error.category.inUse'));

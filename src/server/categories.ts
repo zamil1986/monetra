@@ -56,10 +56,10 @@ async function lockType(tx: Tx, userId: string, type: CategoryType) {
 /** Finds the Pengguna's Kategori and locks its whole type. */
 async function lockOwned(tx: Tx, userId: string, id: string) {
   const found = await tx.category.findFirst({ where: { id, userId, deletedAt: null }, select: { type: true } });
-  if (!found) throw ServiceError.notFound("Category");
+  if (!found) throw ServiceError.notFound("category");
   const siblings = await lockType(tx, userId, found.type);
   const self = siblings.find((c) => c.id === id);
-  if (!self) throw ServiceError.notFound("Category");
+  if (!self) throw ServiceError.notFound("category");
   return { self, siblings };
 }
 
@@ -116,7 +116,7 @@ export async function archiveCategory(userId: string, id: string) {
 /** Names are unique across archived Kategori too, so unarchiving never clashes (PRD 3.6). */
 export async function unarchiveCategory(userId: string, id: string) {
   const found = await db.category.findFirst({ where: { id, userId, deletedAt: null } });
-  if (!found) throw ServiceError.notFound("Category");
+  if (!found) throw ServiceError.notFound("category");
   await db.category.update({ where: { id }, data: { archivedAt: null, clientUpdatedAt: new Date() } });
 }
 

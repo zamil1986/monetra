@@ -1,10 +1,11 @@
+import type { MessageKey } from "./i18n";
 import { err, ok, type Result } from "./result";
 
 const PLAIN_DIGITS = /^\d+$/;
 const GROUPED = /^\d{1,3}(\.\d{3})+$/;
 
-/** Reads what a person typed into an amount field as whole rupiah (ADR 0002). */
-export function parseRupiah(input: string): Result<number> {
+/** Reads what a person typed into an amount field as whole rupiah (ADR 0002). The error is a catalog key. */
+export function parseRupiah(input: string): Result<number, MessageKey> {
   // "-15.000", "−Rp 15.000" and "Rp -15.000" all read as minus fifteen thousand.
   let text = input.trim();
   let negative = false;
@@ -14,10 +15,10 @@ export function parseRupiah(input: string): Result<number> {
     text = text.replace(/^rp\s*/i, "");
   }
   if (!PLAIN_DIGITS.test(text) && !GROUPED.test(text)) {
-    return err("Enter a whole rupiah amount, for example 18.000.");
+    return err("error.amount.example");
   }
   const value = Number(text.replaceAll(".", ""));
-  if (!Number.isSafeInteger(value)) return err("That amount is too large.");
+  if (!Number.isSafeInteger(value)) return err("error.amount.tooLarge");
   return ok(negative && value !== 0 ? -value : value);
 }
 

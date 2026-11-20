@@ -1,8 +1,10 @@
 import { z } from "zod";
+import { LANGS } from "@/domain/i18n";
 import { PERIOD_KINDS } from "@/domain/period";
 
 /** Whole rupiah in JSON: an integer, never a string or a fraction (ADR 0002). */
-const rupiah = z.number("Enter a whole rupiah amount.").int("Enter a whole rupiah amount, with no fractions.").refine(Number.isSafeInteger, "That amount is too large.");
+// Messages are catalog keys; the route handler renders them in the Pengguna's Bahasa.
+const rupiah = z.number("error.amount.whole").int("error.amount.noFraction").refine(Number.isSafeInteger, "error.amount.tooLarge");
 const id = z.uuid();
 
 export const walletCreateSchema = z.object({
@@ -63,4 +65,10 @@ export const dashboardQuerySchema = z.object({
   period: z.enum(PERIOD_KINDS).default("month"),
   from: z.string().optional(),
   to: z.string().optional(),
+});
+
+export const languageSchema = z.object({
+  language: z.enum(LANGS, "error.language"),
+  /** When the Pengguna made the choice, by the Perangkat clock; the latest choice wins (ADR 0005). */
+  changedAt: z.iso.datetime({ offset: true }).transform((s) => new Date(s)).optional(),
 });

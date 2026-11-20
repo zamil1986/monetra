@@ -1,4 +1,5 @@
-import type { DomainError } from "./errors";
+import { domainError, type DomainError } from "./errors";
+import type { MessageKey, Params } from "./i18n";
 import { type Color, isColor } from "./palette";
 import { err, ok, type Result } from "./result";
 import type { CategoryType } from "./types";
@@ -21,8 +22,8 @@ export type ValidCategoryInput = { name: string; icon: CategoryIcon; color: Colo
 /** A Kategori the Pengguna already has, archived or not, as the naming rule sees it. */
 export type ExistingCategory = { id: string; name: string; type: CategoryType; archived: boolean };
 
-const invalid = (field: string, message: string, code = "INVALID_CATEGORY"): Result<never, DomainError> =>
-  err({ code, field, message });
+const invalid = (field: string, key: MessageKey, params?: Params, code = "INVALID_CATEGORY"): Result<never, DomainError> =>
+  err(domainError(code, key, params, field));
 
 const sameName = (a: string, b: string) => a.localeCompare(b, "id", { sensitivity: "accent" }) === 0;
 
@@ -43,23 +44,22 @@ export function validateCategoryInput(
   selfId: string | null = null,
 ): Result<ValidCategoryInput, DomainError> {
   const name = input.name.trim().replace(/\s+/g, " ");
-  if (!name) return invalid("name", "Give the category a name.");
-  if (name.length > MAX_CATEGORY_NAME) return invalid("name", `Keep the name to ${MAX_CATEGORY_NAME} characters or fewer.`);
+  if (!name) return invalid("name", "error.category.nameMissing");
+  if (name.length > MAX_CATEGORY_NAME) return invalid("name", "error.name.tooLong", { max: MAX_CATEGORY_NAME });
 
   const clash = findNameClash(name, type, existing, selfId);
   if (clash) {
-    const kind = type === "INCOME" ? "income" : "expense";
+    const kind = type === "INCOME" ? "Income" : "Expense";
     return invalid(
       "name",
-      clash.archived
-        ? `An archived ${kind} category is already called ${clash.name}. Unarchive it instead.`
-        : `You already have an ${kind} category called ${clash.name}.`,
+      clash.archived ? `error.category.takenArchived${kind}` : `error.category.taken${kind}`,
+      { name: clash.name },
       "CATEGORY_NAME_TAKEN",
     );
   }
 
-  if (!isColor(input.color)) return invalid("color", "Pick one of the colors.");
-  if (!(CATEGORY_ICONS as readonly string[]).includes(input.icon)) return invalid("icon", "Pick one of the icons.");
+  if (!isColor(input.color)) return invalid("color", "error.color");
+  if (!(CATEGORY_ICONS as readonly string[]).includes(input.icon)) return invalid("icon", "error.icon");
   return ok({ name, icon: input.icon as CategoryIcon, color: input.color });
 }
 
@@ -69,18 +69,11 @@ export function validateCategoryInput(
  */
 export function checkLeavesOneActive(category: { type: CategoryType; archived: boolean; activeOfSameType: number }): Result<void, DomainError> {
   if (category.archived || category.activeOfSameType > 1) return ok(undefined);
-  const kind = category.type === "INCOME" ? "income" : "expense";
-  return err({
-    code: "LAST_ACTIVE_CATEGORY",
-    message: `This is your only active ${kind} category. Add or unarchive another one first.`,
-  });
+  return err(domainError("LAST_ACTIVE_CATEGORY", category.type === "INCOME" ? "error.category.lastActiveIncome" : "error.category.lastActiveExpense"));
 }
 
 /** PRD 3.6: a Kategori any Transaksi uses is archived instead. */
 export function checkDelete(category: { transactionCount: number }): Result<void, DomainError> {
   if (category.transactionCount === 0) return ok(undefined);
-  return err({
-    code: "CATEGORY_IN_USE",
-    message: "This category has been used in transactions, so it can't be deleted. Archive it instead.",
-  });
+  return err(domainError("CATEGORY_IN_USE", "error.category.inUse"));
 }

@@ -11,8 +11,10 @@ import {
 import { balancesByWallet } from "@/domain/balance";
 import { localToInstant } from "@/domain/local-time";
 import { formatRupiah, parseRupiah } from "@/domain/money";
+import type { Translate } from "@/domain/i18n";
 import type { TransactionType } from "@/domain/types";
 import { api, ApiError } from "@/lib/api";
+import { useT } from "@/lib/i18n-client";
 import { haptic } from "@/lib/haptics";
 import { useOnline } from "@/lib/use-online";
 
@@ -44,16 +46,15 @@ type Props = {
 };
 
 const TYPES = [
-  { value: "EXPENSE", label: "Expense", Icon: ArrowUpRight },
-  { value: "INCOME", label: "Income", Icon: ArrowDownLeft },
-  { value: "TRANSFER", label: "Transfer", Icon: ArrowLeftRight },
+  { value: "EXPENSE", Icon: ArrowUpRight },
+  { value: "INCOME", Icon: ArrowDownLeft },
+  { value: "TRANSFER", Icon: ArrowLeftRight },
 ] as const;
-
-const typeWord = (t: TransactionType) => t.toLowerCase();
 
 export function TransactionForm({ mode, timezone, now, wallets, categories, initial, inSheet = false, onSaved }: Props) {
   const router = useRouter();
   const online = useOnline();
+  const { t } = useT();
   const [type, setType] = useState<TransactionType>(initial.type);
   const [amount, setAmount] = useState(initial.amount ? initial.amount.toLocaleString("id-ID") : "");
   const [walletId, setWalletId] = useState(initial.walletId);
@@ -84,9 +85,9 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
     e.preventDefault();
     setSavedNote(null);
     const parsed = parseRupiah(amount);
-    if (!parsed.ok || parsed.value <= 0) return setError({ field: "amount", message: "Enter an amount above Rp 0, in whole rupiah." });
+    if (!parsed.ok || parsed.value <= 0) return setError({ field: "amount", message: t("form.amountInvalid") });
     const occurredAt = localToInstant(date, time, timezone);
-    if (Number.isNaN(occurredAt.getTime())) return setError({ field: "occurredAt", message: "Enter a date and time." });
+    if (Number.isNaN(occurredAt.getTime())) return setError({ field: "occurredAt", message: t("error.occurredAt.missing") });
     const body = {
       type,
       amount: parsed.value,
@@ -105,7 +106,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
       if (addAnother) {
         setAmount("");
         setDescription("");
-        setSavedNote(`Saved ${typeWord(type)} of ${formatRupiah(parsed.value)}.`);
+        setSavedNote(t("form.saved", { type: t(`typeWord.${type}`), amount: formatRupiah(parsed.value) }));
         router.refresh();
       } else if (onSaved) {
         onSaved();
@@ -114,18 +115,18 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof ApiError ? { field: err.field, message: err.message } : { message: "Something went wrong. Try again." });
+      setError(err instanceof ApiError ? { field: err.field, message: err.message } : { message: t("common.somethingWrong") });
     } finally {
       setSaving(false);
     }
   }
 
   const errorFor = (field: string) => (error?.field === field ? error.message : null);
-  const label = (w: FormWallet) => `${w.name} · ${formatRupiah(w.balance)}${w.archived ? " (archived)" : ""}`;
-  const saveLabel = !online ? "Saving needs a connection" : mode === "edit" ? "Save changes" : `Save ${typeWord(type)}`;
+  const label = (w: FormWallet) => `${w.name} · ${formatRupiah(w.balance)}${w.archived ? t("common.archivedSuffix") : ""}`;
+  const saveLabel = !online ? t("common.savingNeedsConnection") : mode === "edit" ? t("common.saveChanges") : t("form.saveNew", { type: t(`typeWord.${type}`) });
   const walletSelect = (id: string, value: string, onChange: (v: string) => void, options: FormWallet[], field: string) => (
     <select className={inputClass(!!errorFor(field))} id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-      {id === "to" && <option value="" disabled>Choose a wallet</option>}
+      {id === "to" && <option value="" disabled>{t("form.chooseWallet")}</option>}
       {options.map((w) => <option key={w.id} value={w.id}>{label(w)}</option>)}
     </select>
   );
@@ -134,24 +135,22 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
     <div className={splitClass}>
       <form className={cx("flex flex-col gap-5", mode === "edit" && "max-w-[560px]")} onSubmit={(e) => submit(e)} noValidate>
         <Field
-          label="Type"
+          label={t("common.type")}
           legendId="type-l"
           error={errorFor("type")}
           hint={
             mode === "edit" &&
-            (initial.type === "TRANSFER"
-              ? "A transfer can't become income or expense: delete it and record the right type instead."
-              : "An expense can become income, and you pick the category again. It can't become a transfer: delete it and record a transfer instead.")
+            (initial.type === "TRANSFER" ? t("form.typeHintTransfer") : t("form.typeHintOther"))
           }
         >
           <div className={segClass} role="group" aria-labelledby="type-l">
-            {availableTypes.map(({ value, label: text, Icon }) => (
-              <button key={value} type="button" className={segButtonClass} aria-pressed={type === value} onClick={() => chooseType(value)}><Icon />{text}</button>
+            {availableTypes.map(({ value, Icon }) => (
+              <button key={value} type="button" className={segButtonClass} aria-pressed={type === value} onClick={() => chooseType(value)}><Icon />{t(`type.${value}`)}</button>
             ))}
           </div>
         </Field>
 
-        <Field label="Amount" htmlFor="amt" error={errorFor("amount")} hint="Whole rupiah, more than 0." hintId="amt-h">
+        <Field label={t("form.amount")} htmlFor="amt" error={errorFor("amount")} hint={t("form.amountHint")} hintId="amt-h">
           <div
             className={cx(
               "flex items-baseline gap-2 border-b-2 pt-1 pb-1.5 focus-within:border-cobalt focus-within:shadow-[0_2px_0_var(--color-cobalt)]",
@@ -170,33 +169,30 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         {type === "TRANSFER" ? (
           <>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field label="From wallet" htmlFor="from" error={errorFor("walletId")}>
+              <Field label={t("form.fromWallet")} htmlFor="from" error={errorFor("walletId")}>
                 {walletSelect("from", walletId, setWalletId, walletChoices, "walletId")}
               </Field>
-              <Field label="To wallet" htmlFor="to" error={errorFor("toWalletId")}>
+              <Field label={t("form.toWallet")} htmlFor="to" error={errorFor("toWalletId")}>
                 {walletSelect("to", toWalletId, setToWalletId, walletChoices.filter((w) => w.id !== walletId), "toWalletId")}
               </Field>
             </div>
-            <Notice tone="info">
-              A transfer moves money between your own wallets. It never counts as income or expense. If you paid an admin fee, record it as a separate
-              expense in Biaya Admin.
-            </Notice>
+            <Notice tone="info">{t("form.transferNote")}</Notice>
           </>
         ) : (
-          <Field label="Wallet" htmlFor="wal" error={errorFor("walletId")}>
+          <Field label={t("common.wallet")} htmlFor="wal" error={errorFor("walletId")}>
             {walletSelect("wal", walletId, setWalletId, walletChoices, "walletId")}
           </Field>
         )}
 
         {type !== "TRANSFER" && (
           <Field
-            label="Category"
+            label={t("common.category")}
             legendId="cat-l"
             error={errorFor("categoryId")}
             hint={
               mode === "edit" && type !== initial.type && !categoryId
-                ? `Choose an ${typeWord(type)} category to finish the change.`
-                : <Link href="/categories">Manage categories</Link>
+                ? t("form.finishCategory", { type: t(`typeWord.${type}`) })
+                : <Link href="/categories">{t("form.manageCategories")}</Link>
             }
           >
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="cat-l">
@@ -214,22 +210,22 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
 
         <div className="flex flex-col gap-1.5">
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Date" htmlFor="date">
+            <Field label={t("common.date")} htmlFor="date">
               <input className={inputClass(!!errorFor("occurredAt"))} id="date" type="date" value={date} max={now.date} onChange={(e) => setDate(e.target.value)} />
             </Field>
-            <Field label="Time" htmlFor="time">
+            <Field label={t("common.time")} htmlFor="time">
               <input className={inputClass(!!errorFor("occurredAt"))} id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
             </Field>
           </div>
           <FieldError message={errorFor("occurredAt")} />
-          <span className={hintClass}>{mode === "new" ? "Set to now. " : ""}It can&apos;t be in the future. Times are in {timezone}.</span>
+          <span className={hintClass}>{mode === "new" ? t("form.timeNow") : ""}{t("form.timeHint", { timezone })}</span>
         </div>
 
-        <Field label={<>Description <span className="font-normal text-ink-2">(optional)</span></>} htmlFor="desc" error={errorFor("description")}>
+        <Field label={<>{t("common.description")} <span className="font-normal text-ink-2">{t("common.optional")}</span></>} htmlFor="desc" error={errorFor("description")}>
           <input className={inputClass(!!errorFor("description"))} id="desc" maxLength={120} enterKeyHint="done" value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
 
-        {error && !error.field && <Notice tone="danger" role="alert"><strong>Not saved.</strong> {error.message}</Notice>}
+        {error && !error.field && <Notice tone="danger" role="alert"><strong>{t("form.notSaved")}</strong> {error.message}</Notice>}
         {savedNote && <Notice tone="info" icon={Check} role="status">{savedNote}</Notice>}
 
         <div
@@ -244,15 +240,15 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         >
           <Button type="submit" size="lg" disabled={saving || !online}>{saveLabel}</Button>
           {mode === "new" ? (
-            <Button variant="secondary" size="lg" className={onlyDesktop} disabled={saving || !online} onClick={(e) => submit(e, true)}>Save and add another</Button>
+            <Button variant="secondary" size="lg" className={onlyDesktop} disabled={saving || !online} onClick={(e) => submit(e, true)}>{t("form.saveAndAdd")}</Button>
           ) : (
-            <Link className={buttonClass("quiet", "lg", onlyDesktop)} href="/transactions">Cancel</Link>
+            <Link className={buttonClass("quiet", "lg", onlyDesktop)} href="/transactions">{t("common.cancel")}</Link>
           )}
         </div>
       </form>
 
       {mode === "new" && (
-        <AfterYouSave type={type} amount={parseRupiah(amount)} wallets={wallets} walletId={walletId} toWalletId={toWalletId} />
+        <AfterYouSave t={t} type={type} amount={parseRupiah(amount)} wallets={wallets} walletId={walletId} toWalletId={toWalletId} />
       )}
     </div>
   );
@@ -260,12 +256,14 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
 
 /** Shows how the Saldo and Total Balance move once this Transaksi is saved, using the same rules as the server. */
 function AfterYouSave(props: {
+  t: Translate;
   type: TransactionType;
   amount: ReturnType<typeof parseRupiah>;
   wallets: FormWallet[];
   walletId: string;
   toWalletId: string;
 }) {
+  const { t } = props;
   const amount = props.amount.ok && props.amount.value > 0 ? props.amount.value : 0;
   const now = props.wallets.map((w) => ({ id: w.id, openingBalance: w.balance, archived: w.archived }));
   const movement = { type: props.type, amount, walletId: props.walletId, toWalletId: props.type === "TRANSFER" ? props.toWalletId || null : null };
@@ -278,7 +276,7 @@ function AfterYouSave(props: {
   const fig = (a: number, b: number) => (
     <span className="fig whitespace-nowrap text-lg">{a.toLocaleString("id-ID")}<span className="mx-1 text-ink-3">→</span>{b.toLocaleString("id-ID")}</span>
   );
-  const noChange = <span className="inline-flex items-center rounded-[3px] bg-white px-2 py-0.5 text-[12.5px] font-semibold text-ink-2">No change</span>;
+  const noChange = <span className="inline-flex items-center rounded-[3px] bg-white px-2 py-0.5 text-[12.5px] font-semibold text-ink-2">{t("after.noChange")}</span>;
   const line = (title: string, sub: string, value: ReactNode) => (
     <div className={rowClass}>
       <span className="min-w-0 flex-1"><span className={rowTitle}>{title}</span><span className={rowSub}>{sub}</span></span>
@@ -290,12 +288,12 @@ function AfterYouSave(props: {
 
   return (
     <aside className={cx(sidePanel, onlyDesktop)} aria-labelledby="after-h">
-      <h2 id="after-h" className={cx(h2, "mb-4")}>After you save</h2>
+      <h2 id="after-h" className={cx(h2, "mb-4")}>{t("after.title")}</h2>
       <div className={rowsClass}>
-        {from && line(from.name, props.type === "TRANSFER" ? "From wallet" : "Wallet balance", fig(before.get(from.id)!, after.get(from.id)!))}
-        {to && line(to.name, "To wallet", fig(before.get(to.id)!, after.get(to.id)!))}
-        {line("Total balance", "All wallets", totalBefore === totalAfter ? noChange : fig(totalBefore, totalAfter))}
-        {props.type === "TRANSFER" && line("Income and expense", "A transfer is neither", noChange)}
+        {from && line(from.name, props.type === "TRANSFER" ? t("form.fromWallet") : t("after.walletBalance"), fig(before.get(from.id)!, after.get(from.id)!))}
+        {to && line(to.name, t("form.toWallet"), fig(before.get(to.id)!, after.get(to.id)!))}
+        {line(t("dash.totalBalance"), t("after.allWallets"), totalBefore === totalAfter ? noChange : fig(totalBefore, totalAfter))}
+        {props.type === "TRANSFER" && line(t("after.incomeExpense"), t("after.transferNeither"), noChange)}
       </div>
     </aside>
   );
