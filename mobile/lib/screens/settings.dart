@@ -77,6 +77,13 @@ class SettingsScreen extends ConsumerWidget {
           subtitle: Text(t('settings.languageSub')),
         ),
         const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: LanguagePicker(forAccount: true)),
+        // This phone only, never synced: the web keeps its own (ADR 0007).
+        ListTile(
+          leading: const Icon(Icons.contrast),
+          title: Text(t('theme.label')),
+          subtitle: Text(t('settings.themeSub')),
+        ),
+        const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: ThemePicker()),
         ListTile(
           leading: const Icon(Icons.lock_outline),
           title: Text(t('m.settings.changePassword')),
@@ -109,8 +116,8 @@ class SettingsScreen extends ConsumerWidget {
           trailing: TextButton(onPressed: () => checkForUpdate(context, ref, version, quiet: false), child: Text(t('m.settings.check'))),
         ),
         ListTile(
-          leading: const Icon(Icons.logout, color: C.red),
-          title: Text(t('shell.signOut'), style: const TextStyle(color: C.red)),
+          leading: Icon(Icons.logout, color: context.c.red),
+          title: Text(t('shell.signOut'), style: TextStyle(color: context.c.red)),
           onTap: () => _signOut(context, ref),
         ),
       ]),
@@ -129,7 +136,7 @@ class SettingsScreen extends ConsumerWidget {
         content: Text(t('m.signOut.body')),
         actions: [
           TextButton(onPressed: () => c.pop(false), child: Text(t('m.signOut.stay'))),
-          TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: C.red), child: Text(t('m.signOut.anyway'))),
+          TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: context.c.red), child: Text(t('m.signOut.anyway'))),
         ],
       ),
     );
@@ -170,5 +177,24 @@ class _ChangePasswordState extends State<_ChangePassword> {
           ),
         ],
       );
+  }
+}
+
+/// System, Light or Dark for this phone, stored in the local settings table (ADR 0007).
+class ThemePicker extends ConsumerWidget {
+  const ThemePicker({super.key});
+
+  static const _icons = {'system': Icons.brightness_auto_outlined, 'light': Icons.light_mode_outlined, 'dark': Icons.dark_mode_outlined};
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = context.t;
+    final mode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
+    return SegmentedButton<String>(
+      showSelectedIcon: false,
+      segments: [for (final p in themePrefs) ButtonSegment(value: p, icon: Icon(_icons[p]), label: Text(t('theme.$p')))],
+      selected: {mode.name},
+      onSelectionChanged: (s) => ref.read(databaseProvider).putSetting('device.theme', s.first),
+    );
   }
 }

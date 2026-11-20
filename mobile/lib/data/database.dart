@@ -107,13 +107,18 @@ class AppDatabase extends _$AppDatabase {
   Stream<String?> watchSetting(String key) =>
       (select(settings)..where((s) => s.key.equals(key))).watchSingleOrNull().map((r) => r?.value);
 
-  /// Everything goes on sign-out (after the outbox has been sent), except the Bahasa: the sign-in
-  /// screen stays in the language the phone was just using (ADR 0006).
+  /// Everything goes on sign-out (after the outbox has been sent), except the Bahasa and the Theme:
+  /// the sign-in screen stays in the language the phone was just using (ADR 0006), and the Theme
+  /// belongs to the Perangkat, not the Akun (ADR 0007).
   Future<void> wipe() => transaction(() async {
-        final language = await setting('profile.language');
+        final kept = {for (final key in _keptOnWipe) key: await setting(key)};
         for (final table in allTables) {
           await delete(table).go();
         }
-        if (language != null) await putSetting('profile.language', language);
+        for (final MapEntry(:key, :value) in kept.entries) {
+          if (value != null) await putSetting(key, value);
+        }
       });
+
+  static const _keptOnWipe = ['profile.language', 'device.theme'];
 }

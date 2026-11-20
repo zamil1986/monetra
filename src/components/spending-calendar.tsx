@@ -114,13 +114,14 @@ export function SpendingCalendar({ data, today, day, dayTx, href, timeZone, lang
                 className={cx(
                   cell,
                   "text-ink no-underline transition-[background-color,box-shadow] duration-150 ease-out-expo",
-                  isToday ? "bg-yellow" : "hover:bg-panel",
-                  selected && "shadow-[inset_0_0_0_2px_var(--color-ink)]",
+                  // Today is yellow in both Themes, so what sits on it uses the fixed on-yellow ink.
+                  isToday ? "bg-yellow text-on-yellow" : "hover:bg-panel",
+                  selected && (isToday ? "shadow-[inset_0_0_0_2px_var(--color-on-yellow)]" : "shadow-[inset_0_0_0_2px_var(--color-ink)]"),
                 )}
               >
                 <span className="fig text-[19px] leading-none font-black md:text-[26px]">{n}</span>
-                {came && <span className="absolute top-0.5 right-1 text-xs font-extrabold text-green md:top-1 md:right-1.5" aria-hidden>+</span>}
-                <span className={cx("fig mt-auto truncate text-[11px] font-semibold md:text-xs", isToday ? "text-ink" : "text-ink-2")} aria-hidden>
+                {came && <span className={cx("absolute top-0.5 right-1 text-xs font-extrabold md:top-1 md:right-1.5", isToday ? "text-on-yellow" : "text-green")} aria-hidden>+</span>}
+                <span className={cx("fig mt-auto truncate text-[11px] font-semibold md:text-xs", isToday ? "text-on-yellow" : "text-ink-2")} aria-hidden>
                   {expense === 0 ? "–" : (
                     <>
                       <span className="md:hidden">{compactRupiah(expense, lang)}</span>
@@ -128,7 +129,7 @@ export function SpendingCalendar({ data, today, day, dayTx, href, timeZone, lang
                     </>
                   )}
                 </span>
-                {expense > 0 && <span className="mt-0.5 block h-1 bg-ink" style={{ width: `${barWidth(expense, cap)}%` }} aria-hidden />}
+                {expense > 0 && <span className={cx("mt-0.5 block h-1", isToday ? "bg-on-yellow" : "bg-ink")} style={{ width: `${barWidth(expense, cap)}%` }} aria-hidden />}
               </Link>
             );
           })}

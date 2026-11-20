@@ -34,7 +34,7 @@ class TransactionTile extends StatelessWidget {
       leading: Glyph(categoryIcon(category?.icon), color: category?.color),
       title: Text(l.titleOf(t, s), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text('${category?.name ?? s('type.TRANSFER')} · $where · $when', maxLines: 1, overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 13, color: C.ink2)),
+          style: TextStyle(fontSize: 13, color: context.c.ink2)),
       trailing: TransactionAmount(type, t.amount),
       onTap: () => context.push('/transactions/${t.id}'),
     );
@@ -116,7 +116,7 @@ class _TransactionsState extends ConsumerState<TransactionsScreen> {
                 Notice(l.transactions.isEmpty ? s('m.empty') : s('m.tx.noMatch')),
               for (final MapEntry(key: day, value: list) in days.entries) ...[
                 Container(
-                  color: C.panel,
+                  color: context.c.panel,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   child: Text(
                     '${weekday(day, s)}, ${dayMonth(day, s)} · '

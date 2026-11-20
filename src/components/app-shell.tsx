@@ -149,7 +149,7 @@ export function AppShell({
             </Link>
           </header>
           {!online && (
-            <div className="flex items-center gap-2.5 bg-ink px-4 py-2 text-sm text-white md:px-8" role="status">
+            <div className="flex items-center gap-2.5 bg-ink px-4 py-2 text-sm text-paper md:px-8" role="status">
               <WifiOff /><span><Rich text={t("shell.offline")} /></span>
             </div>
           )}

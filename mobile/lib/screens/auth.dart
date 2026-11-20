@@ -21,9 +21,9 @@ class AuthScaffold extends StatelessWidget {
         body: SafeArea(
           child: ListView(padding: const EdgeInsets.fromLTRB(20, 32, 20, 32), children: [
             Row(children: [
-              const Expanded(
-                child: Text.rich(TextSpan(text: 'MONETRA', children: [TextSpan(text: '.', style: TextStyle(color: C.yellow))]),
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: C.cobalt)),
+              Expanded(
+                child: Text.rich(TextSpan(text: 'MONETRA', children: const [TextSpan(text: '.', style: TextStyle(color: C.yellow))]),
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: context.c.cobaltInk)),
               ),
               // Before signing in the Bahasa follows the phone; picking one here is kept and used at sign-up.
               const LanguagePicker(forAccount: false, compact: true),
@@ -31,7 +31,7 @@ class AuthScaffold extends StatelessWidget {
             const SizedBox(height: 32),
             Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text(lead, style: const TextStyle(color: C.ink2)),
+            Text(lead, style: TextStyle(color: context.c.ink2)),
             const SizedBox(height: 24),
             ...children,
           ]),
@@ -132,7 +132,7 @@ class _AuthFormState extends State<_AuthForm> {
             ),
             const SizedBox(height: 16),
           ],
-          if (error != null) Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(error!, style: const TextStyle(color: C.red))),
+          if (error != null) Padding(padding: EdgeInsets.only(bottom: 12), child: Text(error!, style: TextStyle(color: context.c.red))),
           FilledButton(onPressed: busy ? null : submit, child: Text(busy ? context.t('auth.wait') : widget.submitLabel)),
         ]),
       );

@@ -68,7 +68,9 @@ Future<(ProviderContainer, AppDatabase)> pumpApp(WidgetTester tester, {String? l
     // As in main.dart: the locale follows the Bahasa, and every screen reads it from there.
     child: Consumer(
         builder: (context, ref, _) => MaterialApp.router(
-              theme: monetraTheme(),
+              theme: monetraTheme(Brightness.light),
+              darkTheme: monetraTheme(Brightness.dark),
+              themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.system,
               routerConfig: ref.watch(routerProvider),
               locale: Locale(ref.watch(languageProvider).value ?? 'en'),
               supportedLocales: const [Locale('en'), Locale('id')],
@@ -142,6 +144,28 @@ void main() {
     expect(find.text('Lainnya'), findsNothing);
     expect(await tester.runAsync(() => db.setting('profile.language')), 'en');
     expect(await tester.runAsync(() => db.setting('profile.languagePending')), '1');
+    await tester.runAsync(db.close);
+    container.dispose();
+  });
+
+  testWidgets('picking Dark in More turns this phone dark at once and keeps it on the phone only (ADR 0007)', (tester) async {
+    final (container, db) = await pumpApp(tester);
+    BuildContext screen() => tester.element(find.byType(Scaffold).last);
+    expect(Theme.of(screen()).brightness, Brightness.light);
+
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Dark'));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    });
+    await tester.pumpAndSettle();
+
+    expect(Theme.of(screen()).brightness, Brightness.dark);
+    expect(Theme.of(screen()).scaffoldBackgroundColor, MonetraColors.dark.paper);
+    expect(await tester.runAsync(() => db.setting('device.theme')), 'dark');
+    final outbox = await tester.runAsync(() => db.select(db.outbox).get());
+    expect(outbox, isEmpty); // not synced to the Akun
     await tester.runAsync(db.close);
     container.dispose();
   });

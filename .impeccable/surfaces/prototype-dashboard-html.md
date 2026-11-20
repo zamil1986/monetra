@@ -29,8 +29,11 @@ FORM: Wall calendar, candidate 4 of 7 on the grounded list (banknotes, bank pass
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
+## Dark theme (2026-11-21, ADR 0007)
+
+The same wall calendar in a dark room. Paper, ink, lines and the meaning colors flip through `light-dark()` tokens (paper `#0F1115`, ink `#E9ECF1`, red `#FF6B5E`, green `#4CC38A`, cobalt as text `#8FA8FF`); the cobalt band, yellow, white and on-yellow ink never flip. Filled ink, red and green chips take `paper` text so they invert with the fill; anything on yellow takes `on-yellow`; inside the cobalt band stays white. Wallet and Category hues are lifted slightly in dark so they hold a white glyph (3:1) and stand off the dark paper (3:1). Theme is System, Light or Dark per device; tokens mirrored in `mobile/lib/ui/theme.dart`.
+
 ## Unresolved
 
 - No logo; the wordmark is set in type.
-- Dark theme not designed.
 - Red dates need an overall monthly Budget (Phase 3); before one exists the sheet shows bars only.

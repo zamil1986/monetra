@@ -220,7 +220,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
             {COLORS.map((c) => (
               <button
                 key={c} type="button" role="radio" aria-checked={color === c} aria-label={t(`color.${c}`)}
-                className="size-8 cursor-pointer rounded border-2 border-white bg-(--c) outline-1 outline-line aria-checked:outline-2 aria-checked:outline-ink"
+                className="size-8 cursor-pointer rounded border-2 border-surface bg-(--c) outline-1 outline-line aria-checked:outline-2 aria-checked:outline-ink"
                 style={{ ["--c" as string]: hue(c) }} onClick={() => setColor(c)}
               />
             ))}

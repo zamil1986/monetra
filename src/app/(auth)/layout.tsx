@@ -18,7 +18,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
       <main className="flex items-center justify-center px-4 py-10 pt-[calc(2.5rem+env(safe-area-inset-top))]">
         <div className="w-full max-w-[400px]">
           <div className="mb-8 flex items-center justify-between gap-3 md:justify-end">
-            <span className="fig block text-2xl font-black leading-none text-cobalt md:hidden [&_b]:text-yellow">MONETRA<b>.</b></span>
+            <span className="fig block text-2xl font-black leading-none text-cobalt-ink md:hidden [&_b]:text-yellow">MONETRA<b>.</b></span>
             {/* Before signing in the Bahasa follows the browser; picking one here is remembered and kept at sign-up. */}
             <LanguageSwitch saveToAccount={false} short />
           </div>

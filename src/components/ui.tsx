@@ -15,10 +15,10 @@ type ButtonVariant = "primary" | "secondary" | "quiet" | "danger" | "dangerSolid
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
   primary: "border-cobalt bg-cobalt text-white hover:border-cobalt-deep hover:bg-cobalt-deep",
   secondary: "border-ink bg-transparent text-ink hover:bg-panel",
-  quiet: "border-transparent bg-transparent px-2 text-cobalt hover:bg-cobalt-soft",
+  quiet: "border-transparent bg-transparent px-2 text-cobalt-ink hover:bg-cobalt-soft",
   danger: "border-red bg-transparent text-red hover:bg-red-soft",
-  dangerSolid: "border-red bg-red text-white hover:border-red-deep hover:bg-red-deep",
-  yellow: "border-yellow bg-yellow text-ink hover:border-yellow-deep hover:bg-yellow-deep",
+  dangerSolid: "border-red bg-red text-paper hover:border-red-deep hover:bg-red-deep",
+  yellow: "border-yellow bg-yellow text-on-yellow hover:border-yellow-deep hover:bg-yellow-deep",
 };
 
 export function buttonClass(variant: ButtonVariant = "primary", size: "md" | "lg" = "md", className?: string) {
@@ -45,7 +45,7 @@ export function Button({
 export function iconButtonClass(danger = false) {
   return cx(
     "inline-grid size-9 cursor-pointer place-items-center rounded border-0 bg-transparent text-ink-2 no-underline",
-    "hover:bg-panel hover:text-ink disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[#a9b0ba]",
+    "hover:bg-panel hover:text-ink disabled:cursor-not-allowed disabled:bg-transparent disabled:text-disabled",
     danger && "hover:bg-red-soft hover:text-red",
   );
 }
@@ -54,9 +54,9 @@ export function iconButtonClass(danger = false) {
 export function inputClass(invalid = false, className?: string) {
   return cx(
     // 16px, not 15: iOS Safari zooms the page into any focused field set smaller than 16px.
-    "min-h-11 w-full rounded border bg-white px-3 py-[9px] text-[16px] placeholder:text-ink-3",
+    "min-h-11 w-full rounded border bg-surface px-3 py-[9px] text-[16px] placeholder:text-ink-3",
     "transition-[border-color,box-shadow] duration-150 ease-out-expo hover:border-ink",
-    "focus-visible:border-cobalt focus-visible:shadow-[0_0_0_2px_var(--color-cobalt)] focus-visible:outline-0",
+    "focus-visible:border-cobalt-ink focus-visible:shadow-[0_0_0_2px_var(--color-cobalt-ink)] focus-visible:outline-0",
     "disabled:border-line disabled:bg-panel disabled:text-ink-3",
     invalid ? "border-red shadow-[0_0_0_1px_var(--color-red)]" : "border-field",
     className,
@@ -103,9 +103,9 @@ export function Field(props: {
 
 export function chipClass(className?: string) {
   return cx(
-    "inline-flex min-h-10 cursor-pointer items-center gap-2 rounded border border-field bg-white px-3 py-[7px] text-sm font-medium text-ink",
+    "inline-flex min-h-10 cursor-pointer items-center gap-2 rounded border border-field bg-surface px-3 py-[7px] text-sm font-medium text-ink",
     "transition-[background-color,border-color] duration-150 ease-out-expo hover:border-ink [&_svg]:size-4!",
-    "aria-checked:border-ink aria-checked:bg-ink aria-checked:text-white aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-white",
+    "aria-checked:border-ink aria-checked:bg-ink aria-checked:text-paper aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-paper",
     className,
   );
 }
@@ -115,15 +115,15 @@ export const segClass = "flex overflow-hidden rounded border border-ink";
 export const segButtonClass = cx(
   "inline-flex min-h-[46px] flex-1 cursor-pointer items-center justify-center gap-2 border-0 border-r border-ink bg-transparent px-3.5 py-2",
   "whitespace-nowrap text-[15px] font-medium text-ink-2 transition-colors duration-150 ease-out-expo last:border-r-0",
-  "hover:bg-panel hover:text-ink aria-pressed:bg-ink aria-pressed:font-semibold aria-pressed:text-white",
+  "hover:bg-panel hover:text-ink aria-pressed:bg-ink aria-pressed:font-semibold aria-pressed:text-paper",
 );
 
 /* Notices */
 type Tone = "info" | "warn" | "danger" | "neutral";
 const TONES: Record<Tone, { box: string; Icon: LucideIcon | null }> = {
-  info: { box: "border-[#b5c3ee] bg-cobalt-soft text-[#12265f]", Icon: Info },
-  warn: { box: "border-[#e9c46a] bg-amber-soft text-[#4a2e00]", Icon: TriangleAlert },
-  danger: { box: "border-[#f0a8a2] bg-red-soft text-[#6e130d]", Icon: CircleAlert },
+  info: { box: "border-cobalt-edge bg-cobalt-soft text-cobalt-text", Icon: Info },
+  warn: { box: "border-amber-edge bg-amber-soft text-amber-text", Icon: TriangleAlert },
+  danger: { box: "border-red-edge bg-red-soft text-red-text", Icon: CircleAlert },
   neutral: { box: "border-line bg-panel", Icon: null },
 };
 

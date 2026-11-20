@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/api.dart';
@@ -10,6 +10,7 @@ import '../data/ledger.dart';
 import '../data/repository.dart';
 import '../data/sync.dart';
 import '../domain/i18n.dart';
+import '../ui/theme.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -27,6 +28,9 @@ final languageProvider = StreamProvider<String>((ref) => ref
     .watch(databaseProvider)
     .watchSetting('profile.language')
     .map((v) => isLang(v) ? v! : deviceLanguage()));
+
+/// This phone's Theme (ADR 0007): a setting of the Perangkat, kept through sign-out and never synced.
+final themeModeProvider = StreamProvider<ThemeMode>((ref) => ref.watch(databaseProvider).watchSetting('device.theme').map(themeModeOf));
 
 final syncEngineProvider = Provider<SyncEngine>((ref) {
   final engine = SyncEngine(ref.watch(databaseProvider), ref.watch(apiProvider));

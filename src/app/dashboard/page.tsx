@@ -68,7 +68,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const flowMax = Math.max(income, expense);
   const customOpen = period.kind === "custom";
-  const activeChip = "aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-white";
+  const activeChip = "aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-paper";
 
   return (
     <>

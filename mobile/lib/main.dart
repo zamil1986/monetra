@@ -34,7 +34,10 @@ class _MonetraAppState extends ConsumerState<MonetraApp> {
       locale: Locale(language),
       supportedLocales: const [Locale('en'), Locale('id')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: monetraTheme(),
+      theme: monetraTheme(Brightness.light),
+      darkTheme: monetraTheme(Brightness.dark),
+      // This phone's own choice (ADR 0007); System until one is picked.
+      themeMode: ref.watch(themeModeProvider).value ?? ThemeMode.system,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) => _UpdateCheck(child: child!),

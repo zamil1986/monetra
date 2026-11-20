@@ -159,7 +159,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         <Field label={t("form.amount")} htmlFor="amt" error={errorFor("amount")} hint={t("form.amountHint")} hintId="amt-h">
           <div
             className={cx(
-              "flex items-baseline gap-2 border-b-2 pt-1 pb-1.5 focus-within:border-cobalt focus-within:shadow-[0_2px_0_var(--color-cobalt)]",
+              "flex items-baseline gap-2 border-b-2 pt-1 pb-1.5 focus-within:border-cobalt-ink focus-within:shadow-[0_2px_0_var(--color-cobalt-ink)]",
               errorFor("amount") ? "border-red" : "border-ink",
             )}
           >
@@ -287,7 +287,7 @@ function AfterYouSave(props: {
   const fig = (a: number, b: number) => (
     <span className="fig whitespace-nowrap text-lg">{a.toLocaleString("id-ID")}<span className="mx-1 text-ink-3">→</span>{b.toLocaleString("id-ID")}</span>
   );
-  const noChange = <span className="inline-flex items-center rounded-[3px] bg-white px-2 py-0.5 text-[12.5px] font-semibold text-ink-2">{t("after.noChange")}</span>;
+  const noChange = <span className="inline-flex items-center rounded-[3px] bg-surface px-2 py-0.5 text-[12.5px] font-semibold text-ink-2">{t("after.noChange")}</span>;
   const line = (title: string, sub: string, value: ReactNode) => (
     <div className={rowClass}>
       <span className="min-w-0 flex-1"><span className={rowTitle}>{title}</span><span className={rowSub}>{sub}</span></span>

@@ -55,7 +55,7 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
         ref={dialog}
         aria-labelledby={`del-h-${id}`}
         className={cx(
-          "w-[min(440px,calc(100vw-32px))] rounded-xl border-0 bg-white p-6 text-left text-ink whitespace-normal shadow-[0_18px_48px_-12px_rgb(20_22_26/0.45)]",
+          "w-[min(440px,calc(100vw-32px))] rounded-xl border-0 bg-surface p-6 text-left text-ink whitespace-normal shadow-[0_18px_48px_-12px_rgb(20_22_26/0.45)]",
           "m-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-t-[10px] max-md:rounded-b-none max-md:px-4 max-md:pt-[22px] max-md:pb-[calc(18px+env(safe-area-inset-bottom))]",
         )}
       >

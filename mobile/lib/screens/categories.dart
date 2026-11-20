@@ -61,8 +61,8 @@ class _List extends ConsumerWidget {
       final uses = l.usesOfCategory(c.id);
       return ListTile(
         leading: Glyph(categoryIcon(c.icon), color: c.color),
-        title: Text(c.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? C.ink3 : C.ink)),
-        subtitle: Text(t('tx.count', {'count': uses}), style: const TextStyle(fontSize: 13, color: C.ink2)),
+        title: Text(c.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? context.c.ink3 : context.c.ink)),
+        subtitle: Text(t('tx.count', {'count': uses}), style: TextStyle(fontSize: 13, color: context.c.ink2)),
         trailing: PopupMenuButton<String>(
           onSelected: (v) => switch (v) {
             'edit' => showCategorySheet(context, type, c),
@@ -139,14 +139,14 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
                 IconButton(
                   tooltip: k,
                   isSelected: icon == k,
-                  style: IconButton.styleFrom(backgroundColor: icon == k ? hue(color).withValues(alpha: 0.15) : null),
+                  style: IconButton.styleFrom(backgroundColor: icon == k ? context.c.hue(color).withValues(alpha: 0.15) : null),
                   onPressed: () => setState(() => icon = k),
-                  icon: Icon(v, color: icon == k ? hue(color) : C.ink2),
+                  icon: Icon(v, color: icon == k ? context.c.hue(color) : context.c.ink2),
                 ),
             ]),
             const SizedBox(height: 12),
             ColorPicker(value: color, onChanged: (c) => setState(() => color = c)),
-            if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: C.red))),
+            if (error != null) Padding(padding: EdgeInsets.only(top: 12), child: Text(error!, style: TextStyle(color: context.c.red))),
             const SizedBox(height: 16),
             FilledButton(onPressed: save, child: Text(t('m.save'))),
           ]),

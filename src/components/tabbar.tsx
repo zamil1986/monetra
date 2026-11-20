@@ -55,7 +55,7 @@ export function Tabbar({
         )}
         style={{ translate: "calc(100% * var(--active)) 0" }}
       >
-        <span className="mx-auto block h-full w-10 rounded-b-sm bg-cobalt" />
+        <span className="mx-auto block h-full w-10 rounded-b-sm bg-cobalt-ink" />
       </span>
 
       {items.map(({ href, label, Icon, active, primary, ariaLabel: itemLabel, badge }) => (
@@ -66,18 +66,18 @@ export function Tabbar({
           aria-current={active ? "page" : undefined}
           className={cn(
             "flex min-h-12 flex-col items-center gap-0.5 rounded py-[5px] text-[11.5px] font-semibold no-underline [&_svg]:size-[22px]!",
-            primary ? "text-ink" : "text-ink-2 transition-colors duration-150 aria-[current=page]:text-cobalt",
+            primary ? "text-ink" : "text-ink-2 transition-colors duration-150 aria-[current=page]:text-cobalt-ink",
           )}
         >
           <span
             className={cn(
               "relative grid place-items-center",
-              primary && "-mt-[18px] h-11 w-[52px] rounded-xl border-2 border-ink bg-yellow transition-transform duration-150 ease-out-expo active:scale-95",
+              primary && "-mt-[18px] h-11 w-[52px] rounded-xl border-2 border-on-yellow bg-yellow text-on-yellow transition-transform duration-150 ease-out-expo active:scale-95",
             )}
           >
             <Icon />
             {!!badge && badge > 0 && (
-              <span className="fig absolute -top-1.5 left-[calc(100%-8px)] min-w-[18px] rounded-full border-2 border-paper bg-red px-1 text-center text-[11px] leading-[14px] text-white">
+              <span className="fig absolute -top-1.5 left-[calc(100%-8px)] min-w-[18px] rounded-full border-2 border-paper bg-red px-1 text-center text-[11px] leading-[14px] text-paper">
                 {badge > 99 ? "99+" : badge}
                 <span className="sr-only">{badgeSuffix}</span>
               </span>

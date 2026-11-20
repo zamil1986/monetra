@@ -143,7 +143,7 @@ class _FormState extends ConsumerState<_Form> {
         content: Text(t('m.del.body')),
         actions: [
           TextButton(onPressed: () => c.pop(false), child: Text(t('del.keep'))),
-          TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: C.red), child: Text(t('del.button'))),
+          TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: context.c.red), child: Text(t('del.button'))),
         ],
       ),
     );
@@ -167,7 +167,7 @@ class _FormState extends ConsumerState<_Form> {
   }
 
   Widget label(String text) => Padding(padding: const EdgeInsets.only(top: 16, bottom: 6), child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)));
-  Widget? errorFor(String field) => errors[field] == null ? null : Padding(padding: const EdgeInsets.only(top: 4), child: Text(errors[field]!, style: const TextStyle(color: C.red, fontSize: 13)));
+  Widget? errorFor(String field) => errors[field] == null ? null : Padding(padding: EdgeInsets.only(top: 4), child: Text(errors[field]!, style: TextStyle(color: context.c.red, fontSize: 13)));
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +192,7 @@ class _FormState extends ConsumerState<_Form> {
             categoryId = null; // a Kategori belongs to one type
           }),
         ),
-        if (editing) Padding(padding: const EdgeInsets.only(top: 4), child: Text(wasTransfer ? t('m.form.transferNoChange') : t('m.form.swap'), style: const TextStyle(fontSize: 13, color: C.ink2))),
+        if (editing) Padding(padding: EdgeInsets.only(top: 4), child: Text(wasTransfer ? t('m.form.transferNoChange') : t('m.form.swap'), style: TextStyle(fontSize: 13, color: context.c.ink2))),
         label(t('m.form.amountRp')),
         TextField(
           controller: amount,

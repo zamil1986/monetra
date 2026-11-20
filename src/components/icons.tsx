@@ -33,7 +33,7 @@ export const categoryIcon = (name: string | null): LucideIcon => (name && CATEGO
 
 /** CSS color for a stored hue name, for use as `--c` with `bg-(--c)`. */
 export const hue = (color: string | null) =>
-  color === "green" ? "var(--color-green)" : color ? `var(--color-hue-${color})` : "var(--color-ink-2)";
+  color ? `var(--color-hue-${color})` : "var(--color-ink-2)";
 
 export function Glyph({ Icon, color }: { Icon: LucideIcon; color: string | null }) {
   return (

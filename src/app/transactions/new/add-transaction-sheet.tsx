@@ -53,9 +53,9 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
     return (
       <Dialog.Root open={open} onOpenChange={(next) => !next && close()}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/45 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-scrim/45 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
           <Dialog.Content
-            className="fixed top-1/2 left-1/2 z-50 flex max-h-[min(92dvh,900px)] w-[min(960px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 flex-col border-t-2 border-ink bg-paper text-base text-ink shadow-[0_24px_64px_-16px_rgba(20,22,26,0.45)] outline-0 duration-200 ease-out-expo data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]"
+            className="fixed top-1/2 left-1/2 z-50 flex max-h-[min(92dvh,900px)] w-[min(960px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 flex-col border-t-2 border-ink bg-paper text-base ring-1 ring-line text-ink shadow-[0_24px_64px_-16px_rgba(20,22,26,0.45)] outline-0 duration-200 ease-out-expo data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]"
             // Typed figures must survive a stray click: only Escape, the close button and Cancel dismiss it.
             onInteractOutside={(e) => e.preventDefault()}
             // Recording starts with the amount, so that is where the caret goes.
@@ -87,7 +87,7 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="max-h-[94dvh] gap-0 overflow-y-auto overscroll-contain rounded-t-2xl border-t-0 bg-paper p-0 text-base text-ink shadow-none"
+        className="max-h-[94dvh] gap-0 overflow-y-auto overscroll-contain rounded-t-2xl border-t-0 bg-paper p-0 ring-1 ring-line text-base text-ink shadow-none"
       >
         <div className="sticky top-0 z-10 bg-paper">
           <span aria-hidden className="mx-auto mt-2 block h-1 w-10 rounded-full bg-line" />

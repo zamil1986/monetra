@@ -65,8 +65,8 @@ class _WalletTile extends ConsumerWidget {
 
     return ListTile(
       leading: Glyph(walletIcon(w.icon), color: w.color),
-      title: Text(w.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? C.ink3 : C.ink)),
-      subtitle: Text('${t('walletIcon.${w.icon}')} · ${t('tx.count', {'count': uses})}', style: const TextStyle(fontSize: 13, color: C.ink2)),
+      title: Text(w.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? context.c.ink3 : context.c.ink)),
+      subtitle: Text('${t('walletIcon.${w.icon}')} · ${t('tx.count', {'count': uses})}', style: TextStyle(fontSize: 13, color: context.c.ink2)),
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         Money(l.balances[w.id] ?? 0),
         PopupMenuButton<String>(
@@ -136,7 +136,7 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
           ]),
           const SizedBox(height: 12),
           ColorPicker(value: color, onChanged: (c) => setState(() => color = c)),
-          if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: C.red))),
+          if (error != null) Padding(padding: EdgeInsets.only(top: 12), child: Text(error!, style: TextStyle(color: context.c.red))),
           const SizedBox(height: 16),
           FilledButton(onPressed: save, child: Text(t('m.save'))),
         ]),
@@ -162,7 +162,7 @@ class ColorPicker extends StatelessWidget {
               child: Container(
                 width: 36,
                 height: 36,
-                decoration: BoxDecoration(color: hue(c), shape: BoxShape.circle, border: Border.all(color: c == value ? C.ink : Colors.transparent, width: 3)),
+                decoration: BoxDecoration(color: context.c.hue(c), shape: BoxShape.circle, border: Border.all(color: c == value ? context.c.ink : Colors.transparent, width: 3)),
                 child: c == value ? const Icon(Icons.check, color: Colors.white, size: 18) : null,
               ),
             ),

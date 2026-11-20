@@ -63,7 +63,7 @@ class _TotalBalance extends StatelessWidget {
         for (final w in l.activeWallets)
           ListTile(
             dense: true,
-            leading: Container(width: 10, height: 10, decoration: BoxDecoration(color: hue(w.color), shape: BoxShape.circle)),
+            leading: Container(width: 10, height: 10, decoration: BoxDecoration(color: context.c.hue(w.color), shape: BoxShape.circle)),
             minLeadingWidth: 10,
             title: Text(w.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             trailing: Money(l.balances[w.id] ?? 0),
@@ -89,7 +89,7 @@ class _CashFlow extends ConsumerWidget {
     final f = l.flow(period, DateTime.now());
     final t = context.t;
     Widget row(IconData icon, String label, Widget value, [Color? iconColor]) => ListTile(
-        leading: Icon(icon, color: iconColor ?? C.ink), title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)), trailing: value);
+        leading: Icon(icon, color: iconColor ?? context.c.ink), title: Text(label, style: TextStyle(fontWeight: FontWeight.w600)), trailing: value);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SectionTitle(t(_labels[period.kind]!), note: t('dash.flowSub', {'range': rangeLabel(f.from, f.to, t)})),
       SingleChildScrollView(
@@ -107,7 +107,7 @@ class _CashFlow extends ConsumerWidget {
             ),
         ]),
       ),
-      row(LucideIcons.arrowDownLeft, t('type.INCOME'), Money(f.income, colored: false), C.green),
+      row(LucideIcons.arrowDownLeft, t('type.INCOME'), Money(f.income, colored: false), context.c.green),
       row(LucideIcons.arrowUpRight, t('type.EXPENSE'), Money(f.expense, colored: false)),
       row(LucideIcons.equal, t('dash.netCashFlow'), Money(f.net, signed: true)),
     ]);

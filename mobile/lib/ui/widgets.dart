@@ -23,7 +23,7 @@ class Money extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = signed && value > 0 ? '+${formatRupiah(value)}' : formatRupiah(value);
-    final color = !colored ? C.ink : value < 0 ? C.red : (signed && value > 0 ? C.green : C.ink);
+    final color = !colored ? context.c.ink : value < 0 ? context.c.red : (signed && value > 0 ? context.c.green : context.c.ink);
     return Text(text, style: TextStyle(fontSize: size, fontWeight: weight, color: color, fontFeatures: figures));
   }
 }
@@ -37,9 +37,9 @@ class TransactionAmount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (sign, color) = switch (type) {
-      TransactionType.income => ('+', C.green),
-      TransactionType.expense => ('−', C.ink),
-      TransactionType.transfer => ('', C.ink2),
+      TransactionType.income => ('+', context.c.green),
+      TransactionType.expense => ('−', context.c.ink),
+      TransactionType.transfer => ('', context.c.ink2),
     };
     return Text('$sign${formatRupiah(amount)}',
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: color, fontFeatures: figures));
@@ -55,11 +55,11 @@ class Glyph extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color == null ? C.ink2 : hue(color);
+    final c = color == null ? context.c.ink2 : context.c.hue(color);
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: color == null ? C.panel : c.withValues(alpha: 0.12), shape: BoxShape.circle),
+      decoration: BoxDecoration(color: color == null ? context.c.panel : c.withValues(alpha: 0.12), shape: BoxShape.circle),
       child: Icon(icon, size: size * 0.5, color: c),
     );
   }
@@ -78,7 +78,7 @@ class SectionTitle extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-              if (note != null) Text(note!, style: const TextStyle(fontSize: 13, color: C.ink2)),
+              if (note != null) Text(note!, style: TextStyle(fontSize: 13, color: context.c.ink2)),
             ]),
           ),
           ?trailing,
@@ -96,9 +96,9 @@ class Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg, icon) = switch (tone) {
-      NoticeTone.info => (C.cobaltSoft, C.cobaltDeep, LucideIcons.info),
-      NoticeTone.warn => (C.amberSoft, C.amber, LucideIcons.circleAlert),
-      NoticeTone.danger => (C.redSoft, C.red, LucideIcons.circleAlert),
+      NoticeTone.info => (context.c.cobaltSoft, context.c.cobaltText, LucideIcons.info),
+      NoticeTone.warn => (context.c.amberSoft, context.c.amber, LucideIcons.circleAlert),
+      NoticeTone.danger => (context.c.redSoft, context.c.red, LucideIcons.circleAlert),
     };
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -107,7 +107,7 @@ class Notice extends StatelessWidget {
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, size: 18, color: fg),
         const SizedBox(width: 10),
-        Expanded(child: Text(text, style: TextStyle(color: C.ink, fontSize: 14))),
+        Expanded(child: Text(text, style: TextStyle(color: context.c.ink, fontSize: 14))),
         ?action,
       ]),
     );

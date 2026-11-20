@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { demoTimeLeft } from "@/domain/presentation";
 import { I18nProvider } from "@/lib/i18n-client";
 import { getT } from "@/server/i18n";
+import { requestTheme } from "@/server/theme";
 import { currentUser } from "@/server/page-session";
 import "./globals.css";
 
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // The cobalt band tops the screen in both Themes, so the status bar stays cobalt.
   themeColor: "#1B3FAB",
   // Draw under the notch and home indicator; the shell pads itself with env(safe-area-inset-*).
   viewportFit: "cover",
@@ -31,8 +33,10 @@ export default async function RootLayout({ children, modal }: { children: ReactN
   const { lang, t } = await getT();
   // Written by the shadcn sidebar when it is collapsed or expanded, so a reload keeps the same state.
   const sidebarOpen = (await cookies()).get("sidebar_state")?.value !== "false";
+  // Rendered on the server from this Perangkat's cookie, so the first paint is already in the right Theme.
+  const theme = await requestTheme();
   return (
-    <html lang={lang} className={archivo.variable}>
+    <html lang={lang} data-theme={theme} className={archivo.variable}>
       <body>
         <I18nProvider lang={lang}>
           <AppShell

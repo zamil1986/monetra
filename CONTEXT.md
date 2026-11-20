@@ -26,6 +26,10 @@ _Avoid_: sync sebagai istilah domain, backup, upload
 Bahasa antarmuka yang dipilih Pengguna: Indonesia atau English. Milik Akun, jadi sama di semua Perangkat; sebelum masuk mengikuti bahasa browser atau HP. Bahasa hanya mengubah teks antarmuka dan nama hari serta bulan; nama Dompet dan Kategori tidak pernah ikut berubah, dan format Rupiah tetap sama.
 _Avoid_: locale, language setting, terjemahan (untuk pilihannya)
 
+**Tema**:
+Tampilan terang atau gelap: Sistem (mengikuti setelan Perangkat), Terang, atau Gelap. Milik Perangkat, bukan Akun, jadi tidak ikut Sinkronisasi; Mac boleh terang sementara HP gelap. Tema hanya mengubah warna, tidak pernah angka, urutan, atau kata.
+_Avoid_: mode, skin, dark mode (untuk pilihannya)
+
 **Akun demo**:
 Akun sementara berisi data contoh yang dibuat untuk satu pengunjung dan kedaluwarsa setelah 24 jam.
 _Avoid_: guest, akun tamu

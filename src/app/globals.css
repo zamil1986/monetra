@@ -2,48 +2,81 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Monetra has no dark theme; the variant exists so shadcn / 21st.dev components compile unchanged. */
-@custom-variant dark (&:is(.dark *));
+/*
+ * Dark variant for shadcn / 21st.dev components: a forced Dark theme, or System on a dark OS.
+ * <html data-theme> is set on the server from the `theme` cookie (src/server/theme.ts), so nothing flashes.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
 
 /*
  * Monetra design tokens (from prototype/monetra.css: "Wall Calendar" system, hairline grids, cobalt shell).
  * Only these colors exist, so every screen stays inside the system.
  * `static` keeps every token in :root even when no utility uses it: hue colors are read through var() at runtime.
+ *
+ * Two kinds of token. Paper, ink and the semantic colors flip with the Theme through light-dark(<light>, <dark>):
+ * the dark theme is the same wall calendar in a dark room. The cobalt band, yellow, white and on-yellow are the
+ * identity and never flip. On a filled ink / red / green chip the text is `paper`, so it inverts with the fill.
+ * Mirrored in mobile/lib/ui/theme.dart.
  */
 @theme static {
   --color-*: initial;
   --color-white: #fff;
   --color-transparent: transparent;
+  /* Fixed: the cobalt band and what sits on it. */
   --color-cobalt: #1b3fab;
   --color-cobalt-deep: #142f86;
-  --color-cobalt-soft: #e7ecfa;
   --color-cobalt-line: #4563c4;
   --color-on-cobalt: #cfd9fa;
-  --color-paper: #fbfcfd;
-  --color-panel: #f1f4f8;
-  --color-line: #d9dee6;
-  --color-field: #7b8491;
-  --color-ink: #14161a;
-  --color-ink-2: #454d59;
-  --color-ink-3: #656d79;
-  --color-red: #d0261c;
-  --color-red-deep: #a81d15;
-  --color-red-soft: #fdecea;
-  --color-green: #0b7343;
-  --color-green-soft: #e4f3ea;
-  --color-amber: #8f5400;
-  --color-amber-soft: #fff1cc;
   --color-yellow: #ffd83a;
   --color-yellow-deep: #f5c800;
-  /* Hues for Dompet and Kategori glyphs */
-  --color-hue-blue: #2a5bd7;
-  --color-hue-teal: #0b8c8c;
-  --color-hue-olive: #5e7a12;
-  --color-hue-orange: #c95f12;
-  --color-hue-violet: #7a3fc4;
-  --color-hue-magenta: #b8296f;
-  --color-hue-slate: #48566a;
-  --color-hue-brown: #8a5a2b;
+  --color-on-yellow: #14161a;
+  /* Dims the page under a dialog in both Themes. */
+  --color-scrim: #14161a;
+  /* Flipping: ground, ink and meaning. */
+  --color-paper: light-dark(#fbfcfd, #0f1115);
+  --color-panel: light-dark(#f1f4f8, #181b21);
+  --color-surface: light-dark(#fff, #1c2027);
+  --color-line: light-dark(#d9dee6, #2c323c);
+  --color-field: light-dark(#7b8491, #6b7482);
+  --color-disabled: light-dark(#a9b0ba, #5b6370);
+  --color-ink: light-dark(#14161a, #e9ecf1);
+  --color-ink-2: light-dark(#454d59, #b3bac5);
+  --color-ink-3: light-dark(#656d79, #949ca9);
+  /* Cobalt as text, link and focus on paper; the band itself stays `cobalt`. */
+  --color-cobalt-ink: light-dark(#1b3fab, #8fa8ff);
+  --color-cobalt-soft: light-dark(#e7ecfa, #1a2447);
+  --color-cobalt-text: light-dark(#12265f, #c9d5ff);
+  --color-cobalt-edge: light-dark(#b5c3ee, #34478a);
+  --color-red: light-dark(#d0261c, #ff6b5e);
+  --color-red-deep: light-dark(#a81d15, #ff8a80);
+  --color-red-soft: light-dark(#fdecea, #3a1714);
+  --color-red-text: light-dark(#6e130d, #ffc2bc);
+  --color-red-edge: light-dark(#f0a8a2, #7a2a23);
+  --color-green: light-dark(#0b7343, #4cc38a);
+  --color-green-soft: light-dark(#e4f3ea, #10291d);
+  --color-amber: light-dark(#8f5400, #f0b54a);
+  --color-amber-soft: light-dark(#fff1cc, #33260a);
+  --color-amber-text: light-dark(#4a2e00, #ffd98a);
+  --color-amber-edge: light-dark(#e9c46a, #6e5419);
+  /* Hues for Dompet and Kategori glyphs: hold a white glyph and stand out on paper in both themes. */
+  --color-hue-green: light-dark(#0b7343, #17895a);
+  --color-hue-blue: light-dark(#2a5bd7, #3d6be6);
+  --color-hue-teal: light-dark(#0b8c8c, #0f9696);
+  --color-hue-olive: light-dark(#5e7a12, #6a8a16);
+  --color-hue-orange: light-dark(#c95f12, #cf6a1c);
+  --color-hue-violet: light-dark(#7a3fc4, #8a52d6);
+  --color-hue-magenta: light-dark(#b8296f, #c43a7e);
+  --color-hue-slate: light-dark(#48566a, #5d6b80);
+  --color-hue-brown: light-dark(#8a5a2b, #9a6935);
 
   --font-sans: var(--font-archivo), system-ui, sans-serif;
   --text-meta: 13px;
@@ -71,11 +104,12 @@
  * added with `npx shadcn add` (or from 21st.dev) land inside the design system.
  */
 :root {
+  color-scheme: light dark;
   --background: var(--color-paper);
   --foreground: var(--color-ink);
-  --card: var(--color-white);
+  --card: var(--color-surface);
   --card-foreground: var(--color-ink);
-  --popover: var(--color-white);
+  --popover: var(--color-surface);
   --popover-foreground: var(--color-ink);
   --primary: var(--color-cobalt);
   --primary-foreground: var(--color-white);
@@ -84,11 +118,11 @@
   --muted: var(--color-panel);
   --muted-foreground: var(--color-ink-2);
   --accent: var(--color-cobalt-soft);
-  --accent-foreground: var(--color-cobalt-deep);
+  --accent-foreground: var(--color-cobalt-text);
   --destructive: var(--color-red);
   --border: var(--color-line);
   --input: var(--color-field);
-  --ring: var(--color-cobalt);
+  --ring: var(--color-cobalt-ink);
   /* Generic series colors. Income / Expense / Transfer charts use green, red and cobalt explicitly. */
   --chart-1: var(--color-cobalt);
   --chart-2: var(--color-hue-teal);
@@ -104,6 +138,13 @@
   --sidebar-accent-foreground: var(--color-white);
   --sidebar-border: var(--color-cobalt-line);
   --sidebar-ring: var(--color-yellow);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -161,16 +202,16 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-base text-foreground caret-cobalt;
+    @apply bg-background text-base text-foreground caret-cobalt-ink;
   }
   ::selection {
-    @apply bg-yellow text-ink;
+    @apply bg-yellow text-on-yellow;
   }
   a {
-    @apply text-cobalt decoration-1 underline-offset-3 hover:decoration-2;
+    @apply text-cobalt-ink decoration-1 underline-offset-3 hover:decoration-2;
   }
   :focus-visible {
-    @apply rounded-[2px] outline-2 outline-offset-2 outline-cobalt;
+    @apply rounded-[2px] outline-2 outline-offset-2 outline-cobalt-ink;
   }
   /* lucide icons default to the system's 18px / 1.75 stroke; components size them where needed. */
   svg.lucide {

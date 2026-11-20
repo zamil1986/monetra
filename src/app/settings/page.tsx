@@ -3,11 +3,13 @@ import Link from "next/link";
 import { LanguageSwitch } from "@/components/language-switch";
 import { NotSignedIn } from "@/components/not-signed-in";
 import { SignOutButton } from "@/components/sign-out-button";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { Page, PageHead, buttonClass, cx, h1, h2, rowClass, rowSub, rowTitle, rowsClass } from "@/components/ui";
 import type { MessageKey } from "@/domain/i18n";
 import { demoTimeLeft } from "@/domain/presentation";
 import { getT, titled } from "@/server/i18n";
 import { currentUser } from "@/server/page-session";
+import { requestTheme } from "@/server/theme";
 
 export const generateMetadata = titled("settings.title");
 export const dynamic = "force-dynamic";
@@ -19,13 +21,14 @@ const LINKS: { href: string; label: MessageKey; sub: MessageKey; Icon: LucideIco
 ];
 
 /**
- * The phone's way to everything outside the tab bar, the Bahasa, and the place to sign out.
+ * The phone's way to everything outside the tab bar, the Bahasa and Theme, and the place to sign out.
  * Profile, time zone and password stay read-only until the full Settings screen (PRD 4.3).
  */
 export default async function SettingsPage() {
   const user = await currentUser();
   if (!user) return <NotSignedIn />;
   const { t } = await getT();
+  const theme = await requestTheme();
   const demo = user.isDemo && user.demoExpiresAt ? demoTimeLeft(user.demoExpiresAt, new Date(), t) : null;
 
   return (
@@ -50,6 +53,12 @@ export default async function SettingsPage() {
             <h2 id="language" className={h2}>{t("lang.label")}</h2>
             <p className="mt-1 mb-3 text-meta text-ink-2">{t("settings.languageSub")}</p>
             <LanguageSwitch saveToAccount className="max-w-[400px]" />
+          </section>
+
+          <section aria-labelledby="theme">
+            <h2 id="theme" className={h2}>{t("theme.label")}</h2>
+            <p className="mt-1 mb-3 text-meta text-ink-2">{t("settings.themeSub")}</p>
+            <ThemeSwitch initial={theme} className="max-w-[400px]" />
           </section>
 
           <section aria-labelledby="manage">

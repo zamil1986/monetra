@@ -15,7 +15,7 @@ export default async function DownloadPage() {
   const [release, { t, lang }] = await Promise.all([latestRelease(), getT()]);
   return (
     <main className="mx-auto flex min-h-dvh max-w-[640px] flex-col gap-8 px-4 py-10 pt-[calc(2.5rem+env(safe-area-inset-top))]">
-      <span className="fig block text-2xl font-black leading-none text-cobalt [&_b]:text-yellow">MONETRA<b>.</b></span>
+      <span className="fig block text-2xl font-black leading-none text-cobalt-ink [&_b]:text-yellow">MONETRA<b>.</b></span>
       <div>
         <h1 className={h1}>{t("download.title")}</h1>
         <p className={cx(muted, "mt-2")}>{t("download.intro")}</p>
