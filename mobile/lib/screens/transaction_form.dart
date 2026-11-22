@@ -10,7 +10,9 @@ import '../domain/money.dart';
 import '../domain/result.dart';
 import '../domain/transaction_rules.dart';
 import '../domain/types.dart';
+import '../data/sync.dart';
 import '../ui/amount_input.dart';
+import '../ui/format.dart';
 import '../ui/icons.dart';
 import '../ui/l10n.dart';
 import '../ui/theme.dart';
@@ -26,7 +28,7 @@ class TransactionFormScreen extends ConsumerWidget {
     final ledger = ref.watch(ledgerProvider);
     return ledger.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Notice('$e', tone: NoticeTone.danger)),
+      error: (e, _) => Scaffold(appBar: AppBar(), body: ReadError(e)),
       data: (l) {
         final existing = id == null ? null : l.transactions.where((t) => t.id == id).firstOrNull;
         if (id != null && existing == null) {
@@ -77,7 +79,9 @@ class _FormState extends ConsumerState<_Form> {
       categoryId = t.categoryId;
     } else {
       type = TransactionType.expense;
-      walletId = l.activeWallets.firstOrNull?.id;
+      // The Dompet used last, as the web opens it (src/app/transactions/new/load.ts); the ledger is newest first.
+      final last = l.transactions.firstOrNull?.walletId;
+      walletId = l.activeWallets.any((w) => w.id == last) ? last : l.activeWallets.firstOrNull?.id;
     }
   }
 
@@ -112,7 +116,10 @@ class _FormState extends ConsumerState<_Form> {
     };
     if (local.isNotEmpty) return setState(() => errors = local);
     setState(() => busy = true);
-    final result = await ref.read(repositoryProvider).saveTransaction(
+    final repository = ref.read(repositoryProvider);
+    final offline = ref.read(syncStateProvider).value == SyncState.offline;
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await repository.saveTransaction(
           TransactionDraft(
             type: type,
             amount: (parsed as Ok<int>).value,
@@ -127,8 +134,16 @@ class _FormState extends ConsumerState<_Form> {
     if (!mounted) return;
     setState(() => busy = false);
     switch (result) {
-      case Ok():
+      case Ok(value: final id):
         context.pop();
+        // The end of the job: say it is saved, where it is, and offer the way back.
+        final what = t('form.saved', {'type': t('typeWord.${wire(type)}'), 'amount': formatRupiah(parsed.value)});
+        final where = offline ? t('m.saved.offline') : t('m.saved.syncing');
+        messenger.showSnackBar(SnackBar(
+          content: Text('${what[0].toUpperCase()}${what.substring(1)}\n$where'),
+          duration: const Duration(seconds: 6),
+          action: editing ? null : SnackBarAction(label: t('toast.undo'), onPressed: () => repository.deleteTransaction(id)),
+        ));
       case Err(:final error):
         setState(() => errors = {error.field ?? 'form': error.text(context.t)});
     }
@@ -199,6 +214,7 @@ class _FormState extends ConsumerState<_Form> {
           keyboardType: TextInputType.number,
           inputFormatters: const [AmountInputFormatter(group: true)],
           autofocus: !editing,
+          onChanged: (_) => errors.containsKey('amount') ? setState(() => errors.remove('amount')) : null,
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, fontFeatures: figures),
           decoration: const InputDecoration(hintText: '0'),
         ),
@@ -212,18 +228,36 @@ class _FormState extends ConsumerState<_Form> {
           ?errorFor('toWalletId'),
         ] else ...[
           label(t('common.category')),
-          _choose<String>(categoryId, [for (final c in categoryChoices) (c.id, c.name, Glyph(categoryIcon(c.icon), color: c.color, size: 28))], (v) => setState(() => categoryId = v)),
+          // All of them in view, as on the web: picking is one tap, not open, scroll and tap.
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final c in categoryChoices)
+              ChoicePill(
+                label: c.name,
+                leading: Glyph(categoryIcon(c.icon), color: c.color, size: 30),
+                selected: categoryId == c.id,
+                onTap: () => setState(() {
+                  categoryId = c.id;
+                  errors.remove('categoryId');
+                }),
+              ),
+          ]),
           ?errorFor('categoryId'),
         ],
         label(t('m.form.when')),
         Row(children: [
-          Expanded(child: OutlinedButton(onPressed: pickDate, child: Text(date))),
+          Expanded(child: OutlinedButton(onPressed: pickDate, child: Text('${weekday(date, t)} ${dayMonth(date, t)}${date.startsWith('${DateTime.now().year}') ? '' : ' ${date.substring(0, 4)}'}'))),
           const SizedBox(width: 8),
           Expanded(child: OutlinedButton(onPressed: pickTime, child: Text(time))),
         ]),
         ?errorFor('occurredAt'),
         label('${t('common.description')} ${t('common.optional')}'),
-        TextField(controller: description, maxLength: maxDescription, textCapitalization: TextCapitalization.sentences),
+        TextField(
+          controller: description,
+          maxLength: maxDescription,
+          textCapitalization: TextCapitalization.sentences,
+          // The limit still holds; the "0/120" counter under an optional field was noise.
+          decoration: const InputDecoration(counterText: ''),
+        ),
         ?errorFor('description'),
         ?errorFor('form'),
         ?errorFor('type'),

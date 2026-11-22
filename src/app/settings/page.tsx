@@ -10,6 +10,7 @@ import { demoTimeLeft } from "@/domain/presentation";
 import { getT, titled } from "@/server/i18n";
 import { currentUser } from "@/server/page-session";
 import { requestTheme } from "@/server/theme";
+import { ChangePasswordForm, TimezoneSwitch } from "./account-forms";
 
 export const generateMetadata = titled("settings.title");
 export const dynamic = "force-dynamic";
@@ -21,8 +22,8 @@ const LINKS: { href: string; label: MessageKey; sub: MessageKey; Icon: LucideIco
 ];
 
 /**
- * The phone's way to everything outside the tab bar, the Bahasa and Theme, and the place to sign out.
- * Profile, time zone and password stay read-only until the full Settings screen (PRD 4.3).
+ * The phone's way to everything outside the tab bar; the Akun's time zone, Bahasa and password, this
+ * device's Theme, and the place to sign out. Same settings as the Android app's More screen.
  */
 export default async function SettingsPage() {
   const user = await currentUser();
@@ -44,9 +45,14 @@ export default async function SettingsPage() {
                 <dt className="w-24 shrink-0 text-meta text-ink-2">{demo ? t("settings.account") : t("common.email")}</dt>
                 <dd className="min-w-0 truncate font-semibold">{demo ? t("settings.demoAccount", { left: demo }) : user.email}</dd>
               </div>
-              <div className={rowClass}><dt className="w-24 shrink-0 text-meta text-ink-2">{t("settings.timezone")}</dt><dd className="min-w-0 truncate font-semibold">{user.timezone}</dd></div>
             </dl>
             {demo && <p className="mt-2 text-meta text-ink-2">{t("settings.demoNote")}</p>}
+          </section>
+
+          <section aria-labelledby="timezone">
+            <h2 id="timezone" className={h2}>{t("settings.timezone")}</h2>
+            <p className="mt-1 mb-3 text-meta text-ink-2">{t("settings.timezoneSub")}</p>
+            <TimezoneSwitch initial={user.timezone} />
           </section>
 
           <section aria-labelledby="language">
@@ -59,6 +65,11 @@ export default async function SettingsPage() {
             <h2 id="theme" className={h2}>{t("theme.label")}</h2>
             <p className="mt-1 mb-3 text-meta text-ink-2">{t("settings.themeSub")}</p>
             <ThemeSwitch initial={theme} className="max-w-[400px]" />
+          </section>
+
+          <section aria-labelledby="password">
+            <h2 id="password" className={h2}>{t("settings.changePassword")}</h2>
+            {demo ? <p className="mt-1 text-meta text-ink-2">{t("settings.passwordDemo")}</p> : <div className="mt-3"><ChangePasswordForm /></div>}
           </section>
 
           <section aria-labelledby="manage">
@@ -74,7 +85,7 @@ export default async function SettingsPage() {
             </nav>
           </section>
 
-          <SignOutButton className={buttonClass("danger", "lg", "w-full md:w-auto md:self-start")} />
+          <SignOutButton className={buttonClass("secondary", "lg", "w-full md:w-auto md:self-start")} />
         </div>
       </Page>
     </>

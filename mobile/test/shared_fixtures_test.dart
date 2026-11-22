@@ -78,6 +78,13 @@ void main() {
         expect(keepAmountTyping(c[0] as String, allowMinus: c[1] as bool), c[2]);
       });
     }
+    for (final c in (rupiah['regroupTyped'] as List).cast<List>()) {
+      test('regroups "${c[0]}" → "${c[1]}" (caret ${c[2]}, minus allowed: ${c[3]})', () {
+        final r = regroupAmountTyping(c[0] as String, c[1] as String, c[2] as int, allowMinus: c[3] as bool);
+        expect(r.text, c[4]);
+        expect(r.caret, c[5]);
+      });
+    }
   });
 
   group('Kategori names', () {

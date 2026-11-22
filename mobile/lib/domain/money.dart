@@ -57,3 +57,40 @@ String keepAmountTyping(String input, {bool allowMinus = false}) {
 
 /// "Rp 6.240.000", "−Rp 15.000"
 String formatRupiah(int value) => value < 0 ? '−Rp ${groupDigits(value)}' : 'Rp ${groupDigits(value)}';
+
+final _nonDigit = RegExp(r'\D');
+final _leadingZeros = RegExp(r'^0+(?=\d)');
+
+/// An amount field after one edit, with its digits regrouped in threes ("27272" → "27.272") and the
+/// caret kept after the same digit, however the person types, deletes or pastes. Backspace over a dot
+/// would only bring the dot back, so it takes the digit before it instead. Mirrors src/domain/money.ts.
+({String text, int caret}) regroupAmountTyping(String oldText, String newText, int caret, {bool allowMinus = false}) {
+  var edited = newText;
+  var at = caret.clamp(0, newText.length);
+  if (at > 0 &&
+      oldText.length == newText.length + 1 &&
+      oldText[at] == '.' &&
+      oldText.substring(0, at) + oldText.substring(at + 1) == newText) {
+    edited = newText.substring(0, at - 1) + newText.substring(at);
+    at -= 1;
+  }
+
+  final kept = keepAmountTyping(edited, allowMinus: allowMinus);
+  final minus = kept.startsWith('-') ? '-' : '';
+  final allDigits = kept.replaceAll(_nonDigit, '');
+  final digits = allDigits.replaceFirst(_leadingZeros, '');
+  final zeros = allDigits.length - digits.length;
+  final before = (edited.substring(0, at).replaceAll(_nonDigit, '').length - zeros).clamp(0, digits.length);
+
+  final grouped = StringBuffer(minus);
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) grouped.write('.');
+    grouped.write(digits[i]);
+  }
+  final text = grouped.toString();
+  var offset = minus.length;
+  for (var seen = 0; seen < before && offset < text.length; offset++) {
+    if (text[offset] != '.') seen++;
+  }
+  return (text: text, caret: offset);
+}

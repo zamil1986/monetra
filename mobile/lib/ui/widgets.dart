@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../app/providers.dart';
 import '../data/sync.dart';
+import '../domain/i18n.dart';
 import '../domain/money.dart';
 import '../domain/types.dart';
 import 'l10n.dart';
@@ -43,6 +44,44 @@ class TransactionAmount extends StatelessWidget {
     };
     return Text('$sign${formatRupiah(amount)}',
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: color, fontFeatures: figures));
+  }
+}
+
+/// One choice in a wrap of choices, as the web's chips: glyph and name, yellow when chosen (selection).
+class ChoicePill extends StatelessWidget {
+  const ChoicePill({super.key, required this.label, required this.selected, required this.onTap, this.leading});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.c;
+    return Semantics(
+      selected: selected,
+      button: true,
+      inMutuallyExclusiveGroup: true,
+      child: Material(
+        color: selected ? C.yellow : c.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4), side: BorderSide(color: selected ? C.onYellow : c.line, width: selected ? 1.5 : 1)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 44),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(leading == null ? 14 : 6, 6, 14, 6),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                if (leading != null) ...[leading!, const SizedBox(width: 8)],
+                Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: selected ? C.onYellow : c.ink)),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -138,6 +177,47 @@ class SyncBanner extends ConsumerWidget {
     }
     return const SizedBox.shrink();
   }
+}
+
+/// The phone's own records could not be read. Says what to do in the person's words; the exception
+/// itself goes to the log, never onto the screen.
+class ReadError extends StatelessWidget {
+  const ReadError(this.error, {super.key});
+  final Object error;
+
+  @override
+  Widget build(BuildContext context) {
+    debugPrint('Monetra could not read the ledger: $error');
+    return Notice(context.t('m.readError'), tone: NoticeTone.danger);
+  }
+}
+
+/// What a sync refusal was about, in the person's words: "Wallet", "Category", "Transaction".
+String entityLabel(String entity, Strings t) => switch (entity) {
+      'wallet' => t('common.wallet'),
+      'category' => t('common.category'),
+      _ => t('tx.col.transaction'),
+    };
+
+/// Deleting always asks first (PRD 3.4 rule 10), naming what goes. True when the person confirmed.
+Future<bool> confirmDelete(BuildContext context, {required String title, required String body, required String item, required String confirm}) async {
+  final t = context.t;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: Text(title),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(body),
+        const SizedBox(height: 12),
+        Text(item, style: const TextStyle(fontWeight: FontWeight.w700)),
+      ]),
+      actions: [
+        TextButton(onPressed: () => c.pop(false), child: Text(t('del.keep'))),
+        TextButton(onPressed: () => c.pop(true), style: TextButton.styleFrom(foregroundColor: c.c.red), child: Text(confirm)),
+      ],
+    ),
+  );
+  return ok == true;
 }
 
 /// Shows a domain refusal or any other message at the bottom of the screen.

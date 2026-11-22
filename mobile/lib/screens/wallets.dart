@@ -31,7 +31,7 @@ class WalletsScreen extends ConsumerWidget {
       ),
       body: ledger.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Notice('$e', tone: NoticeTone.danger),
+        error: (e, _) => ReadError(e),
         data: (l) => ListView(padding: const EdgeInsets.only(bottom: 96), children: [
           const SyncBanner(),
           SectionTitle(t('dash.totalBalance'), note: t('m.wallets.activeOnly')),
@@ -74,7 +74,8 @@ class _WalletTile extends ConsumerWidget {
             'edit' => showWalletSheet(context, ref, w),
             'archive' => act(() => ref.read(repositoryProvider).setWalletArchived(w.id, true)),
             'unarchive' => act(() => ref.read(repositoryProvider).setWalletArchived(w.id, false)),
-            'delete' => act(() => ref.read(repositoryProvider).deleteWallet(w.id)),
+            'delete' => confirmDelete(context, title: t('wallets.del.title'), body: t('wallets.del.body'), item: w.name, confirm: t('wallets.del.confirm'))
+                .then((ok) => ok ? act(() => ref.read(repositoryProvider).deleteWallet(w.id)) : null),
             _ => null,
           },
           itemBuilder: (_) => [
@@ -128,7 +129,7 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
               controller: opening,
               decoration: InputDecoration(labelText: t('m.wallets.openingRp'), helperText: t('m.wallets.openingHelp')),
               keyboardType: const TextInputType.numberWithOptions(signed: true),
-              inputFormatters: const [AmountInputFormatter(allowMinus: true)]),
+              inputFormatters: const [AmountInputFormatter(allowMinus: true, group: true)]),
           const SizedBox(height: 12),
           Wrap(spacing: 8, children: [
             for (final MapEntry(key: k, value: v) in walletIconData.entries)

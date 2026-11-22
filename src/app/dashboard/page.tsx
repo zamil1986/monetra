@@ -125,7 +125,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               ) : (
                 <div className="flex flex-col gap-3 pb-3">
                   <FlowBar Icon={ArrowDownLeft} label={t("type.INCOME")} amount={income} max={flowMax} bar="bg-green" icon="text-green" />
-                  <FlowBar Icon={ArrowUpRight} label={t("type.EXPENSE")} amount={expense} max={flowMax} bar="bg-red" />
+                  <FlowBar Icon={ArrowUpRight} label={t("type.EXPENSE")} amount={expense} max={flowMax} bar="bg-ink" />
                 </div>
               )}
               <div className={cx(rowClass, "border-t")}>
@@ -160,7 +160,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                   const local = instantToLocal(tx.occurredAt, user.timezone);
                   const where = tx.type === "TRANSFER" ? `${tx.walletName} → ${tx.toWalletName}` : tx.walletName;
                   return (
-                    <Link key={tx.id} href={`/transactions/${tx.id}`} className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
+                    <Link key={tx.id} data-tx={tx.id} href={`/transactions/${tx.id}`} className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
                       <Glyph Icon={categoryIcon(tx.categoryIcon)} color={tx.categoryColor} />
                       <span className="min-w-0 flex-1">
                         <span className={rowTitle}>{transactionTitle(tx, t)}</span>

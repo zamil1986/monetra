@@ -414,6 +414,20 @@
       ["12a 3", true, "123"],
       ["-", true, "-"],
       ["", true, ""]
+    ],
+    "_regroupTypedDoc": "[old text, new text, caret after the edit, minus allowed, regrouped text, regrouped caret]",
+    "regroupTyped": [
+      ["", "1", 1, false, "1", 1],
+      ["2.727", "2.7272", 6, false, "27.272", 6],
+      ["", "1234567", 7, false, "1.234.567", 9],
+      ["", "0050a0", 6, false, "500", 3],
+      ["27.272", "27272", 2, false, "2.272", 1],
+      ["1.000", "19.000", 2, false, "19.000", 2],
+      ["1.234.567", "1.24.567", 3, false, "124.567", 2],
+      ["", "-150000", 7, true, "-150.000", 8],
+      ["", "-150000", 7, false, "150.000", 7],
+      ["", "-", 1, true, "-", 1],
+      ["1.000", "", 0, false, "", 0]
     ]
   },
   "categoryNameClash": {

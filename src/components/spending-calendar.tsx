@@ -202,7 +202,7 @@ function DayDetail({ day, dayTx, timeZone, lang, t }: { day: string; dayTx: NonN
           {items.map((tx) => {
             const where = tx.type === "TRANSFER" ? `${tx.walletName} → ${tx.toWalletName}` : tx.walletName;
             return (
-              <Link key={tx.id} href={`/transactions/${tx.id}`} className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
+              <Link key={tx.id} data-tx={tx.id} href={`/transactions/${tx.id}`} className={cx(rowClass, "text-inherit no-underline hover:bg-panel")}>
                 <Glyph Icon={categoryIcon(tx.categoryIcon)} color={tx.categoryColor} />
                 <span className="min-w-0 flex-1">
                   <span className={rowTitle}>{transactionTitle(tx, t)}</span>

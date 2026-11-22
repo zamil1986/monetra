@@ -2,7 +2,9 @@
 import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { ConfirmDelete } from "@/components/confirm-delete";
 import { CATEGORY_ICON_COMPONENTS, Glyph, categoryIcon, hue } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import {
   Button, Field, FieldError, Notice, Page, PageHead, buttonClass, cx, h1, h2, iconButtonClass, inputClass,
   onlyMobile, rowClass, rowSub, rowTitle, rowsClass, segButtonClass, segClass, sidePanel, spacer, splitClass,
@@ -20,6 +22,7 @@ const TYPES: CategoryType[] = ["EXPENSE", "INCOME"];
 export function CategoriesManager({ categories }: { categories: CategoryView[] }) {
   const router = useRouter();
   const online = useOnline();
+  const toast = useToast();
   const { t } = useT();
   const [type, setType] = useState<CategoryType>("EXPENSE");
   const [editing, setEditing] = useState<CategoryView | null>(null);
@@ -30,18 +33,29 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
   const active = ofType.filter((c) => !c.archived);
   const archived = ofType.filter((c) => c.archived);
 
-  async function act(category: CategoryView, action: "archive" | "unarchive" | "delete") {
+  async function act(category: CategoryView, action: "archive" | "unarchive") {
     setBusy(category.id);
     setRefusal(null);
     try {
-      if (action === "delete") await api(`/api/categories/${category.id}`, { method: "DELETE" });
-      else await api(`/api/categories/${category.id}/${action}`, { method: "POST" });
-      if (editing?.id === category.id && action === "delete") setEditing(null);
+      await api(`/api/categories/${category.id}/${action}`, { method: "POST" });
       router.refresh();
     } catch (e) {
       setRefusal({ id: category.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong") });
     } finally {
       setBusy(null);
+    }
+  }
+
+  /** Delete, after the confirmation: the error is shown in the dialog, the outcome in a toast. */
+  async function remove(category: CategoryView) {
+    try {
+      await api(`/api/categories/${category.id}`, { method: "DELETE" });
+      if (editing?.id === category.id) setEditing(null);
+      toast({ message: t("categories.deleted", { name: category.name }) });
+      router.refresh();
+      return null;
+    } catch (e) {
+      return e instanceof ApiError ? e.message : t("common.somethingWrong");
     }
   }
 
@@ -86,7 +100,16 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
                       <span className="inline-flex flex-none items-center justify-end gap-0.5">
                         <button className={iconButtonClass()} type="button" aria-label={t("common.edit", { name: c.name })} onClick={() => setEditing(c)}><Pencil /></button>
                         {c.deletable ? (
-                          <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: c.name })} disabled={locked(c.id)} onClick={() => act(c, "delete")}><Trash2 /></button>
+                          <ConfirmDelete
+                            title={t("categories.del.title")}
+                            body={t("categories.del.body")}
+                            item={{ title: c.name, meta: t(`type.${c.type}`) }}
+                            confirmLabel={t("categories.del.confirm")}
+                            onConfirm={() => remove(c)}
+                            trigger={(open) => (
+                              <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: c.name })} disabled={locked(c.id)} onClick={open}><Trash2 /></button>
+                            )}
+                          />
                         ) : (
                           <button className={iconButtonClass()} type="button" aria-label={t("common.archive", { name: c.name })} disabled={locked(c.id)} onClick={() => act(c, "archive")}><Archive /></button>
                         )}
@@ -168,7 +191,7 @@ function CategoryForm({
         <Field label={t("common.name")} htmlFor="c-name" error={errorFor("name")}>
           <input
             className={inputClass(!!errorFor("name"))} id="c-name" placeholder={t(`categories.placeholder${type}`)}
-            maxLength={MAX_CATEGORY_NAME} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!errorFor("name")}
+            maxLength={MAX_CATEGORY_NAME} value={name} onChange={(e) => { if (error?.field === "name") setError(null); setName(e.target.value); }} aria-invalid={!!errorFor("name")}
           />
         </Field>
         <Field label={t("common.color")} legendId="c-col" error={errorFor("color")}>
@@ -188,7 +211,7 @@ function CategoryForm({
               const Icon = CATEGORY_ICON_COMPONENTS[key];
               return (
                 <button
-                  key={key} type="button" role="radio" aria-checked={icon === key} aria-label={key.replace(/-\d+$/, "").replace(/-/g, " ")}
+                  key={key} type="button" role="radio" aria-checked={icon === key} aria-label={t(`categoryIcon.${key}`)}
                   className="inline-grid size-10 cursor-pointer place-items-center rounded border border-line bg-surface text-ink-2 aria-checked:border-ink aria-checked:bg-ink aria-checked:text-paper [&_svg]:size-[18px]"
                   onClick={() => setIcon(key)}
                 >

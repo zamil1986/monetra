@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -61,13 +62,13 @@ class SettingsScreen extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.schedule),
           title: Text(t('settings.timezone')),
-          subtitle: Text(t('m.settings.timezoneSub')),
+          subtitle: Text(t('settings.timezoneSub')),
           trailing: DropdownButton<String>(
             value: _timezones.containsKey(l?.timezone) ? l!.timezone : null,
             hint: Text(l?.timezone ?? ''),
             underline: const SizedBox.shrink(),
             items: [for (final MapEntry(key: k, value: v) in _timezones.entries) DropdownMenuItem(value: k, child: Text(v))],
-            onChanged: (tz) => tz == null ? null : online(() => ref.read(apiProvider).updateProfile(timezone: tz), t('m.settings.timezoneSaved')),
+            onChanged: (tz) => tz == null ? null : online(() => ref.read(apiProvider).updateProfile(timezone: tz), t('settings.timezoneSaved')),
           ),
         ),
         // Shows at once, even offline; the Akun and the web follow at the next sync (ADR 0006).
@@ -86,11 +87,11 @@ class SettingsScreen extends ConsumerWidget {
         const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: ThemePicker()),
         ListTile(
           leading: const Icon(Icons.lock_outline),
-          title: Text(t('m.settings.changePassword')),
+          title: Text(t('settings.changePassword')),
           onTap: () => showDialog(
               context: context,
               builder: (_) => _ChangePassword(
-                  onSubmit: (current, next) => online(() => ref.read(apiProvider).changePassword(current, next), t('m.settings.passwordChanged')))),
+                  onSubmit: (current, next) => online(() => ref.read(apiProvider).changePassword(current, next), t('settings.passwordChanged')))),
         ),
         const Divider(),
         ListTile(
@@ -106,7 +107,7 @@ class SettingsScreen extends ConsumerWidget {
         if (failures.isNotEmpty) ...[
           Notice(t('m.sync.refused', {'count': failures.length}), tone: NoticeTone.warn,
               action: TextButton(onPressed: () => ref.read(repositoryProvider).dismissFailures(), child: Text(t('m.dismiss')))),
-          for (final f in failures) ListTile(dense: true, title: Text(f.message), subtitle: Text('${f.entity} · ${f.code}')),
+          for (final f in failures) ListTile(dense: true, title: Text(f.message), subtitle: Text(entityLabel(f.entity, t))),
         ],
         const Divider(),
         ListTile(
@@ -116,8 +117,8 @@ class SettingsScreen extends ConsumerWidget {
           trailing: TextButton(onPressed: () => checkForUpdate(context, ref, version, quiet: false), child: Text(t('m.settings.check'))),
         ),
         ListTile(
-          leading: Icon(Icons.logout, color: context.c.red),
-          title: Text(t('shell.signOut'), style: TextStyle(color: context.c.red)),
+          leading: Icon(LucideIcons.logOut, color: context.c.ink2),
+          title: Text(t('shell.signOut')),
           onTap: () => _signOut(context, ref),
         ),
       ]),
@@ -159,9 +160,9 @@ class _ChangePasswordState extends State<_ChangePassword> {
   Widget build(BuildContext context) {
     final t = context.t;
     return AlertDialog(
-        title: Text(t('m.settings.changePassword')),
+        title: Text(t('settings.changePassword')),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: current, obscureText: true, decoration: InputDecoration(labelText: t('m.settings.currentPassword'))),
+          TextField(controller: current, obscureText: true, decoration: InputDecoration(labelText: t('settings.currentPassword'))),
           const SizedBox(height: 12),
           TextField(controller: next, obscureText: true, decoration: InputDecoration(labelText: t('auth.newPassword'), helperText: t('auth.passwordHint'))),
         ]),

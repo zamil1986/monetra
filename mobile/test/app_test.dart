@@ -106,9 +106,7 @@ void main() {
     await tester.pump();
     expect(find.text('18.000'), findsOneWidget); // grouped as typed
 
-    await tester.tap(find.text('Choose').last); // Category
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Makanan').last);
+    await tester.tap(find.text('Makanan')); // Category chips are all in view
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, 'Kopi susu');
 
@@ -120,6 +118,10 @@ void main() {
 
     expect(find.text('Kopi susu'), findsOneWidget);
     expect(find.text('Rp 2.057.000'), findsOneWidget);
+    // Saving says so, says where it is, and offers Undo.
+    expect(find.textContaining('Saved expense of Rp 18.000.'), findsOneWidget);
+    expect(find.textContaining('Saved on this phone'), findsOneWidget);
+    expect(find.text('Undo'), findsOneWidget);
     final outbox = await tester.runAsync(() => db.select(db.outbox).get());
     expect(outbox, hasLength(1));
     expect(outbox!.single.body, contains('"amount":18000'));

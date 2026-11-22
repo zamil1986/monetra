@@ -28,6 +28,15 @@ const CLOSE_MS = 200;
  * Both are modal, so the screen underneath is inert while one is open; Escape, the close button and Cancel close it.
  * Closing goes back in history, so the Android back button and the browser back both close it.
  */
+/** Recording starts with the amount, so that is where the caret (and on a phone, the keyboard) goes. */
+function focusAmount(e: Event) {
+  const amount = document.getElementById("amt");
+  if (amount) {
+    e.preventDefault();
+    amount.focus();
+  }
+}
+
 export function AddTransactionSheet({ data, initial, empty }: { data: Data; initial: FormInitial | null; empty: ReactNode }) {
   const router = useRouter();
   const phone = usePhone();
@@ -58,14 +67,7 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
             className="fixed top-1/2 left-1/2 z-50 flex max-h-[min(92dvh,900px)] w-[min(960px,calc(100vw-48px))] -translate-x-1/2 -translate-y-1/2 flex-col border-t-2 border-ink bg-paper text-base ring-1 ring-line text-ink shadow-[0_24px_64px_-16px_rgba(20,22,26,0.45)] outline-0 duration-200 ease-out-expo data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]"
             // Typed figures must survive a stray click: only Escape, the close button and Cancel dismiss it.
             onInteractOutside={(e) => e.preventDefault()}
-            // Recording starts with the amount, so that is where the caret goes.
-            onOpenAutoFocus={(e) => {
-              const amount = document.getElementById("amt");
-              if (amount) {
-                e.preventDefault();
-                amount.focus();
-              }
-            }}
+            onOpenAutoFocus={focusAmount}
           >
             <div className="flex shrink-0 items-center gap-3 border-b border-line px-8 py-3.5">
               <Dialog.Title className="text-2xl leading-tight font-bold text-ink">{t("nav.addTransaction")}</Dialog.Title>
@@ -87,6 +89,7 @@ export function AddTransactionSheet({ data, initial, empty }: { data: Data; init
       <SheetContent
         side="bottom"
         showCloseButton={false}
+        onOpenAutoFocus={focusAmount}
         className="max-h-[94dvh] gap-0 overflow-y-auto overscroll-contain rounded-t-2xl border-t-0 bg-paper p-0 ring-1 ring-line text-base text-ink shadow-none"
       >
         <div className="sticky top-0 z-10 bg-paper">

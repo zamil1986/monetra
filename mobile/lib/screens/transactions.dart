@@ -61,7 +61,7 @@ class _TransactionsState extends ConsumerState<TransactionsScreen> {
       appBar: AppBar(title: Text(s('nav.transactions'))),
       body: ledger.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Notice('$e', tone: NoticeTone.danger),
+        error: (e, _) => ReadError(e),
         data: (l) {
           final q = search.trim().toLowerCase();
           final rows = l.transactions.where((t) {

@@ -3,14 +3,16 @@ import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, Check } from "lucide-react
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
+import { AmountInput } from "@/components/amount-input";
 import { categoryIcon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import {
   Button, Field, FieldError, Notice, buttonClass, chipClass, cx, h2, hintClass, inputClass, onlyDesktop, rowClass, rowSub, rowTitle,
-  rowsClass, segButtonClass, segClass, sidePanel, splitClass,
+  onlyMobile, rowsClass, segButtonClass, segClass, sidePanel, splitClass,
 } from "@/components/ui";
 import { balancesByWallet } from "@/domain/balance";
 import { localToInstant } from "@/domain/local-time";
-import { formatRupiah, keepAmountTyping, parseRupiah } from "@/domain/money";
+import { formatRupiah, parseRupiah } from "@/domain/money";
 import type { Translate } from "@/domain/i18n";
 import type { TransactionType } from "@/domain/types";
 import { api, ApiError } from "@/lib/api";
@@ -58,6 +60,7 @@ const TYPES = [
 export function TransactionForm({ mode, timezone, now, wallets, categories, initial, inSheet = false, inDialog = false, onSaved, onCancel }: Props) {
   const router = useRouter();
   const online = useOnline();
+  const toast = useToast();
   const { t } = useT();
   const [type, setType] = useState<TransactionType>(initial.type);
   const [amount, setAmount] = useState(initial.amount ? initial.amount.toLocaleString("id-ID") : "");
@@ -70,6 +73,8 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedNote, setSavedNote] = useState<string | null>(null);
+  /** A field's error goes as soon as that field changes, so it never sits under a value that is now fine. */
+  const changed = (field: string) => setError((e) => (e?.field === field ? null : e));
 
   // Archived wallets and categories stay selectable only where this transaction already uses them.
   const usable = <T extends { id: string; archived: boolean }>(items: T[], keep: (string | null)[]) =>
@@ -90,6 +95,10 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
     setSavedNote(null);
     const parsed = parseRupiah(amount);
     if (!parsed.ok || parsed.value <= 0) return setError({ field: "amount", message: t("form.amountInvalid") });
+    // Checked here too, so the amount and the category never come back as two rounds of errors.
+    if (type !== "TRANSFER" && !categoryId) {
+      return setError({ field: "categoryId", message: t(type === "INCOME" ? "error.category.chooseIncome" : "error.category.chooseExpense") });
+    }
     const occurredAt = localToInstant(date, time, timezone);
     if (Number.isNaN(occurredAt.getTime())) return setError({ field: "occurredAt", message: t("error.occurredAt.missing") });
     const body = {
@@ -104,9 +113,23 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
     setSaving(true);
     setError(null);
     try {
-      if (mode === "new") await api("/api/transactions", { method: "POST", body });
-      else await api(`/api/transactions/${initial.id}`, { method: "PATCH", body });
+      const saved = mode === "new"
+        ? await api<{ id: string }>("/api/transactions", { method: "POST", body })
+        : await api<{ id: string }>(`/api/transactions/${initial.id}`, { method: "PATCH", body });
       haptic();
+      const id = saved?.id ?? initial.id;
+      if (!addAnother) {
+        const moved = afterSave(wallets, type, parsed.value, walletId, toWalletId);
+        const detail = moved.from ? `${moved.from.name} · ${formatRupiah(moved.after.get(moved.from.id)!)}` : undefined;
+        toast(mode === "new"
+          ? {
+              message: t("form.saved", { type: t(`typeWord.${type}`), amount: formatRupiah(parsed.value) }),
+              detail,
+              fresh: id,
+              action: { label: t("toast.undo"), run: () => undo(id) },
+            }
+          : { message: t("toast.updated"), detail, fresh: id });
+      }
       if (addAnother) {
         setAmount("");
         setDescription("");
@@ -127,11 +150,22 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
     }
   }
 
+  /** Undo of a Transaksi just recorded: delete it again and show the lists without it. */
+  async function undo(id: string) {
+    try {
+      await api(`/api/transactions/${id}`, { method: "DELETE" });
+      router.refresh();
+      return t("toast.undone");
+    } catch {
+      return t("toast.undoFailed");
+    }
+  }
+
   const errorFor = (field: string) => (error?.field === field ? error.message : null);
   const label = (w: FormWallet) => `${w.name} · ${formatRupiah(w.balance)}${w.archived ? t("common.archivedSuffix") : ""}`;
   const saveLabel = !online ? t("common.savingNeedsConnection") : mode === "edit" ? t("common.saveChanges") : t("form.saveNew", { type: t(`typeWord.${type}`) });
   const walletSelect = (id: string, value: string, onChange: (v: string) => void, options: FormWallet[], field: string) => (
-    <select className={inputClass(!!errorFor(field))} id={id} value={value} onChange={(e) => onChange(e.target.value)}>
+    <select className={inputClass(!!errorFor(field))} id={id} value={value} onChange={(e) => { changed(field); onChange(e.target.value); }}>
       {id === "to" && <option value="" disabled>{t("form.chooseWallet")}</option>}
       {options.map((w) => <option key={w.id} value={w.id}>{label(w)}</option>)}
     </select>
@@ -164,12 +198,13 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
             )}
           >
             <span className="text-[22px] font-bold text-ink-2">Rp</span>
-            <input
+            <AmountInput
               className="fig min-w-0 flex-1 border-0 bg-transparent p-0 text-[44px] leading-[1.1] outline-0 md:text-[52px]"
-              id="amt" inputMode="numeric" enterKeyHint="done" autoComplete="off" value={amount} onChange={(e) => setAmount(keepAmountTyping(e.target.value))}
+              id="amt" inputMode="numeric" enterKeyHint="done" autoComplete="off" value={amount} onValueChange={(v) => { changed("amount"); setAmount(v); }}
               aria-describedby="amt-h" aria-invalid={!!errorFor("amount")}
             />
           </div>
+          {mode === "new" && <PhoneAfterSave type={type} amount={parseRupiah(amount)} wallets={wallets} walletId={walletId} toWalletId={toWalletId} />}
         </Field>
 
         {type === "TRANSFER" ? (
@@ -205,7 +240,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
               {categoryChoices.map((c) => {
                 const Icon = categoryIcon(c.icon);
                 return (
-                  <button key={c.id} type="button" className={chipClass()} role="radio" aria-checked={categoryId === c.id} onClick={() => setCategoryId(c.id)}>
+                  <button key={c.id} type="button" className={chipClass()} role="radio" aria-checked={categoryId === c.id} onClick={() => { changed("categoryId"); setCategoryId(c.id); }}>
                     <Icon />{c.name}
                   </button>
                 );
@@ -217,10 +252,10 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         <div className="flex flex-col gap-1.5">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label={t("common.date")} htmlFor="date">
-              <input className={inputClass(!!errorFor("occurredAt"))} id="date" type="date" value={date} max={now.date} onChange={(e) => setDate(e.target.value)} />
+              <input className={inputClass(!!errorFor("occurredAt"))} id="date" type="date" value={date} max={now.date} onChange={(e) => { changed("occurredAt"); setDate(e.target.value); }} />
             </Field>
             <Field label={t("common.time")} htmlFor="time">
-              <input className={inputClass(!!errorFor("occurredAt"))} id="time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              <input className={inputClass(!!errorFor("occurredAt"))} id="time" type="time" value={time} onChange={(e) => { changed("occurredAt"); setTime(e.target.value); }} />
             </Field>
           </div>
           <FieldError message={errorFor("occurredAt")} />
@@ -228,7 +263,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
         </div>
 
         <Field label={<>{t("common.description")} <span className="font-normal text-ink-2">{t("common.optional")}</span></>} htmlFor="desc" error={errorFor("description")}>
-          <input className={inputClass(!!errorFor("description"))} id="desc" maxLength={120} enterKeyHint="done" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <input className={inputClass(!!errorFor("description"))} id="desc" maxLength={120} enterKeyHint="done" value={description} onChange={(e) => { changed("description"); setDescription(e.target.value); }} />
         </Field>
 
         {error && !error.field && <Notice tone="danger" role="alert"><strong>{t("form.notSaved")}</strong> {error.message}</Notice>}
@@ -249,7 +284,7 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
           <Button type="submit" size="lg" disabled={saving || !online}>{saveLabel}</Button>
           {mode === "new" ? (
             <>
-              <Button variant="secondary" size="lg" className={onlyDesktop} disabled={saving || !online} onClick={(e) => submit(e, true)}>{t("form.saveAndAdd")}</Button>
+              <Button variant="secondary" size="lg" className="max-md:min-h-11!" disabled={saving || !online} onClick={(e) => submit(e, true)}>{t("form.saveAndAdd")}</Button>
               {onCancel && <Button type="button" variant="quiet" size="lg" className={onlyDesktop} onClick={onCancel}>{t("common.cancel")}</Button>}
             </>
           ) : (
@@ -265,6 +300,42 @@ export function TransactionForm({ mode, timezone, now, wallets, categories, init
   );
 }
 
+/** How each Saldo and the Total Balance move once this Transaksi is saved, using the same rules as the server. */
+function afterSave(wallets: FormWallet[], type: TransactionType, amount: number, walletId: string, toWalletId: string) {
+  const now = wallets.map((w) => ({ id: w.id, openingBalance: w.balance, archived: w.archived }));
+  const movement = { type, amount, walletId, toWalletId: type === "TRANSFER" ? toWalletId || null : null };
+  const before = balancesByWallet(now, []);
+  const after = balancesByWallet(now, [movement]);
+  const total = (balances: Map<string, number>) => now.filter((w) => !w.archived).reduce((sum, w) => sum + (balances.get(w.id) ?? 0), 0);
+  return {
+    before,
+    after,
+    totalBefore: total(before),
+    totalAfter: total(after),
+    from: wallets.find((w) => w.id === walletId),
+    to: type === "TRANSFER" ? wallets.find((w) => w.id === toWalletId) : undefined,
+  };
+}
+
+/** A figure with a true minus, as formatRupiah writes it: "−44.000", never "-44.000". */
+const figure = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(n).toLocaleString("id-ID")}`;
+const arrowFig = (a: number, b: number, size = "text-lg") => (
+  <span className={cx("fig whitespace-nowrap", size)}>{figure(a)}<span className="mx-1 text-ink-3">→</span>{figure(b)}</span>
+);
+
+/** The phone's one line of After you save, under the amount: where the chosen Dompet's Saldo goes. */
+function PhoneAfterSave(props: { type: TransactionType; amount: ReturnType<typeof parseRupiah>; wallets: FormWallet[]; walletId: string; toWalletId: string }) {
+  const amount = props.amount.ok && props.amount.value > 0 ? props.amount.value : 0;
+  const { before, after, from, to } = afterSave(props.wallets, props.type, amount, props.walletId, props.toWalletId);
+  if (!amount || !from) return null;
+  return (
+    <p className={cx(onlyMobile, "mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-meta text-ink-2")}>
+      <span>{from.name} {arrowFig(before.get(from.id)!, after.get(from.id)!, "text-[15px] text-ink")}</span>
+      {to && <span>{to.name} {arrowFig(before.get(to.id)!, after.get(to.id)!, "text-[15px] text-ink")}</span>}
+    </p>
+  );
+}
+
 /** Shows how the Saldo and Total Balance move once this Transaksi is saved, using the same rules as the server. */
 function AfterYouSave(props: {
   t: Translate;
@@ -276,17 +347,8 @@ function AfterYouSave(props: {
 }) {
   const { t } = props;
   const amount = props.amount.ok && props.amount.value > 0 ? props.amount.value : 0;
-  const now = props.wallets.map((w) => ({ id: w.id, openingBalance: w.balance, archived: w.archived }));
-  const movement = { type: props.type, amount, walletId: props.walletId, toWalletId: props.type === "TRANSFER" ? props.toWalletId || null : null };
-  const after = balancesByWallet(now, [movement]);
-  const total = (balances: Map<string, number>) => now.filter((w) => !w.archived).reduce((sum, w) => sum + (balances.get(w.id) ?? 0), 0);
-  const before = balancesByWallet(now, []);
-
-  const from = props.wallets.find((w) => w.id === props.walletId);
-  const to = props.type === "TRANSFER" ? props.wallets.find((w) => w.id === props.toWalletId) : undefined;
-  const fig = (a: number, b: number) => (
-    <span className="fig whitespace-nowrap text-lg">{a.toLocaleString("id-ID")}<span className="mx-1 text-ink-3">→</span>{b.toLocaleString("id-ID")}</span>
-  );
+  const { before, after, totalBefore, totalAfter, from, to } = afterSave(props.wallets, props.type, amount, props.walletId, props.toWalletId);
+  const fig = (a: number, b: number) => arrowFig(a, b);
   const noChange = <span className="inline-flex items-center rounded-[3px] bg-surface px-2 py-0.5 text-[12.5px] font-semibold text-ink-2">{t("after.noChange")}</span>;
   const line = (title: string, sub: string, value: ReactNode) => (
     <div className={rowClass}>
@@ -294,8 +356,6 @@ function AfterYouSave(props: {
       {value}
     </div>
   );
-  const totalBefore = total(before);
-  const totalAfter = total(after);
 
   return (
     <aside className={cx(sidePanel, onlyDesktop)} aria-labelledby="after-h">

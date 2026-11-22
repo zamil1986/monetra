@@ -31,6 +31,38 @@ export function keepAmountTyping(input: string, allowMinus = false): string {
   return minus + input.replace(/[^\d.]/g, "");
 }
 
+/**
+ * An amount field after one edit, with its digits regrouped in threes ("27272" → "27.272") and the
+ * caret kept after the same digit, however the person types, deletes or pastes. Backspace over a dot
+ * would only bring the dot back, so it takes the digit before it instead. Mirrors mobile/lib/domain/money.dart.
+ */
+export function regroupAmountTyping(oldText: string, newText: string, caret: number, allowMinus = false): { text: string; caret: number } {
+  let edited = newText;
+  let at = Math.min(Math.max(caret, 0), newText.length);
+  if (at > 0 && oldText.length === newText.length + 1 && oldText[at] === "." && oldText.slice(0, at) + oldText.slice(at + 1) === newText) {
+    edited = newText.slice(0, at - 1) + newText.slice(at);
+    at -= 1;
+  }
+
+  const kept = keepAmountTyping(edited, allowMinus);
+  const minus = kept.startsWith("-") ? "-" : "";
+  const allDigits = kept.replace(/\D/g, "");
+  const digits = allDigits.replace(/^0+(?=\d)/, "");
+  const zeros = allDigits.length - digits.length;
+  const before = Math.min(Math.max(edited.slice(0, at).replace(/\D/g, "").length - zeros, 0), digits.length);
+
+  let text = minus;
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 === 0) text += ".";
+    text += digits[i];
+  }
+  let offset = minus.length;
+  for (let seen = 0; seen < before && offset < text.length; offset++) {
+    if (text[offset] !== ".") seen++;
+  }
+  return { text, caret: offset };
+}
+
 /** "Rp 6.240.000", "−Rp 15.000" */
 export function formatRupiah(value: number): string {
   const digits = Math.abs(value).toLocaleString("id-ID");

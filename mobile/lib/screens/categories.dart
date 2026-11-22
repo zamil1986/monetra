@@ -34,7 +34,7 @@ class CategoriesScreen extends ConsumerWidget {
         ),
         body: ledger.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Notice('$e', tone: NoticeTone.danger),
+          error: (e, _) => ReadError(e),
           data: (l) => TabBarView(children: [_List(l, CategoryType.expense), _List(l, CategoryType.income)]),
         ),
       ),
@@ -68,7 +68,8 @@ class _List extends ConsumerWidget {
             'edit' => showCategorySheet(context, type, c),
             'archive' => act(() => ref.read(repositoryProvider).setCategoryArchived(c.id, true)),
             'unarchive' => act(() => ref.read(repositoryProvider).setCategoryArchived(c.id, false)),
-            'delete' => act(() => ref.read(repositoryProvider).deleteCategory(c.id)),
+            'delete' => confirmDelete(context, title: t('categories.del.title'), body: t('categories.del.body'), item: c.name, confirm: t('categories.del.confirm'))
+                .then((ok) => ok ? act(() => ref.read(repositoryProvider).deleteCategory(c.id)) : null),
             _ => null,
           },
           itemBuilder: (_) => [

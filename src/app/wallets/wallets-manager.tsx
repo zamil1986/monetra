@@ -3,13 +3,16 @@ import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { AmountInput } from "@/components/amount-input";
+import { ConfirmDelete } from "@/components/confirm-delete";
+import { useToast } from "@/components/toast";
 import { Glyph, WALLET_ICONS, hue, walletIcon } from "@/components/icons";
 import { Rich } from "@/components/rich";
 import {
   Button, Field, FieldError, Notice, Page, PageHead, buttonClass, chipClass, cx, h1, h2, iconButtonClass, inputClass,
   noticeActions, onlyDesktop, onlyMobile, rowClass, rowFig, rowSub, rowTitle, rowsClass, sidePanel, spacer, splitClass,
 } from "@/components/ui";
-import { formatRupiah, keepAmountTyping, parseRupiah } from "@/domain/money";
+import { formatRupiah, parseRupiah } from "@/domain/money";
 import { COLORS } from "@/domain/palette";
 import type { WalletColor, WalletIcon } from "@/domain/wallet-rules";
 import { api, ApiError } from "@/lib/api";
@@ -33,6 +36,7 @@ export type WalletRow = {
 export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]; totalBalance: number }) {
   const router = useRouter();
   const online = useOnline();
+  const toast = useToast();
   const { t, lang } = useT();
   const [editing, setEditing] = useState<WalletRow | null>(null);
   const [refusal, setRefusal] = useState<{ id: string; message: string } | null>(null);
@@ -41,18 +45,30 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
   const active = wallets.filter((w) => !w.archived);
   const archived = wallets.filter((w) => w.archived);
 
-  async function act(wallet: WalletRow, action: "archive" | "unarchive" | "delete") {
+  async function act(wallet: WalletRow, action: "archive" | "unarchive") {
     setBusy(wallet.id);
     setRefusal(null);
     try {
-      if (action === "delete") await api(`/api/wallets/${wallet.id}`, { method: "DELETE" });
-      else await api(`/api/wallets/${wallet.id}/${action}`, { method: "POST" });
+      await api(`/api/wallets/${wallet.id}/${action}`, { method: "POST" });
       if (editing?.id === wallet.id) setEditing(null);
       router.refresh();
     } catch (e) {
       setRefusal({ id: wallet.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong") });
     } finally {
       setBusy(null);
+    }
+  }
+
+  /** Delete, after the confirmation: the error is shown in the dialog, the outcome in a toast. */
+  async function remove(wallet: WalletRow) {
+    try {
+      await api(`/api/wallets/${wallet.id}`, { method: "DELETE" });
+      if (editing?.id === wallet.id) setEditing(null);
+      toast({ message: t("wallets.deleted", { name: wallet.name }) });
+      router.refresh();
+      return null;
+    } catch (e) {
+      return e instanceof ApiError ? e.message : t("common.somethingWrong");
     }
   }
 
@@ -103,7 +119,16 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                         <span className="inline-flex flex-none items-center justify-end gap-0.5 md:min-w-[76px]">
                           <button className={iconButtonClass()} type="button" aria-label={t("common.edit", { name: w.name })} onClick={() => setEditing(w)}><Pencil /></button>
                           {w.deletable ? (
-                            <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: w.name })} disabled={locked(w.id)} onClick={() => act(w, "delete")}><Trash2 /></button>
+                            <ConfirmDelete
+                              title={t("wallets.del.title")}
+                              body={t("wallets.del.body")}
+                              item={{ title: w.name, aside: formatRupiah(w.balance) }}
+                              confirmLabel={t("wallets.del.confirm")}
+                              onConfirm={() => remove(w)}
+                              trigger={(open) => (
+                                <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: w.name })} disabled={locked(w.id)} onClick={open}><Trash2 /></button>
+                              )}
+                            />
                           ) : (
                             <button className={iconButtonClass()} type="button" aria-label={t("common.archive", { name: w.name })} disabled={locked(w.id)} onClick={() => act(w, "archive")}><Archive /></button>
                           )}
@@ -189,6 +214,8 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
   }
 
   const errorFor = (field: string) => (error?.field === field ? error.message : null);
+  /** A field's error goes as soon as that field changes. */
+  const changed = (field: string) => setError((e) => (e?.field === field ? null : e));
 
   return (
     <aside className={sidePanel} id="wallet-form" aria-labelledby="nw-h">
@@ -197,7 +224,7 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
         <Field label={t("common.name")} htmlFor="w-name" error={errorFor("name")}>
           <input
             className={inputClass(!!errorFor("name"))} id="w-name" placeholder={t("wallets.namePlaceholder")} maxLength={40}
-            value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!errorFor("name")}
+            value={name} onChange={(e) => { changed("name"); setName(e.target.value); }} aria-invalid={!!errorFor("name")}
           />
         </Field>
         <Field
@@ -208,9 +235,9 @@ function WalletForm({ wallet, onDone, onCancel }: { wallet: WalletRow | null; on
           hint={t("wallets.openingHint")}
         >
           <div className="relative">
-            <input
-              className={inputClass(!!errorFor("openingBalance"), "fig pl-11 text-xl")} id="w-open" inputMode="text"
-              value={opening} onChange={(e) => setOpening(keepAmountTyping(e.target.value, true))} aria-describedby="w-open-h" aria-invalid={!!errorFor("openingBalance")}
+            <AmountInput
+              className={inputClass(!!errorFor("openingBalance"), "fig pl-11 text-xl")} id="w-open" inputMode="text" allowMinus
+              value={opening} onValueChange={(v) => { changed("openingBalance"); setOpening(v); }} aria-describedby="w-open-h" aria-invalid={!!errorFor("openingBalance")}
             />
             <span className="absolute top-[11px] left-3 font-bold text-ink-2">Rp</span>
           </div>
