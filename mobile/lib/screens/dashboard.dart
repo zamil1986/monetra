@@ -32,7 +32,7 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Monetra')),
       body: ledger.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Notice(t('m.dash.readError', {'error': e}), tone: NoticeTone.danger),
+        error: (e, _) => ReadError(e),
         data: (l) => RefreshIndicator(
           onRefresh: () => ref.read(syncSchedulerProvider).now(),
           child: ListView(padding: const EdgeInsets.only(bottom: 96), children: [

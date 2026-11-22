@@ -77,7 +77,7 @@ export function Tabbar({
           >
             <Icon />
             {!!badge && badge > 0 && (
-              <span className="fig absolute -top-1.5 left-[calc(100%-8px)] min-w-[18px] rounded-full border-2 border-paper bg-red px-1 text-center text-[11px] leading-[14px] text-paper">
+              <span className="fig absolute -top-1.5 left-[calc(100%-8px)] min-w-[18px] rounded-full border-2 border-paper bg-ink px-1 text-center text-[11px] leading-[14px] text-paper">
                 {badge > 99 ? "99+" : badge}
                 <span className="sr-only">{badgeSuffix}</span>
               </span>

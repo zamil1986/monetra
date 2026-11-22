@@ -128,7 +128,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                     </tr>
                   ),
                   ...g.rows.map((t) => (
-                    <tr key={t.id} className="group hover:[&>td]:bg-panel">
+                    <tr key={t.id} data-tx={t.id} className="group hover:[&>td]:bg-panel">
                       <td className={td}>
                         <span className="flex min-w-0 items-center gap-2.5">
                           <Glyph Icon={categoryIcon(t.categoryIcon)} color={t.categoryColor} />
@@ -170,6 +170,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
                       className="flex min-w-0 items-center gap-3 border-b border-line py-3 text-inherit no-underline hover:bg-panel"
                       href={`/transactions/${t.id}`}
                       key={t.id}
+                      data-tx={t.id}
                     >
                       <Glyph Icon={categoryIcon(t.categoryIcon)} color={t.categoryColor} />
                       <span className="min-w-0 flex-1">

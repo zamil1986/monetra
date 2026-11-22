@@ -13,7 +13,7 @@ related_targets: ["prototype"]
 
 **Content:** synthetic demo data only (wallets BCA, Jago Savings, Cash, GoPay, OVO; November 2026). UI language English; amounts in id-ID format (Rp 10.322.500).
 
-**Constraints:** standard web controls only. Red means overspending or a negative balance and nothing else. Transfer is always shown as neutral, never as income or expense. Money state never relies on color alone.
+**Constraints:** standard web controls only. Red means overspending or a negative balance and nothing else. Two stated exceptions, both about the action rather than the money: a destructive control (Delete, the confirm that erases) and a validation error. An ordinary Expense is ink, never red (2026-11-22 critique). Transfer is always shown as neutral, never as income or expense. Money state never relies on color alone.
 
 ## Direction contract
 

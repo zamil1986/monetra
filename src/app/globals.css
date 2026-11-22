@@ -190,6 +190,23 @@
   --radius-4xl: 16px;
 }
 
+/* A Transaksi just recorded: its row glows yellow (selection) and fades back to the list. */
+@keyframes fresh {
+  from {
+    background-color: color-mix(in srgb, var(--color-yellow) 45%, transparent);
+  }
+}
+/* On a table row the row itself glows, so the hidden-until-hover actions cell glows with it. */
+[data-fresh] {
+  animation: fresh 2.4s var(--ease-out-expo);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-fresh] {
+    animation: none;
+    background-color: color-mix(in srgb, var(--color-yellow) 30%, transparent);
+  }
+}
+
 /* The calendar numeral voice: condensed, heavy, tabular. */
 @utility fig {
   font-stretch: 68%;

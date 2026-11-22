@@ -207,6 +207,13 @@ ThemeData monetraTheme(Brightness brightness) {
       indicatorColor: c.cobaltSoft,
       labelTextStyle: WidgetStateProperty.all(const TextStyle(fontFamily: 'Archivo', fontSize: 12, fontWeight: FontWeight.w600)),
     ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: c.ink,
+      contentTextStyle: TextStyle(fontFamily: 'Archivo', fontSize: 15, fontWeight: FontWeight.w600, color: c.paper, height: 1.35),
+      actionTextColor: c.paper,
+      behavior: SnackBarBehavior.floating,
+      shape: Border(top: BorderSide(color: C.yellow, width: 2)),
+    ),
     floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: C.yellow, foregroundColor: C.onYellow),
   );
 }

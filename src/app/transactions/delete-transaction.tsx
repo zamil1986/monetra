@@ -2,27 +2,22 @@
 import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { Button, FieldError, cx, iconButtonClass } from "@/components/ui";
+import { ConfirmDelete } from "@/components/confirm-delete";
+import { useToast } from "@/components/toast";
+import { Button, iconButtonClass } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { haptic } from "@/lib/haptics";
 import { useT } from "@/lib/i18n-client";
-import { useOnline } from "@/lib/use-online";
 
 type Props = { id: string; title: string; meta: string; amount: string; variant?: "icon" | "button"; after?: string };
 
 /** PRD 3.4 rule 10: deleting always goes through a confirmation dialog. */
 export function DeleteTransactionButton({ id, title, meta, amount, variant = "icon", after }: Props) {
   const router = useRouter();
-  const online = useOnline();
+  const toast = useToast();
   const { t } = useT();
-  const dialog = useRef<HTMLDialogElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
-  async function confirm() {
-    setBusy(true);
-    setError(null);
+  async function remove() {
     try {
       try {
         await api(`/api/transactions/${id}`, { method: "DELETE" });
@@ -31,46 +26,32 @@ export function DeleteTransactionButton({ id, title, meta, amount, variant = "ic
         if (!(e instanceof ApiError && e.status === 404)) throw e;
       }
       haptic();
-      dialog.current?.close();
+      toast({ message: t("toast.deleted"), detail: `${title} · ${amount}` });
       if (after) router.push(after);
       router.refresh();
+      return null;
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : t("del.failed"));
-    } finally {
-      setBusy(false);
+      return e instanceof ApiError ? e.message : t("del.failed");
     }
   }
 
   return (
-    <>
-      {variant === "icon" ? (
-        <>
-          <Link className={iconButtonClass()} href={`/transactions/${id}`} aria-label={t("common.edit", { name: title })}><Pencil /></Link>
-          <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: title })} onClick={() => dialog.current?.showModal()}><Trash2 /></button>
-        </>
-      ) : (
-        <Button variant="danger" onClick={() => dialog.current?.showModal()}><Trash2 />{t("del.button")}</Button>
-      )}
-      <dialog
-        ref={dialog}
-        aria-labelledby={`del-h-${id}`}
-        className={cx(
-          "w-[min(440px,calc(100vw-32px))] rounded-xl border-0 bg-surface p-6 text-left text-ink whitespace-normal shadow-[0_18px_48px_-12px_rgb(20_22_26/0.45)]",
-          "m-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-t-[10px] max-md:rounded-b-none max-md:px-4 max-md:pt-[22px] max-md:pb-[calc(18px+env(safe-area-inset-bottom))]",
-        )}
-      >
-        <h2 id={`del-h-${id}`} className="mb-2 text-xl font-bold">{t("del.title")}</h2>
-        <p className="text-ink-2">{t("del.body")}</p>
-        <div className="mt-3.5 flex items-center justify-between gap-3 rounded bg-panel px-3 py-2.5 text-sm">
-          <span><strong>{title}</strong><br /><span className="text-meta text-ink-2">{meta}</span></span>
-          <span className="fig text-xl">{amount}</span>
-        </div>
-        {error && <div className="mt-3"><FieldError message={error} /></div>}
-        <div className="mt-[22px] flex justify-end gap-2.5 max-md:flex-col-reverse max-md:[&_button]:min-h-12">
-          <Button variant="secondary" onClick={() => dialog.current?.close()}>{t("del.keep")}</Button>
-          <Button variant="dangerSolid" disabled={busy || !online} onClick={confirm}>{online ? t("del.confirm") : t("del.needsConnection")}</Button>
-        </div>
-      </dialog>
-    </>
+    <ConfirmDelete
+      title={t("del.title")}
+      body={t("del.body")}
+      item={{ title, meta, aside: amount }}
+      confirmLabel={t("del.confirm")}
+      onConfirm={remove}
+      trigger={(open) =>
+        variant === "icon" ? (
+          <>
+            <Link className={iconButtonClass()} href={`/transactions/${id}`} aria-label={t("common.edit", { name: title })}><Pencil /></Link>
+            <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: title })} onClick={open}><Trash2 /></button>
+          </>
+        ) : (
+          <Button variant="danger" onClick={open}><Trash2 />{t("del.button")}</Button>
+        )
+      }
+    />
   );
 }

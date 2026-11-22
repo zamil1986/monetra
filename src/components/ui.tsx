@@ -44,7 +44,7 @@ export function Button({
 
 export function iconButtonClass(danger = false) {
   return cx(
-    "inline-grid size-9 cursor-pointer place-items-center rounded border-0 bg-transparent text-ink-2 no-underline",
+    "inline-grid size-11 md:size-9 cursor-pointer place-items-center rounded border-0 bg-transparent text-ink-2 no-underline",
     "hover:bg-panel hover:text-ink disabled:cursor-not-allowed disabled:bg-transparent disabled:text-disabled",
     danger && "hover:bg-red-soft hover:text-red",
   );
@@ -96,7 +96,8 @@ export function Field(props: {
       )}
       {props.children}
       <FieldError message={props.error} />
-      {props.hint && <span className={hintClass} id={props.hintId}>{props.hint}</span>}
+      {/* The error says what to fix; the hint would only say it again. */}
+      {props.hint && !props.error && <span className={hintClass} id={props.hintId}>{props.hint}</span>}
     </div>
   );
 }
@@ -113,7 +114,9 @@ export function chipClass(className?: string) {
 /* Segmented control: a row of mutually exclusive buttons. */
 export const segClass = "flex overflow-hidden rounded border border-ink";
 export const segButtonClass = cx(
-  "inline-flex min-h-[46px] flex-1 cursor-pointer items-center justify-center gap-2 border-0 border-r border-ink bg-transparent px-3.5 py-2",
+  "inline-flex min-h-[46px] min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 border-0 border-r border-ink bg-transparent px-3.5 py-2",
+  // Three Indonesian labels must fit a 390px phone: tighter padding, and the icons go first.
+  "max-md:gap-1.5 max-md:px-2 max-[420px]:[&_svg]:hidden",
   "whitespace-nowrap text-[15px] font-medium text-ink-2 transition-colors duration-150 ease-out-expo last:border-r-0",
   "hover:bg-panel hover:text-ink aria-pressed:bg-ink aria-pressed:font-semibold aria-pressed:text-paper",
 );
