@@ -61,7 +61,8 @@ class LanguagePicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
     return SegmentedButton<String>(
-      showSelectedIcon: !compact,
+      // The filled ink segment already says which is chosen.
+      showSelectedIcon: false,
       style: compact ? const ButtonStyle(visualDensity: VisualDensity.compact) : null,
       segments: [
         for (final l in langs)
