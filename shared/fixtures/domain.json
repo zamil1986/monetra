@@ -489,5 +489,39 @@
         "clashId": null
       }
     ]
+  },
+  "calendar": {
+    "_doc": "The spending calendar (src/domain/calendar.ts, mobile/lib/domain/calendar.dart). grid: [month, blanks before the 1st, days, cells]; compact: [value, lang, text].",
+    "grid": [
+      ["2026-11", 6, 30, 42],
+      ["2027-02", 0, 28, 28],
+      ["2028-02", 1, 29, 35],
+      ["2026-03", 6, 31, 42]
+    ],
+    "barWidths": {"values": [0, 5000, 12000, 18000, 24000, 30000, 45000, 60000, 85000, 120000, 246000, 2500000], "widths": [0, 2, 4, 6, 8, 11, 16, 21, 30, 42, 87, 100]},
+    "compact": [
+      [0, "en", "0"],
+      [999, "en", "999"],
+      [18000, "en", "18K"],
+      [18000, "id", "18rb"],
+      [246000, "en", "246K"],
+      [1250000, "en", "1.25M"],
+      [1250000, "id", "1,25jt"],
+      [999999, "en", "1M"],
+      [1200000, "id", "1,2jt"],
+      [2500000000, "id", "2,5M"],
+      [2500000000, "en", "2.5B"],
+      [-18000, "en", "−18K"]
+    ],
+    "buckets": {
+      "timeZone": "Asia/Jakarta",
+      "movements": [
+        {"type": "EXPENSE", "amount": 18000, "occurredAt": "2026-11-20T16:30:00Z"},
+        {"type": "EXPENSE", "amount": 5000, "occurredAt": "2026-11-20T17:30:00Z"},
+        {"type": "INCOME", "amount": 100000, "occurredAt": "2026-11-21T02:00:00Z"},
+        {"type": "TRANSFER", "amount": 50000, "occurredAt": "2026-11-21T03:00:00Z"}
+      ],
+      "days": {"2026-11-20": {"expense": 18000, "income": 0, "count": 1}, "2026-11-21": {"expense": 5000, "income": 100000, "count": 3}}
+    }
   }
 }

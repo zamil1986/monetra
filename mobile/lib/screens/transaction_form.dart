@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -191,20 +192,21 @@ class _FormState extends ConsumerState<_Form> {
     return Scaffold(
       appBar: AppBar(
         title: Text(editing ? t('edit.title') : t('nav.addTransaction')),
-        actions: [if (editing) IconButton(onPressed: delete, icon: const Icon(Icons.delete_outline), tooltip: t('del.button'))],
+        actions: [if (editing) IconButton(onPressed: delete, icon: const Icon(LucideIcons.trash2), tooltip: t('del.button'))],
       ),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 120), children: [
         label(t('common.type')),
-        SegmentedButton<TransactionType>(
-          segments: [
-            ButtonSegment(value: TransactionType.expense, label: Text(t('type.EXPENSE')), enabled: !editing || !wasTransfer),
-            ButtonSegment(value: TransactionType.income, label: Text(t('type.INCOME')), enabled: !editing || !wasTransfer),
-            ButtonSegment(value: TransactionType.transfer, label: Text(t('type.TRANSFER')), enabled: !editing || wasTransfer),
+        Segmented<TransactionType>(
+          label: t('common.type'),
+          options: [
+            (value: TransactionType.expense, label: t('type.EXPENSE'), icon: LucideIcons.arrowUpRight, enabled: !editing || !wasTransfer),
+            (value: TransactionType.income, label: t('type.INCOME'), icon: LucideIcons.arrowDownLeft, enabled: !editing || !wasTransfer),
+            (value: TransactionType.transfer, label: t('type.TRANSFER'), icon: LucideIcons.arrowLeftRight, enabled: !editing || wasTransfer),
           ],
-          selected: {type},
-          onSelectionChanged: (s) => setState(() {
-            type = s.first;
-            categoryId = null; // a Kategori belongs to one type
+          value: type,
+          onChanged: (next) => setState(() {
+            if (next != type) categoryId = null; // a Kategori belongs to one type
+            type = next;
           }),
         ),
         if (editing) Padding(padding: EdgeInsets.only(top: 4), child: Text(wasTransfer ? t('m.form.transferNoChange') : t('m.form.swap'), style: TextStyle(fontSize: 13, color: context.c.ink2))),
@@ -215,8 +217,19 @@ class _FormState extends ConsumerState<_Form> {
           inputFormatters: const [AmountInputFormatter(group: true)],
           autofocus: !editing,
           onChanged: (_) => errors.containsKey('amount') ? setState(() => errors.remove('amount')) : null,
-          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, fontFeatures: figures),
-          decoration: const InputDecoration(hintText: '0'),
+          // The amount in the calendar numeral voice on a 2px ink rule, as the web form draws it.
+          style: fig(44, color: context.c.ink, weight: 900, height: 1.1),
+          decoration: InputDecoration(
+            hintText: '0',
+            prefixText: 'Rp ',
+            prefixStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: context.c.ink2),
+            filled: false,
+            contentPadding: const EdgeInsets.only(top: 4, bottom: 6),
+            border: UnderlineInputBorder(borderSide: BorderSide(color: context.c.ink, width: 2)),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.c.ink, width: 2)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.c.cobaltInk, width: 3)),
+            errorBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.c.red, width: 2)),
+          ),
         ),
         ?errorFor('amount'),
         label(type == TransactionType.transfer ? t('form.fromWallet') : t('common.wallet')),
@@ -272,6 +285,7 @@ class _FormState extends ConsumerState<_Form> {
   }
 
   Widget _choose<T>(T? value, List<(T, String, Widget)> items, ValueChanged<T?> onChanged) => DropdownButtonFormField<T>(
+        icon: const Icon(LucideIcons.chevronDown, size: 18),
         initialValue: items.any((i) => i.$1 == value) ? value : null,
         isExpanded: true,
         hint: Text(context.t('m.choose')),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
@@ -64,6 +65,7 @@ class _List extends ConsumerWidget {
         title: Text(c.name, style: TextStyle(fontWeight: FontWeight.w600, color: archived ? context.c.ink3 : context.c.ink)),
         subtitle: Text(t('tx.count', {'count': uses}), style: TextStyle(fontSize: 13, color: context.c.ink2)),
         trailing: PopupMenuButton<String>(
+          icon: const Icon(LucideIcons.ellipsisVertical),
           onSelected: (v) => switch (v) {
             'edit' => showCategorySheet(context, type, c),
             'archive' => act(() => ref.read(repositoryProvider).setCategoryArchived(c.id, true)),
@@ -92,7 +94,7 @@ class _List extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: OutlinedButton.icon(
           onPressed: () => showCategorySheet(context, type, null),
-          icon: const Icon(Icons.add),
+          icon: const Icon(LucideIcons.plus),
           label: Text(t(type == CategoryType.income ? 'm.categories.addINCOME' : 'm.categories.addEXPENSE')),
         ),
       ),
@@ -138,7 +140,7 @@ class _CategoryFormState extends ConsumerState<_CategoryForm> {
             Wrap(spacing: 4, runSpacing: 4, children: [
               for (final MapEntry(key: k, value: v) in categoryIconData.entries)
                 IconButton(
-                  tooltip: k,
+                  tooltip: t('categoryIcon.$k'),
                   isSelected: icon == k,
                   style: IconButton.styleFrom(backgroundColor: icon == k ? context.c.hue(color).withValues(alpha: 0.15) : null),
                   onPressed: () => setState(() => icon = k),

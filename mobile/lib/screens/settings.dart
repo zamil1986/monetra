@@ -49,21 +49,22 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(children: [
         const SyncBanner(),
         ListTile(
-          leading: const Icon(Icons.person_outline),
+          leading: const Icon(LucideIcons.user),
           title: Text(l?.profileName ?? '–', style: const TextStyle(fontWeight: FontWeight.w600)),
           subtitle: Text(l?.profileEmail ?? ''),
         ),
         ListTile(
-          leading: const Icon(Icons.category_outlined),
+          leading: const Icon(LucideIcons.tags),
           title: Text(t('nav.categories')),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: const Icon(LucideIcons.chevronRight),
           onTap: () => context.push('/categories'),
         ),
         ListTile(
-          leading: const Icon(Icons.schedule),
+          leading: const Icon(LucideIcons.clock),
           title: Text(t('settings.timezone')),
           subtitle: Text(t('settings.timezoneSub')),
           trailing: DropdownButton<String>(
+            icon: const Icon(LucideIcons.chevronDown, size: 18),
             value: _timezones.containsKey(l?.timezone) ? l!.timezone : null,
             hint: Text(l?.timezone ?? ''),
             underline: const SizedBox.shrink(),
@@ -73,20 +74,20 @@ class SettingsScreen extends ConsumerWidget {
         ),
         // Shows at once, even offline; the Akun and the web follow at the next sync (ADR 0006).
         ListTile(
-          leading: const Icon(Icons.translate),
+          leading: const Icon(LucideIcons.languages),
           title: Text(t('lang.label')),
           subtitle: Text(t('settings.languageSub')),
         ),
         const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: LanguagePicker(forAccount: true)),
         // This phone only, never synced: the web keeps its own (ADR 0007).
         ListTile(
-          leading: const Icon(Icons.contrast),
+          leading: const Icon(LucideIcons.sunMoon),
           title: Text(t('theme.label')),
           subtitle: Text(t('settings.themeSub')),
         ),
         const Padding(padding: EdgeInsets.fromLTRB(16, 0, 16, 8), child: ThemePicker()),
         ListTile(
-          leading: const Icon(Icons.lock_outline),
+          leading: const Icon(LucideIcons.lockKeyhole),
           title: Text(t('settings.changePassword')),
           onTap: () => showDialog(
               context: context,
@@ -95,7 +96,7 @@ class SettingsScreen extends ConsumerWidget {
         ),
         const Divider(),
         ListTile(
-          leading: Icon(state == SyncState.syncing ? Icons.sync : pending > 0 ? Icons.cloud_upload_outlined : Icons.cloud_done_outlined),
+          leading: Icon(state == SyncState.syncing ? LucideIcons.refreshCw : pending > 0 ? LucideIcons.cloudUpload : LucideIcons.cloudCheck),
           title: Text(state == SyncState.syncing
               ? t('m.sync.syncing')
               : pending > 0
@@ -111,7 +112,7 @@ class SettingsScreen extends ConsumerWidget {
         ],
         const Divider(),
         ListTile(
-          leading: const Icon(Icons.system_update_outlined),
+          leading: const Icon(LucideIcons.download),
           title: Text(t('m.settings.version')),
           subtitle: Text(version ?? ''),
           trailing: TextButton(onPressed: () => checkForUpdate(context, ref, version, quiet: false), child: Text(t('m.settings.check'))),
@@ -185,7 +186,7 @@ class _ChangePasswordState extends State<_ChangePassword> {
 class ThemePicker extends ConsumerWidget {
   const ThemePicker({super.key});
 
-  static const _icons = {'system': Icons.brightness_auto_outlined, 'light': Icons.light_mode_outlined, 'dark': Icons.dark_mode_outlined};
+  static const _icons = {'system': LucideIcons.monitor, 'light': LucideIcons.sun, 'dark': LucideIcons.moon};
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
