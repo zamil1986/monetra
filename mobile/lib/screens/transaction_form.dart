@@ -197,17 +197,10 @@ class _FormState extends ConsumerState<_Form> {
         TextField(
           controller: amount,
           keyboardType: TextInputType.number,
-          inputFormatters: const [AmountInputFormatter()],
+          inputFormatters: const [AmountInputFormatter(group: true)],
           autofocus: !editing,
           style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, fontFeatures: figures),
           decoration: const InputDecoration(hintText: '0'),
-          onChanged: (v) {
-            final p = parseRupiah(v);
-            if (p is Ok<int> && p.value >= 0) {
-              final g = groupDigits(p.value);
-              if (g != v) amount.value = TextEditingValue(text: g, selection: TextSelection.collapsed(offset: g.length));
-            }
-          },
         ),
         ?errorFor('amount'),
         label(type == TransactionType.transfer ? t('form.fromWallet') : t('common.wallet')),
