@@ -143,6 +143,9 @@ class _FormState extends ConsumerState<_Form> {
         messenger.showSnackBar(SnackBar(
           content: Text('${what[0].toUpperCase()}${what.substring(1)}\n$where'),
           duration: const Duration(seconds: 6),
+          // A snackbar with an action stays up forever unless told otherwise; this one goes by itself.
+          persist: false,
+          showCloseIcon: true,
           action: editing ? null : SnackBarAction(label: t('toast.undo'), onPressed: () => repository.deleteTransaction(id)),
         ));
       case Err(:final error):
