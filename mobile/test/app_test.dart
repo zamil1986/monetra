@@ -123,6 +123,11 @@ void main() {
     expect(find.textContaining('Saved expense of Rp 18.000.'), findsOneWidget);
     expect(find.textContaining('Saved on this phone'), findsOneWidget);
     expect(find.text('Undo'), findsOneWidget);
+    expect(find.byIcon(Icons.close), findsOneWidget); // a visible way to close it now
+    // ...and left alone it goes by itself, Undo or not.
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsNothing);
     final outbox = await tester.runAsync(() => db.select(db.outbox).get());
     expect(outbox, hasLength(1));
     expect(outbox!.single.body, contains('"amount":18000'));
