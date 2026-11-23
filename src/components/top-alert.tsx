@@ -1,25 +1,40 @@
 "use client";
 import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useT } from "@/lib/i18n-client";
 import { TONES, cx } from "./ui";
 
+/** How long a TopAlert stays on screen; the Android app uses the same (mobile/lib/ui/widgets.dart). */
+export const TOP_ALERT_MS = 8000;
+
 /**
  * A refusal that drops in at the top of the page instead of pushing the list apart: the Arsip that was
- * turned down, with what to do about it. It stays until closed, one of its links is followed, or the page
- * is left, because the way out it offers must not vanish before it is read. Success stays in the toast.
+ * turned down, with what to do about it. It goes by itself after TOP_ALERT_MS, or sooner when closed,
+ * when one of its links is followed, or when the page is left. Success stays in the toast.
  */
 export function TopAlert({ children, onDismiss }: { children: ReactNode; onDismiss: () => void }) {
   const { t } = useT();
   const { state } = useSidebar();
+  // The latest callback, so a parent re-render (router.refresh) doesn't restart the countdown.
+  const dismiss = useRef(onDismiss);
+  useEffect(() => {
+    dismiss.current = onDismiss;
+  });
   // Leaving closes it. The Add sheet opens over this page without unmounting it, so watch the path.
   const path = usePathname();
   const openedOn = useRef(path);
   useEffect(() => {
-    if (path !== openedOn.current) onDismiss();
-  }, [path, onDismiss]);
+    if (path !== openedOn.current) dismiss.current();
+  }, [path]);
+  // The countdown waits while the pointer or keyboard focus is on it, so a link can still be reached.
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    if (held) return;
+    const timer = setTimeout(() => dismiss.current(), TOP_ALERT_MS);
+    return () => clearTimeout(timer);
+  }, [held]);
   const { box, Icon } = TONES.warn;
   // Desktop centers it over the content column, past the cobalt rail however wide the rail is now.
   const rail = state === "collapsed" ? "var(--sidebar-width-icon)" : "var(--sidebar-width)";
@@ -31,6 +46,10 @@ export function TopAlert({ children, onDismiss }: { children: ReactNode; onDismi
     >
       <div
         role="alert"
+        onPointerEnter={() => setHeld(true)}
+        onPointerLeave={() => setHeld(false)}
+        onFocus={() => setHeld(true)}
+        onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setHeld(false); }}
         className={cx(
           "pointer-events-auto flex w-full max-w-[560px] animate-drop items-start gap-2.5 rounded border py-1.5 pr-1 pl-3.5 text-sm shadow-[0_12px_32px_-12px_rgba(20,22,26,0.4)] motion-reduce:animate-none [&_a]:text-inherit",
           box,

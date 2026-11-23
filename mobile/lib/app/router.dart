@@ -29,7 +29,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordScreen()),
-      GoRoute(path: '/transactions/new', builder: (_, _) => const TransactionFormScreen()),
+      GoRoute(path: '/transactions/new', builder: (_, s) => TransactionFormScreen(type: s.uri.queryParameters['type'])),
       GoRoute(path: '/transactions/:id', builder: (_, s) => TransactionFormScreen(id: s.pathParameters['id'])),
       GoRoute(path: '/categories', builder: (_, _) => const CategoriesScreen()),
       StatefulShellRoute.indexedStack(

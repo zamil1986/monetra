@@ -10,7 +10,9 @@ import 'package:monetra/app/providers.dart';
 import 'package:monetra/app/router.dart';
 import 'package:monetra/data/api.dart';
 import 'package:monetra/data/database.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:monetra/ui/theme.dart';
+import 'package:monetra/ui/widgets.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
 class MemoryTokens extends TokenStore {
@@ -131,6 +133,46 @@ void main() {
     final outbox = await tester.runAsync(() => db.select(db.outbox).get());
     expect(outbox, hasLength(1));
     expect(outbox!.single.body, contains('"amount":18000'));
+    await tester.runAsync(db.close);
+    container.dispose();
+  });
+
+  testWidgets('a refused Arsip drops in at the top with the ways out, then goes by itself', (tester) async {
+    final (container, db) = await pumpApp(tester);
+    await tester.tap(find.text('Wallets').last);
+    await tester.pumpAndSettle();
+
+    Future<void> archiveTunai() async {
+      await tester.tap(find.byIcon(LucideIcons.ellipsisVertical).first);
+      await tester.pumpAndSettle();
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Archive'));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      });
+      await tester.pumpAndSettle();
+    }
+
+    await archiveTunai();
+    final message = find.textContaining('Tunai still holds Rp 75.000.');
+    expect(message, findsOneWidget);
+    expect(find.text('Record it as an expense'), findsOneWidget);
+    // Under the app bar, not at the bottom like a snackbar.
+    expect(tester.getTopLeft(message).dy, lessThan(300));
+    expect(find.byType(SnackBar), findsNothing);
+
+    await tester.pump(topAlertDuration);
+    await tester.pumpAndSettle();
+    expect(message, findsNothing);
+
+    // Its Transfer opens the form on Transfer, and the alert goes with it.
+    await archiveTunai();
+    await tester.tap(find.text('Transfer the balance out'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('still holds'), findsNothing);
+    expect(find.text('To wallet'), findsOneWidget);
+    // Close the form first: its ledger stream would keep the database from closing.
+    Navigator.of(tester.element(find.text('To wallet'))).pop();
+    await tester.pumpAndSettle();
     await tester.runAsync(db.close);
     container.dispose();
   });

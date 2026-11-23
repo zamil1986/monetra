@@ -54,7 +54,7 @@ class _List extends ConsumerWidget {
     final t = context.t;
     Future<void> act(Future<Result<void>> Function() f) async {
       final r = await f();
-      if (r is Err<void> && context.mounted) showMessage(context, r.error.text(context.t));
+      if (r is Err<void> && context.mounted) showTopAlert(context, r.error.text(context.t));
     }
 
     Widget tile(CategoryRow c) {
