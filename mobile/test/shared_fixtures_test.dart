@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:monetra/domain/balance.dart';
+import 'package:monetra/domain/calendar.dart';
 import 'package:monetra/domain/category_rules.dart';
 import 'package:monetra/domain/money.dart';
 import 'package:monetra/domain/period.dart';
@@ -99,5 +100,35 @@ void main() {
         expect(hit?.id, c['clashId']);
       });
     }
+  });
+
+  group('spending calendar', () {
+    final cal = fixture['calendar'] as Map<String, dynamic>;
+    for (final g in (cal['grid'] as List).cast<List>()) {
+      test('lays out ${g[0]}', () {
+        final grid = monthGrid(g[0] as String);
+        expect([grid.indexWhere((d) => d != null), grid.whereType<String>().length, grid.length], [g[1], g[2], g[3]]);
+      });
+    }
+    test('sizes the day bars against the busy days', () {
+      final bars = cal['barWidths'] as Map<String, dynamic>;
+      final values = (bars['values'] as List).cast<int>();
+      final cap = barCap(values);
+      expect(values.map((v) => barWidth(v, cap)).toList(), bars['widths']);
+    });
+    for (final c in (cal['compact'] as List).cast<List>()) {
+      test('writes ${c[0]} in ${c[1]} as ${c[2]}', () => expect(compactRupiah(c[0] as int, c[1] as String), c[2]));
+    }
+    test('buckets by local day; a Transfer counts but moves neither total', () {
+      final b = cal['buckets'] as Map<String, dynamic>;
+      final days = bucketByDay(
+          list(b['movements']).map((m) => (
+                type: transactionTypeFrom(m['type'] as String),
+                amount: m['amount'] as int,
+                occurredAt: DateTime.parse(m['occurredAt'] as String),
+              )),
+          b['timeZone'] as String);
+      expect({for (final e in days.entries) e.key: {'expense': e.value.expense, 'income': e.value.income, 'count': e.value.count}}, b['days']);
+    });
   });
 }

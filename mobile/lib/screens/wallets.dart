@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/providers.dart';
@@ -23,21 +24,31 @@ class WalletsScreen extends ConsumerWidget {
     final t = context.t;
     return Scaffold(
       appBar: AppBar(title: Text(t('nav.wallets'))),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'wallet',
-        onPressed: () => showWalletSheet(context, ref, null),
-        icon: const Icon(Icons.add),
-        label: Text(t('m.wallets.add')),
-      ),
       body: ledger.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ReadError(e),
         data: (l) => ListView(padding: const EdgeInsets.only(bottom: 96), children: [
           const SyncBanner(),
           SectionTitle(t('dash.totalBalance'), note: t('m.wallets.activeOnly')),
-          Padding(padding: pad, child: Money(l.total, size: 32, weight: FontWeight.w700)),
+          Padding(
+            padding: pad,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(formatRupiah(l.total), style: fig(48, color: l.total < 0 ? context.c.red : context.c.ink, weight: 900, height: 1.05)),
+            ),
+          ),
           SectionTitle(t('categories.active')),
           for (final w in l.activeWallets) _WalletTile(w, l),
+          // One Add on this screen, at the end of the list it adds to; the tab bar's Add is for Transaksi.
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: OutlinedButton.icon(
+              onPressed: () => showWalletSheet(context, ref, null),
+              icon: const Icon(LucideIcons.plus),
+              label: Text(t('m.wallets.add')),
+            ),
+          ),
           if (l.wallets.any((w) => w.archivedAt != null)) ...[
             SectionTitle(t('common.archived'), note: t('m.wallets.archivedNote')),
             for (final w in l.wallets.where((w) => w.archivedAt != null)) _WalletTile(w, l),
@@ -70,6 +81,7 @@ class _WalletTile extends ConsumerWidget {
       trailing: Row(mainAxisSize: MainAxisSize.min, children: [
         Money(l.balances[w.id] ?? 0),
         PopupMenuButton<String>(
+          icon: const Icon(LucideIcons.ellipsisVertical),
           onSelected: (v) => switch (v) {
             'edit' => showWalletSheet(context, ref, w),
             'archive' => act(() => ref.read(repositoryProvider).setWalletArchived(w.id, true)),
@@ -164,7 +176,7 @@ class ColorPicker extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(color: context.c.hue(c), shape: BoxShape.circle, border: Border.all(color: c == value ? context.c.ink : Colors.transparent, width: 3)),
-                child: c == value ? const Icon(Icons.check, color: Colors.white, size: 18) : null,
+                child: c == value ? const Icon(LucideIcons.check, color: Colors.white, size: 18) : null,
               ),
             ),
           ),

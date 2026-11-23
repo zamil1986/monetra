@@ -6,10 +6,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { balancesByWallet, totalBalance } from "./balance";
+import { barCap, barWidth, bucketByDay, compactRupiah, monthGrid } from "./calendar";
 import { findNameClash, type ExistingCategory } from "./category-rules";
 import { formatRupiah, keepAmountTyping, parseRupiah, regroupAmountTyping } from "./money";
 import { cashFlow, periodRange, type Period } from "./period";
-import type { CategoryType, Movement, WalletState } from "./types";
+import type { CategoryType, Movement, TransactionType, WalletState } from "./types";
 
 type Fixture = {
   balances: { name: string; wallets: WalletState[]; movements: Movement[]; expected: { byWallet: Record<string, number>; total: number } }[];
@@ -17,6 +18,12 @@ type Fixture = {
   periods: { name: string; period: Period; now: string; timeZone: string; expected: { from: string; to: string; start: string; endExclusive: string } }[];
   rupiah: { format: [number, string][]; parse: [string, number | null][]; keepTyped: [string, boolean, string][]; regroupTyped: [string, string, number, boolean, string, number][] };
   categoryNameClash: { existing: ExistingCategory[]; cases: { name: string; input: string; type: CategoryType; selfId: string | null; clashId: string | null }[] };
+  calendar: {
+    grid: [string, number, number, number][];
+    barWidths: { values: number[]; widths: number[] };
+    compact: [number, "en" | "id", string][];
+    buckets: { timeZone: string; movements: { type: TransactionType; amount: number; occurredAt: string }[]; days: Record<string, { expense: number; income: number; count: number }> };
+  };
 };
 
 const fixture: Fixture = JSON.parse(readFileSync(join(process.cwd(), "shared/fixtures/domain.json"), "utf8"));
@@ -59,5 +66,22 @@ describe("shared fixtures: Kategori names", () => {
   const { existing, cases } = fixture.categoryNameClash;
   it.each(cases.map((c) => [c.name, c] as const))("%s", (_, c) => {
     expect(findNameClash(c.input, c.type, existing, c.selfId)?.id ?? null).toBe(c.clashId);
+  });
+});
+
+describe("shared fixtures: spending calendar", () => {
+  const { grid, barWidths, compact, buckets } = fixture.calendar;
+  it.each(grid)("lays out %s: %d blanks, %d days, %d cells", (month, blanks, days, cells) => {
+    const g = monthGrid(month);
+    expect([g.findIndex(Boolean), g.filter(Boolean).length, g.length]).toEqual([blanks, days, cells]);
+  });
+  it("sizes the day bars against the busy days", () => {
+    const cap = barCap(barWidths.values);
+    expect(barWidths.values.map((v) => barWidth(v, cap))).toEqual(barWidths.widths);
+  });
+  it.each(compact)("writes %d in %s as %s", (value, lang, text) => expect(compactRupiah(value, lang)).toBe(text));
+  it("buckets by local day; a Transfer counts but moves neither total", () => {
+    const moves = buckets.movements.map((m) => ({ ...m, occurredAt: new Date(m.occurredAt) }));
+    expect(bucketByDay(moves, buckets.timeZone)).toEqual(buckets.days);
   });
 });

@@ -46,13 +46,14 @@ Future<AppDatabase> seeded() async {
   return db;
 }
 
-Future<(ProviderContainer, AppDatabase)> pumpApp(WidgetTester tester, {String? language}) async {
+Future<(ProviderContainer, AppDatabase)> pumpApp(WidgetTester tester, {String? language, String? theme, double height = 1800}) async {
   // A phone-width screen, tall enough that every section is built.
   tester.view.devicePixelRatio = 2.75;
-  tester.view.physicalSize = const Size(393 * 2.75, 1800 * 2.75);
+  tester.view.physicalSize = Size(393 * 2.75, height * 2.75);
   addTearDown(tester.view.reset);
   final db = await seeded();
   if (language != null) await db.putSetting('profile.language', language);
+  if (theme != null) await db.putSetting('device.theme', theme);
   final container = ProviderContainer(overrides: [
     databaseProvider.overrideWithValue(db),
     // Nothing listens on this port: every request fails as if there were no signal.
@@ -91,7 +92,7 @@ void main() {
     expect(find.text('Total balance'), findsOneWidget);
     expect(find.text('Rp 2.075.000'), findsOneWidget); // 100.000 − 25.000 + 2.000.000
     expect(find.text('Rp 75.000'), findsOneWidget); // Tunai
-    expect(find.text('Ojek'), findsOneWidget);
+    expect(find.text('Ojek'), findsWidgets); // in the chosen day under the month sheet and in Recent
     await tester.runAsync(db.close);
     container.dispose();
   });
@@ -116,7 +117,7 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    expect(find.text('Kopi susu'), findsOneWidget);
+    expect(find.text('Kopi susu'), findsWidgets);
     expect(find.text('Rp 2.057.000'), findsOneWidget);
     // Saving says so, says where it is, and offers Undo.
     expect(find.textContaining('Saved expense of Rp 18.000.'), findsOneWidget);

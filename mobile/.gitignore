@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Screens rendered for review (dart_test.yaml), not checked in.
+test/goldens/

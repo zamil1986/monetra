@@ -1,0 +1,6 @@
+tags:
+  # Renders whole screens to PNG for a person to look at (there is no emulator on every machine).
+  # They follow today's date, so they are not a pass/fail check. Make them with:
+  #   flutter test --tags golden --run-skipped --update-goldens
+  golden:
+    skip: "Screens for review, not a check: see dart_test.yaml"

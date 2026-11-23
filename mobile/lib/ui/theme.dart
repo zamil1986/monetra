@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// The fixed tokens: the cobalt band, yellow, and the ink that sits on yellow. Same in both Themes.
 abstract final class C {
@@ -130,6 +131,19 @@ ThemeMode themeModeOf(String? pref) => switch (pref) {
 /// Figures use tabular digits so columns of rupiah line up.
 const figures = [FontFeature.tabularFigures()];
 
+/// The calendar numeral voice, as the web's `fig` utility (src/app/globals.css): Archivo condensed to
+/// 68% width, heavy, tabular. Every amount and every date number in the app is set in it.
+TextStyle fig(double size, {Color? color, double weight = 800, double? height}) => TextStyle(
+      fontFamily: 'Archivo',
+      fontSize: size,
+      // A variable face: the axes carry the voice, fontWeight keeps Flutter's own weight matching in step.
+      fontVariations: [const FontVariation('wdth', 68), FontVariation('wght', weight)],
+      fontWeight: FontWeight.values[((weight / 100).round() - 1).clamp(0, 8)],
+      fontFeatures: figures,
+      color: color,
+      height: height,
+    );
+
 ThemeData monetraTheme(Brightness brightness) {
   final c = brightness == Brightness.dark ? MonetraColors.dark : MonetraColors.light;
   final dark = brightness == Brightness.dark;
@@ -202,10 +216,26 @@ ThemeData monetraTheme(Brightness brightness) {
     ),
     textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: c.cobaltInk)),
     dividerTheme: DividerThemeData(color: c.line, space: 1, thickness: 1),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: c.surface,
-      indicatorColor: c.cobaltSoft,
-      labelTextStyle: WidgetStateProperty.all(const TextStyle(fontFamily: 'Archivo', fontSize: 12, fontWeight: FontWeight.w600)),
+    // The back arrow in the same Lucide stroke as every other icon in the app.
+    actionIconTheme: ActionIconThemeData(backButtonIconBuilder: (_) => const Icon(LucideIcons.arrowLeft)),
+    // Square-cornered like the web's dialogs, closed by the 2px ink top rule (drawn in [ruledDialogShape]).
+    dialogTheme: DialogThemeData(
+      backgroundColor: c.paper,
+      shape: ruledDialogShape(c),
+      surfaceTintColor: Colors.transparent,
+      titleTextStyle: TextStyle(fontFamily: 'Archivo', fontSize: 20, fontWeight: FontWeight.w700, color: c.ink),
+      contentTextStyle: TextStyle(fontFamily: 'Archivo', fontSize: 15, height: 1.45, color: c.ink2),
+    ),
+    // One choice out of a few, as the web's segClass: ink outline, the chosen segment filled ink.
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? c.ink : Colors.transparent),
+        foregroundColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? c.paper : c.ink2),
+        iconColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? c.paper : c.ink2),
+        side: WidgetStateProperty.all(BorderSide(color: c.ink)),
+        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(4))),
+        textStyle: WidgetStateProperty.all(const TextStyle(fontFamily: 'Archivo', fontSize: 15, fontWeight: FontWeight.w600)),
+      ),
     ),
     snackBarTheme: SnackBarThemeData(
       backgroundColor: c.ink,
@@ -217,3 +247,7 @@ ThemeData monetraTheme(Brightness brightness) {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(backgroundColor: C.yellow, foregroundColor: C.onYellow),
   );
 }
+
+/// A dialog's outline: square corners, a hairline round it and the 2px ink rule along the top.
+ShapeBorder ruledDialogShape(MonetraColors c) =>
+    Border(top: BorderSide(color: c.ink, width: 2), left: BorderSide(color: c.line), right: BorderSide(color: c.line), bottom: BorderSide(color: c.line));
