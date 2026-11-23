@@ -1,4 +1,5 @@
 import { NotSignedIn } from "@/components/not-signed-in";
+import { instantToLocal } from "@/domain/local-time";
 import { listCategories } from "@/server/categories";
 import { titled } from "@/server/i18n";
 import { currentUser } from "@/server/page-session";
@@ -10,5 +11,13 @@ export const dynamic = "force-dynamic";
 export default async function CategoriesPage() {
   const user = await currentUser();
   if (!user) return <NotSignedIn />;
-  return <CategoriesManager categories={await listCategories(user.id)} />;
+  const categories = await listCategories(user.id);
+  return (
+    <CategoriesManager
+      categories={categories.map(({ lastUsedAt, ...c }) => ({
+        ...c,
+        lastUsedOn: lastUsedAt ? instantToLocal(lastUsedAt, user.timezone).date : null,
+      }))}
+    />
+  );
 }
