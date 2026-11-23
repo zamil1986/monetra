@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 
+import 'package:monetra/ui/widgets.dart' show topAlertDuration;
+
 import 'app_test.dart' show pumpApp;
 
 Future<void> loadFont(String family, String asset) async {
@@ -28,6 +30,7 @@ void main() {
     final (container, db) = await pumpApp(tester, theme: theme, height: height);
     await steps();
     await expectLater(find.byType(MaterialApp), matchesGoldenFile('goldens/${name}_$theme.png'));
+    await tester.pump(topAlertDuration); // let a top alert's countdown run out
     await tester.pumpWidget(const SizedBox());
     await tester.runAsync(() async {
       container.dispose();
@@ -71,6 +74,18 @@ void main() {
 
     testWidgets('Wallets, $theme', (tester) => shoot(tester, 'wallets', theme, () async {
           await tester.tap(find.text('Wallets').last);
+          await tester.pumpAndSettle();
+        }));
+
+    testWidgets('Archive refused, $theme', (tester) => shoot(tester, 'archive_refused', theme, () async {
+          await tester.tap(find.text('Wallets').last);
+          await tester.pumpAndSettle();
+          await tester.tap(find.byIcon(LucideIcons.ellipsisVertical).first);
+          await tester.pumpAndSettle();
+          await tester.runAsync(() async {
+            await tester.tap(find.text('Archive'));
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          });
           await tester.pumpAndSettle();
         }));
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -296,5 +298,103 @@ Future<bool> confirmDelete(BuildContext context, {required String title, require
 /// Shows a domain refusal or any other message at the bottom of the screen.
 void showMessage(BuildContext context, String message) =>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+
+/// How long a top alert stays on screen; the web's TopAlert uses the same (src/components/top-alert.tsx).
+const topAlertDuration = Duration(seconds: 8);
+
+VoidCallback? _closeTopAlert;
+
+/// A refused Arsip, dropped in at the top under the app bar with what to do about it, as on the web.
+/// It goes by itself after [topAlertDuration], or sooner on ✕, an action, or a newer alert replacing it.
+/// Success stays in the snackbar at the bottom.
+void showTopAlert(BuildContext context, String message, {List<(String, VoidCallback)> actions = const []}) {
+  _closeTopAlert?.call();
+  final overlay = Overlay.of(context, rootOverlay: true);
+  late final OverlayEntry entry;
+  late final Timer timer;
+  void close() {
+    timer.cancel();
+    if (entry.mounted) entry.remove();
+    if (_closeTopAlert == close) _closeTopAlert = null;
+  }
+
+  entry = OverlayEntry(
+    builder: (_) => _TopAlert(
+      message: message,
+      actions: [for (final (label, run) in actions) (label, () { close(); run(); })],
+      onClose: close,
+    ),
+  );
+  timer = Timer(topAlertDuration, close);
+  _closeTopAlert = close;
+  overlay.insert(entry);
+}
+
+class _TopAlert extends StatelessWidget {
+  const _TopAlert({required this.message, required this.actions, required this.onClose});
+  final String message;
+  final List<(String, VoidCallback)> actions;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    return Positioned(
+      top: MediaQuery.paddingOf(context).top + kToolbarHeight + 8,
+      left: 16,
+      right: 16,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: still ? 1 : 0, end: 1),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutExpo,
+        builder: (_, v, child) => Opacity(opacity: v, child: Transform.translate(offset: Offset(0, (1 - v) * -8), child: child)),
+        child: Semantics(
+          liveRegion: true,
+          child: Material(
+            color: context.c.amberSoft,
+            elevation: 3,
+            shadowColor: Colors.black.withValues(alpha: 0.35),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: context.c.amber.withValues(alpha: 0.5))),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 4, 4, 4),
+              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Padding(padding: const EdgeInsets.only(top: 12), child: Icon(LucideIcons.triangleAlert, size: 18, color: context.c.amber)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(message, style: TextStyle(color: context.c.ink, fontSize: 14, fontWeight: FontWeight.w600, height: 1.35)),
+                      if (actions.isNotEmpty)
+                        Wrap(spacing: 4, children: [
+                          for (final (label, run) in actions)
+                            TextButton(
+                              onPressed: run,
+                              style: TextButton.styleFrom(
+                                foregroundColor: context.c.amber,
+                                padding: const EdgeInsets.symmetric(horizontal: 0),
+                                minimumSize: const Size(0, 40),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                textStyle: const TextStyle(fontFamily: 'Archivo', fontSize: 14, fontWeight: FontWeight.w700),
+                              ),
+                              child: Padding(padding: const EdgeInsets.only(right: 12), child: Text(label)),
+                            ),
+                        ]),
+                    ]),
+                  ),
+                ),
+                IconButton(
+                  onPressed: onClose,
+                  tooltip: context.t('toast.dismiss'),
+                  icon: Icon(LucideIcons.x, size: 18, color: context.c.ink2),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 const pad = EdgeInsets.symmetric(horizontal: 16);

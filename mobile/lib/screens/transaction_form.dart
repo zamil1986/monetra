@@ -21,8 +21,10 @@ import '../ui/widgets.dart';
 
 /// Add or edit a Transaksi (PRD 3.4). Saved on the phone at once; the sync follows.
 class TransactionFormScreen extends ConsumerWidget {
-  const TransactionFormScreen({super.key, this.id});
+  const TransactionFormScreen({super.key, this.id, this.type});
   final String? id;
+  /// The type a new Transaksi opens on (`?type=transfer`), as the web's /transactions/new does.
+  final String? type;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,16 +37,17 @@ class TransactionFormScreen extends ConsumerWidget {
         if (id != null && existing == null) {
           return Scaffold(appBar: AppBar(), body: Notice(context.t('m.tx.deleted'), tone: NoticeTone.warn));
         }
-        return _Form(ledger: l, existing: existing);
+        return _Form(ledger: l, existing: existing, type: type);
       },
     );
   }
 }
 
 class _Form extends ConsumerStatefulWidget {
-  const _Form({required this.ledger, required this.existing});
+  const _Form({required this.ledger, required this.existing, this.type});
   final Ledger ledger;
   final TransactionRow? existing;
+  final String? type;
   @override
   ConsumerState<_Form> createState() => _FormState();
 }
@@ -79,7 +82,7 @@ class _FormState extends ConsumerState<_Form> {
       toWalletId = t.toWalletId;
       categoryId = t.categoryId;
     } else {
-      type = TransactionType.expense;
+      type = TransactionType.values.where((v) => v.name == widget.type).firstOrNull ?? TransactionType.expense;
       // The Dompet used last, as the web opens it (src/app/transactions/new/load.ts); the ledger is newest first.
       final last = l.transactions.firstOrNull?.walletId;
       walletId = l.activeWallets.any((w) => w.id == last) ? last : l.activeWallets.firstOrNull?.id;

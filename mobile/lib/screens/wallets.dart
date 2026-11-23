@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../app/providers.dart';
 import '../data/database.dart';
@@ -71,7 +72,14 @@ class _WalletTile extends ConsumerWidget {
     final t = context.t;
     Future<void> act(Future<Result<void>> Function() f) async {
       final r = await f();
-      if (r is Err<void> && context.mounted) showMessage(context, r.error.text(context.t));
+      if (r is! Err<void> || !context.mounted) return;
+      // A Saldo that blocks the Arsip comes with the two ways to bring it to Rp 0, as on the web.
+      showTopAlert(context, r.error.text(context.t), actions: [
+        if (r.error.code == 'WALLET_NOT_EMPTY') ...[
+          (t('wallets.transferOut'), () => context.push('/transactions/new?type=transfer')),
+          (t('wallets.recordExpense'), () => context.push('/transactions/new')),
+        ],
+      ]);
     }
 
     return ListTile(
