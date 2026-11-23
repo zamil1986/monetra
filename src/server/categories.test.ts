@@ -129,3 +129,28 @@ describe("deleting a Kategori", () => {
     await expect(updateCategory(budi.id, makanan.id, { name: "Punya Budi" })).rejects.toMatchObject({ status: 404 });
   });
 });
+
+describe("a Kategori's usage", () => {
+  it("counts the Transaksi that use it and remembers the latest one", async () => {
+    const user = await newUser();
+    const makanan = await byName(user.id, "Makanan");
+    await spend(user.id, makanan.id);
+    const latest = await spend(user.id, makanan.id);
+    const used = await byName(user.id, "Makanan");
+    expect(used).toMatchObject({ transactionCount: 2, deletable: false });
+    expect(used.lastUsedAt?.getTime()).toBe(new Date(latest.occurredAt).getTime());
+  });
+
+  it("is zero, with no last use, while nothing uses it", async () => {
+    const user = await newUser();
+    expect(await byName(user.id, "Belanja")).toMatchObject({ transactionCount: 0, lastUsedAt: null, deletable: true });
+  });
+
+  it("leaves out deleted Transaksi", async () => {
+    const user = await newUser();
+    const makanan = await byName(user.id, "Makanan");
+    const t = await spend(user.id, makanan.id);
+    await deleteTransaction(user.id, t.id);
+    expect(await byName(user.id, "Makanan")).toMatchObject({ transactionCount: 0, lastUsedAt: null });
+  });
+});

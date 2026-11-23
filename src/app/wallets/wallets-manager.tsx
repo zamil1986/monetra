@@ -22,6 +22,21 @@ import { longDate } from "@/lib/dates";
 import { useT } from "@/lib/i18n-client";
 import { useOnline } from "@/lib/use-online";
 
+/*
+ * From the `wide` breakpoint the list lays out as columns: one grid for the whole page, which every
+ * section, the column heads and each row join through subgrid, so the columns line up across the
+ * active and archived rows even though the Unarchive button is wider than the icon pair. Below it,
+ * each row is the stacked one the phone shows.
+ */
+const wideGrid =
+  "wide:grid wide:max-w-none wide:grid-cols-[minmax(180px,1fr)_minmax(160px,1.5fr)_auto_auto_auto_auto] wide:gap-x-6 wide:gap-y-9";
+const sub = "wide:col-span-full wide:grid wide:grid-cols-subgrid";
+const full = "wide:col-span-full";
+const headRow = "hidden py-2 text-meta font-semibold text-ink-2";
+const wideCell = "hidden wide:flex";
+const barTrack = "h-1.5 min-w-0 flex-1 bg-panel";
+const barFill = "h-1.5 w-[calc(var(--p)*1%)] min-w-[3px] bg-(--c)";
+
 export type WalletRow = {
   id: string;
   name: string;
@@ -91,22 +106,32 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
         <Button onClick={() => openForm(null)}><Plus />{t("wallets.new")}</Button>
       </PageHead>
       <Page>
-        <div className="flex max-w-[760px] flex-col gap-8 md:gap-9">
-          <section aria-labelledby="act-h">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+        <div className={cx("flex max-w-[760px] flex-col gap-8 md:gap-9", wideGrid)}>
+          <section aria-labelledby="act-h" className={sub}>
+            <div className={cx("flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5", full)}>
               <h2 id="act-h" className={h2}>{t("dash.totalBalance")}</h2>
               <span className="text-meta text-ink-2">{t("wallets.activeCount", { count: active.length })}</span>
             </div>
-            <p className={cx("fig mt-1 mb-[18px] text-[52px] leading-none md:text-[72px]", totalBalance < 0 && "text-red")}>
+            <p className={cx("fig mt-1 mb-[18px] text-[52px] leading-none md:text-[72px]", full, totalBalance < 0 && "text-red")}>
               <span className="mr-[0.18em] text-[0.5em] font-bold">{totalBalance < 0 ? "−Rp" : "Rp"}</span>
               {Math.abs(totalBalance).toLocaleString("id-ID")}
             </p>
-            <div className={rowsClass}>
+            {/* The column heads exist only where the rows lay out as columns. */}
+            <div aria-hidden className={cx(sub, headRow)}>
+              <span>{t("common.wallet")}</span>
+              <span>{t("wallets.col.share")}</span>
+              <span className="text-right">{t("wallets.openingLabel")}</span>
+              <span className="text-right">{t("nav.transactions")}</span>
+              <span className="text-right">{t("wallets.col.balance")}</span>
+              <span />
+            </div>
+            <div className={cx(rowsClass, sub)}>
               {active.map((w) => {
                 const share = totalBalance > 0 && w.balance > 0 ? Math.round((w.balance / totalBalance) * 100) : 0;
+                const bar = { ["--p" as string]: share, ["--c" as string]: hue(w.color) };
                 return (
-                  <div key={w.id}>
-                    <div className={rowClass}>
+                  <div key={w.id} className={cx(rowClass, sub, "wide:gap-x-6")}>
+                    <span className="flex min-w-0 flex-1 items-center gap-3">
                       <Glyph Icon={walletIcon(w.icon)} color={w.color} />
                       <span className="min-w-0 flex-1">
                         <span className={rowTitle}>{w.name}</span>
@@ -114,36 +139,37 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                         {w.balance < 0 && w.openingBalance >= 0 ? (
                           <span className={rowSub}><Rich text={t("wallets.belowZero")} tags={{ red: (c) => <span className="text-red">{c}</span> }} /></span>
                         ) : (
-                          <span className={rowSub}>
+                          <span className={cx(rowSub, "wide:hidden")}>
                             {t("wallets.opening", { amount: formatRupiah(w.openingBalance) })}<span className={onlyDesktop}>{t("wallets.share", { share })}</span>
                           </span>
                         )}
-                        {w.balance > 0 && (
-                          <span
-                            className="mt-1.5 block h-1.5 w-[calc(var(--p)*1%)] min-w-[3px] bg-(--c)"
-                            style={{ ["--p" as string]: share, ["--c" as string]: hue(w.color) }}
-                          />
-                        )}
+                        {w.balance > 0 && <span className={cx(barFill, "mt-1.5 block wide:hidden")} style={bar} />}
                       </span>
-                      <span className={cx(rowFig, w.balance < 0 && "text-red")}>{formatRupiah(w.balance)}</span>
-                      <span className="inline-flex flex-none items-center justify-end gap-0.5 md:min-w-[76px]">
-                        <button className={iconButtonClass()} type="button" aria-label={t("common.edit", { name: w.name })} onClick={() => openForm(w)}><Pencil /></button>
-                        {w.deletable ? (
-                          <ConfirmDelete
-                            title={t("wallets.del.title")}
-                            body={t("wallets.del.body")}
-                            item={{ title: w.name, aside: formatRupiah(w.balance) }}
-                            confirmLabel={t("wallets.del.confirm")}
-                            onConfirm={() => remove(w)}
-                            trigger={(open) => (
-                              <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: w.name })} disabled={locked(w.id)} onClick={open}><Trash2 /></button>
-                            )}
-                          />
-                        ) : (
-                          <button className={iconButtonClass()} type="button" aria-label={t("common.archive", { name: w.name })} disabled={locked(w.id)} onClick={() => act(w, "archive")}><Archive /></button>
-                        )}
-                      </span>
-                    </div>
+                    </span>
+                    <span className={cx(wideCell, "items-center gap-3")}>
+                      <span className={barTrack}>{w.balance > 0 && <span className={cx(barFill, "block")} style={bar} />}</span>
+                      <span className="w-[4ch] text-right text-meta tabular-nums"><span className="sr-only">{t("wallets.col.share")} </span>{share}%</span>
+                    </span>
+                    <span className={cx(wideCell, "justify-end text-meta text-ink-2 tabular-nums")}><span className="sr-only">{t("wallets.openingLabel")} </span>{formatRupiah(w.openingBalance)}</span>
+                    <span className={cx(wideCell, "justify-end text-meta text-ink-2 tabular-nums")}><span aria-hidden>{w.transactionCount}</span><span className="sr-only">{t("tx.count", { count: w.transactionCount })}</span></span>
+                    <span className={cx(rowFig, "text-right", w.balance < 0 && "text-red")}>{formatRupiah(w.balance)}</span>
+                    <span className="inline-flex flex-none items-center justify-end gap-0.5 md:min-w-[76px]">
+                      <button className={iconButtonClass()} type="button" aria-label={t("common.edit", { name: w.name })} onClick={() => openForm(w)}><Pencil /></button>
+                      {w.deletable ? (
+                        <ConfirmDelete
+                          title={t("wallets.del.title")}
+                          body={t("wallets.del.body")}
+                          item={{ title: w.name, aside: formatRupiah(w.balance) }}
+                          confirmLabel={t("wallets.del.confirm")}
+                          onConfirm={() => remove(w)}
+                          trigger={(open) => (
+                            <button className={iconButtonClass(true)} type="button" aria-label={t("common.delete", { name: w.name })} disabled={locked(w.id)} onClick={open}><Trash2 /></button>
+                          )}
+                        />
+                      ) : (
+                        <button className={iconButtonClass()} type="button" aria-label={t("common.archive", { name: w.name })} disabled={locked(w.id)} onClick={() => act(w, "archive")}><Archive /></button>
+                      )}
+                    </span>
                   </div>
                 );
               })}
@@ -151,24 +177,32 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
           </section>
 
           {archived.length > 0 && (
-            <section aria-labelledby="arch-h">
-              <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-t-2 border-ink pt-3.5">
+            <section aria-labelledby="arch-h" className={sub}>
+              <div className={cx("mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-t-2 border-ink pt-3.5", full)}>
                 <h2 id="arch-h" className={h2}>{t("common.archived")}</h2>
                 <span className="text-meta text-ink-2">{t("wallets.archivedNote")}</span>
               </div>
-              {archived.map((w) => (
-                <div className={rowClass} key={w.id}>
-                  <Glyph Icon={walletIcon(w.icon)} color={null} />
-                  <span className="min-w-0 flex-1">
-                    <span className={rowTitle}>{w.name}</span>
-                    <span className={rowSub}>
-                      {t("wallets.archivedOn", { date: w.archivedOn ? longDate(w.archivedOn, lang) : "" })} · {t("tx.count", { count: w.transactionCount })}
+              {archived.map((w) => {
+                const archivedOn = t("wallets.archivedOn", { date: w.archivedOn ? longDate(w.archivedOn, lang) : "" });
+                return (
+                  <div className={cx(rowClass, sub, "wide:gap-x-6")} key={w.id}>
+                    <span className="flex min-w-0 flex-1 items-center gap-3">
+                      <Glyph Icon={walletIcon(w.icon)} color={null} />
+                      <span className="min-w-0 flex-1">
+                        <span className={rowTitle}>{w.name}</span>
+                        <span className={cx(rowSub, "wide:hidden")}>{archivedOn} · {t("tx.count", { count: w.transactionCount })}</span>
+                      </span>
                     </span>
-                  </span>
-                  <span className={cx(rowFig, "text-ink-2")}>{formatRupiah(w.balance)}</span>
-                  <Button variant="quiet" disabled={locked(w.id)} onClick={() => act(w, "unarchive")}><ArchiveRestore />{t("common.unarchive")}</Button>
-                </div>
-              ))}
+                    <span className={cx(wideCell, "text-meta text-ink-2")}>{archivedOn}</span>
+                    <span className={cx(wideCell, "justify-end text-meta text-ink-2 tabular-nums")}><span className="sr-only">{t("wallets.openingLabel")} </span>{formatRupiah(w.openingBalance)}</span>
+                    <span className={cx(wideCell, "justify-end text-meta text-ink-2 tabular-nums")}><span aria-hidden>{w.transactionCount}</span><span className="sr-only">{t("tx.count", { count: w.transactionCount })}</span></span>
+                    <span className={cx(rowFig, "text-right text-ink-2")}>{formatRupiah(w.balance)}</span>
+                    <span className="flex justify-end">
+                      <Button variant="quiet" disabled={locked(w.id)} onClick={() => act(w, "unarchive")}><ArchiveRestore />{t("common.unarchive")}</Button>
+                    </span>
+                  </div>
+                );
+              })}
             </section>
           )}
         </div>

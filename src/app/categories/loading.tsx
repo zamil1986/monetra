@@ -1,1 +1,5 @@
-export { ScreenSkeleton as default } from "@/components/screen-skeleton";
+import { ScreenSkeleton } from "@/components/screen-skeleton";
+
+export default function Loading() {
+  return <ScreenSkeleton wide />;
+}

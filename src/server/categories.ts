@@ -20,24 +20,38 @@ export type CategoryView = {
   archived: boolean;
   /** No Transaksi uses it (PRD 3.6). */
   deletable: boolean;
+  /** Transaksi that use it, not counting deleted ones. */
+  transactionCount: number;
+  /** When its latest Transaksi happened, or null when none uses it. */
+  lastUsedAt: Date | null;
 };
 
 /** Defaults first in PRD order, then the Pengguna's own by creation time (PRD 3.6). */
 export async function listCategories(userId: string): Promise<CategoryView[]> {
   const [rows, used] = await Promise.all([
     db.category.findMany({ where: { userId, deletedAt: null }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
-    db.transaction.findMany({ where: { userId, deletedAt: null, categoryId: { not: null } }, distinct: ["categoryId"], select: { categoryId: true } }),
+    db.transaction.groupBy({
+      by: ["categoryId"],
+      where: { userId, deletedAt: null, categoryId: { not: null } },
+      _count: true,
+      _max: { occurredAt: true },
+    }),
   ]);
-  const everUsed = new Set(used.map((t) => t.categoryId));
-  return rows.map((c) => ({
-    id: c.id,
-    name: c.name,
-    type: c.type,
-    icon: c.icon,
-    color: c.color,
-    archived: c.archivedAt !== null,
-    deletable: !everUsed.has(c.id),
-  }));
+  const usage = new Map(used.map((g) => [g.categoryId, g]));
+  return rows.map((c) => {
+    const u = usage.get(c.id);
+    return {
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      icon: c.icon,
+      color: c.color,
+      archived: c.archivedAt !== null,
+      deletable: !u,
+      transactionCount: u?._count ?? 0,
+      lastUsedAt: u?._max.occurredAt ?? null,
+    };
+  });
 }
 
 type LockedCategory = { id: string; name: string; type: CategoryType; archived_at: Date | null };

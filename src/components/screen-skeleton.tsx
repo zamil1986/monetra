@@ -10,14 +10,15 @@ const bone = "animate-pulse bg-panel motion-reduce:animate-none";
  * A Client Component, so the fallback needs no request data and can show instantly. Each app route
  * re-exports it as its loading.tsx; the sign-in pages keep their own look and have none.
  */
-export function ScreenSkeleton() {
+/** `wide`: for screens whose list spans the page from the `wide` breakpoint, so it doesn't jump on load. */
+export function ScreenSkeleton({ wide = false }: { wide?: boolean }) {
   const { t } = useT();
   return (
     <div role="status" aria-busy="true">
       <span className="sr-only">{t("loading.label")}</span>
       <PageHead><span aria-hidden className={cx(bone, "h-7 w-40")} /></PageHead>
       <Page>
-        <div aria-hidden className="flex max-w-[720px] flex-col">
+        <div aria-hidden className={cx("flex max-w-[720px] flex-col", wide && "wide:max-w-none")}>
           <span className={cx(bone, "h-4 w-28")} />
           <span className={cx(bone, "mt-3 h-12 w-72 md:h-14")} />
           <div className={cx(rowsClass, "mt-8")}>
