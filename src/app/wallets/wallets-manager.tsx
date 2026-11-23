@@ -9,8 +9,9 @@ import { FormDialog } from "@/components/form-dialog";
 import { useToast } from "@/components/toast";
 import { Glyph, WALLET_ICONS, hue, walletIcon } from "@/components/icons";
 import { Rich } from "@/components/rich";
+import { TopAlert } from "@/components/top-alert";
 import {
-  Button, Field, FieldError, Notice, Page, PageHead, chipClass, cx, h1, h2, iconButtonClass, inputClass,
+  Button, Field, FieldError, Page, PageHead, chipClass, cx, h1, h2, iconButtonClass, inputClass,
   noticeActions, onlyDesktop, rowClass, rowFig, rowSub, rowTitle, rowsClass, spacer,
 } from "@/components/ui";
 import { formatRupiah, parseRupiah } from "@/domain/money";
@@ -43,7 +44,8 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
   const [formOpen, setFormOpen] = useState(false);
   const [target, setTarget] = useState<WalletRow | null>(null);
   const [formKey, setFormKey] = useState(0);
-  const [refusal, setRefusal] = useState<{ id: string; message: string } | null>(null);
+  // `key` restarts the drop-in when a second refusal replaces the first.
+  const [refusal, setRefusal] = useState<{ id: string; message: string; key: number } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const locked = (id: string) => busy === id || !online; // changes need a connection (PRD 5.5)
   const active = wallets.filter((w) => !w.archived);
@@ -63,7 +65,7 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
       await api(`/api/wallets/${wallet.id}/${action}`, { method: "POST" });
       router.refresh();
     } catch (e) {
-      setRefusal({ id: wallet.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong") });
+      setRefusal({ id: wallet.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong"), key: Date.now() });
     } finally {
       setBusy(null);
     }
@@ -142,15 +144,6 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
                         )}
                       </span>
                     </div>
-                    {refusal?.id === w.id && (
-                      <Notice tone="warn" role="alert" className="my-2">
-                        <strong>{refusal.message}</strong>
-                        <div className={noticeActions}>
-                          <Link href="/transactions/new?type=transfer">{t("wallets.transferOut")}</Link>
-                          <Link href="/transactions/new">{t("wallets.recordExpense")}</Link>
-                        </div>
-                      </Notice>
-                    )}
                   </div>
                 );
               })}
@@ -180,6 +173,18 @@ export function WalletsManager({ wallets, totalBalance }: { wallets: WalletRow[]
           )}
         </div>
       </Page>
+      {refusal && (
+        <TopAlert key={refusal.key} onDismiss={() => setRefusal(null)}>
+          <strong>{refusal.message}</strong>
+          {/* The ways out of a balance that blocks the Arsip; an unarchive refusal has none. */}
+          {active.some((w) => w.id === refusal.id) && (
+            <div className={noticeActions}>
+              <Link href="/transactions/new?type=transfer">{t("wallets.transferOut")}</Link>
+              <Link href="/transactions/new">{t("wallets.recordExpense")}</Link>
+            </div>
+          )}
+        </TopAlert>
+      )}
       <FormDialog
         open={formOpen}
         onClose={() => setFormOpen(false)}

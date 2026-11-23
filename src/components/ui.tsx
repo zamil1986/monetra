@@ -122,8 +122,8 @@ export const segButtonClass = cx(
 );
 
 /* Notices */
-type Tone = "info" | "warn" | "danger" | "neutral";
-const TONES: Record<Tone, { box: string; Icon: LucideIcon | null }> = {
+export type Tone = "info" | "warn" | "danger" | "neutral";
+export const TONES: Record<Tone, { box: string; Icon: LucideIcon | null }> = {
   info: { box: "border-cobalt-edge bg-cobalt-soft text-cobalt-text", Icon: Info },
   warn: { box: "border-amber-edge bg-amber-soft text-amber-text", Icon: TriangleAlert },
   danger: { box: "border-red-edge bg-red-soft text-red-text", Icon: CircleAlert },

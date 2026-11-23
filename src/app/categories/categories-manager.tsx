@@ -6,8 +6,9 @@ import { ConfirmDelete } from "@/components/confirm-delete";
 import { FormDialog } from "@/components/form-dialog";
 import { CATEGORY_ICON_COMPONENTS, Glyph, categoryIcon, hue } from "@/components/icons";
 import { useToast } from "@/components/toast";
+import { TopAlert } from "@/components/top-alert";
 import {
-  Button, Field, FieldError, Notice, Page, PageHead, cx, h1, h2, iconButtonClass, inputClass,
+  Button, Field, FieldError, Page, PageHead, cx, h1, h2, iconButtonClass, inputClass,
   rowClass, rowSub, rowTitle, rowsClass, segButtonClass, segClass, spacer,
 } from "@/components/ui";
 import { CATEGORY_ICONS, MAX_CATEGORY_NAME, type CategoryIcon } from "@/domain/category-rules";
@@ -30,7 +31,8 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
   const [formOpen, setFormOpen] = useState(false);
   const [target, setTarget] = useState<CategoryView | null>(null);
   const [formKey, setFormKey] = useState(0);
-  const [refusal, setRefusal] = useState<{ id: string; message: string } | null>(null);
+  // `key` restarts the drop-in when a second refusal replaces the first.
+  const [refusal, setRefusal] = useState<{ id: string; message: string; key: number } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const locked = (id: string) => busy === id || !online; // changes need a connection (PRD 5.5)
   const ofType = categories.filter((c) => c.type === type);
@@ -53,7 +55,7 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
       await api(`/api/categories/${category.id}/${action}`, { method: "POST" });
       router.refresh();
     } catch (e) {
-      setRefusal({ id: category.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong") });
+      setRefusal({ id: category.id, message: e instanceof ApiError ? e.message : t("common.somethingWrong"), key: Date.now() });
     } finally {
       setBusy(null);
     }
@@ -70,9 +72,6 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
       return e instanceof ApiError ? e.message : t("common.somethingWrong");
     }
   }
-
-  const refusalFor = (id: string) =>
-    refusal?.id === id && <Notice tone="warn" role="alert" className="my-2"><strong>{refusal.message}</strong></Notice>;
 
   return (
     <>
@@ -126,7 +125,6 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
                       )}
                     </span>
                   </div>
-                  {refusalFor(c.id)}
                 </div>
               ))}
             </div>
@@ -146,13 +144,17 @@ export function CategoriesManager({ categories }: { categories: CategoryView[] }
                     <button className={iconButtonClass()} type="button" aria-label={t("common.edit", { name: c.name })} onClick={() => openForm(c)}><Pencil /></button>
                     <Button variant="quiet" disabled={locked(c.id)} onClick={() => act(c, "unarchive")}><ArchiveRestore />{t("common.unarchive")}</Button>
                   </div>
-                  {refusalFor(c.id)}
                 </div>
               ))}
             </section>
           )}
         </div>
       </Page>
+      {refusal && (
+        <TopAlert key={refusal.key} onDismiss={() => setRefusal(null)}>
+          <strong>{refusal.message}</strong>
+        </TopAlert>
+      )}
       <FormDialog
         open={formOpen}
         onClose={() => setFormOpen(false)}
